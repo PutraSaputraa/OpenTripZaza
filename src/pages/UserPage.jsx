@@ -6,14 +6,16 @@ import { Badge, InfoBlock, NotFound } from './shared'
 export function PublicNav({ navigate, session, logout }) {
   return (
     <header className="public-nav">
-      <button className="brand" onClick={() => navigate('/')}>Zaza Open Trip</button>
+      <button className="brand" onClick={() => navigate('/')}>{session?.role === 'customer' ? `Welcome, ${session.name}` : 'Welcome Customer'}</button>
       <nav>
-        <button onClick={() => navigate('/open-trip')}>Katalog</button>
         {session?.role === 'customer' ? (
           <>
-            <span className="customer-name">{session.name}</span>
-            <button onClick={() => navigate('/akun')}>Akun</button>
-            <button onClick={logout}>Keluar</button>
+            <button className="nav-icon-btn" onClick={() => navigate('/akun')} aria-label="Akun customer" title="Akun">
+              <span className="nav-icon nav-icon-account" aria-hidden="true" />
+            </button>
+            <button className="nav-icon-btn" onClick={logout} aria-label="Keluar" title="Keluar">
+              <span className="nav-icon nav-icon-logout" aria-hidden="true" />
+            </button>
           </>
         ) : (
           <>
