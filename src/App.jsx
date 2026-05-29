@@ -301,11 +301,6 @@ function CustomerCatalog({ trips, navigate, session, logout }) {
             <button className="primary-btn" onClick={() => document.getElementById('open-trip-list')?.scrollIntoView({ behavior: 'smooth' })}>Lihat open trip</button>
             {!session?.role && <button className="hero-secondary-btn" onClick={() => navigate('/login')}>Masuk customer</button>}
           </div>
-          <div className="hero-facts">
-            <span><strong>{trips.length}</strong> total trip</span>
-            <span><strong>{availableTrips}</strong> tersedia</span>
-            <span><strong>Admin</strong> terverifikasi</span>
-          </div>
         </div>
       </section>
 
