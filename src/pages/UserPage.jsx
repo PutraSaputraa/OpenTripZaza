@@ -1,7 +1,5 @@
 import { useState } from 'react'
 import cinematicVideo from '../assets/cinematic1.mp4'
-import logoutIcon from '../assets/sign-out-alt.svg'
-import userIcon from '../assets/user.svg'
 import { formatCurrency, formatDate, tripName } from '../utils/formatters'
 import { Badge, InfoBlock, NotFound } from './shared'
 
@@ -13,10 +11,10 @@ export function PublicNav({ navigate, session, logout }) {
         {session?.role === 'customer' ? (
           <>
             <button className="nav-icon-btn" onClick={() => navigate('/akun')} aria-label="Akun customer" title="Akun">
-              <img src={userIcon} alt="" aria-hidden="true" />
+              <span className="nav-icon nav-icon-account" aria-hidden="true" />
             </button>
             <button className="nav-icon-btn" onClick={logout} aria-label="Keluar" title="Keluar">
-              <img src={logoutIcon} alt="" aria-hidden="true" />
+              <span className="nav-icon nav-icon-logout" aria-hidden="true" />
             </button>
           </>
         ) : (
