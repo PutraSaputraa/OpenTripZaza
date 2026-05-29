@@ -559,16 +559,22 @@ button:disabled {
 
 .detail-side-card {
   display: grid;
-  gap: 12px;
+  gap: 10px;
   border: 1px solid #e1e9f2;
   border-radius: 8px;
   background: #fff;
-  padding: 16px;
+  padding: 14px;
   box-shadow: 0 14px 34px rgba(15, 23, 42, 0.06);
 }
 
 .detail-side-card .metric {
+  min-width: 0;
+  padding: 12px;
   box-shadow: none;
+}
+
+.detail-side-card .metric strong {
+  font-size: 18px;
 }
 
 .checkout-card span {
@@ -578,9 +584,22 @@ button:disabled {
   text-transform: uppercase;
 }
 
-.checkout-card strong {
+.checkout-price {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.checkout-price strong {
   color: #0f172a;
-  font-size: 30px;
+  font-size: 24px;
+}
+
+.checkout-price small {
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 800;
 }
 
 .form-shell {

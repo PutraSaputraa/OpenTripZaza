@@ -119,8 +119,8 @@ export function TripDetail({ tripId, trips, navigate, session, logout }) {
               <Metric label="Slot tersedia" value={`${trip.slots} peserta`} />
             </section>
             <section className="detail-side-card checkout-card">
-              <span>Harga per orang</span>
-              <strong>{formatCurrency(trip.price)}</strong>
+              <span>Mulai dari</span>
+              <div className="checkout-price"><strong>{formatCurrency(trip.price)}</strong><small>/ orang</small></div>
               <button className="primary-btn wide" disabled={!isOpen} onClick={() => navigate(`/daftar/${trip.id}`)}>
                 {isOpen ? 'Checkout' : 'Pendaftaran ditutup'}
               </button>
