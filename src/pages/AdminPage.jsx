@@ -35,10 +35,19 @@ export function AdminDashboard(props) {
   ]
   return (
     <AdminShell title="Dashboard Admin" {...props}>
-      <section className="stat-grid">{stats.map(([label, value]) => <Metric key={label} label={label} value={value} />)}</section>
-      <section className="two-col">
-        <DataPanel title="Approval terbaru"><RegistrationTable {...props} compact /></DataPanel>
-        <DataPanel title="Monitoring job"><JobTable {...props} compact /></DataPanel>
+      <section className="admin-dashboard">
+        <div className="dashboard-hero">
+          <div>
+            <p className="eyebrow">Ringkasan operasional</p>
+            <h2>Kelola open trip, pendaftaran, dan pekerjaan tim dari menu admin.</h2>
+            <p className="muted">Gunakan dashboard ini sebagai pintu masuk cepat. Detail lengkap tetap ada di halaman masing-masing menu.</p>
+          </div>
+          <div className="dashboard-actions">
+            <button className="primary-btn" onClick={() => props.navigate('/admin/open-trip')}>Kelola open trip</button>
+            <button className="outline-btn" onClick={() => props.navigate('/admin/pendaftaran')}>Lihat pendaftaran</button>
+          </div>
+        </div>
+        <section className="stat-grid dashboard-stats">{stats.map(([label, value]) => <Metric key={label} label={label} value={value} />)}</section>
       </section>
     </AdminShell>
   )

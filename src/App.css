@@ -1089,11 +1089,56 @@ button:disabled {
   font-size: clamp(28px, 3vw, 42px);
 }
 
+.admin-dashboard {
+  display: grid;
+  gap: 22px;
+}
+
+.dashboard-hero {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 22px;
+  border: 1px solid var(--color-line);
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, rgba(240, 200, 76, 0.28), rgba(255, 255, 255, 0.74)),
+    #ffffff;
+  padding: clamp(22px, 3vw, 32px);
+  box-shadow: var(--shadow-soft);
+}
+
+.dashboard-hero h2 {
+  max-width: 760px;
+  margin: 0;
+  color: var(--color-text);
+  font-size: clamp(28px, 4vw, 48px);
+  line-height: 1.04;
+  letter-spacing: 0;
+}
+
+.dashboard-hero .muted {
+  max-width: 640px;
+  margin-top: 14px;
+  line-height: 1.6;
+}
+
+.dashboard-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
 .stat-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 14px;
   margin-bottom: 22px;
+}
+
+.stat-grid.dashboard-stats {
+  margin-bottom: 0;
 }
 
 .two-col {
@@ -1226,9 +1271,18 @@ th {
   }
 
   .registration-hero,
+  .dashboard-hero,
   .registration-submit {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .dashboard-actions {
+    justify-content: stretch;
+  }
+
+  .dashboard-actions button {
+    width: 100%;
   }
 
   .registration-submit .primary-btn {
