@@ -65,7 +65,7 @@ button:disabled {
   position: fixed;
   right: 0;
   left: 0;
-  background: linear-gradient(180deg, rgba(8, 8, 8, 0.78), rgba(8, 8, 8, 0.14));
+  background: rgba(8, 8, 8, 0.82);
   border-bottom: 1px solid rgba(255, 255, 255, 0.16);
 }
 
@@ -184,9 +184,7 @@ button:disabled {
 }
 
 .hero-shade {
-  background:
-    linear-gradient(90deg, rgba(8, 8, 8, 0.88), rgba(8, 8, 8, 0.5) 50%, rgba(8, 8, 8, 0.24)),
-    linear-gradient(180deg, rgba(8, 8, 8, 0.08), rgba(8, 8, 8, 0.78));
+  background: rgba(8, 8, 8, 0.58);
 }
 
 .hero-content {
@@ -289,9 +287,7 @@ button:disabled {
   aspect-ratio: 16 / 10;
   place-items: center;
   border-bottom: 1px solid var(--color-line);
-  background:
-    linear-gradient(135deg, rgba(216, 179, 106, 0.18), rgba(8, 8, 8, 0.06)),
-    #fbf7ed;
+  background: #fbf7ed;
   color: var(--color-text);
   padding: 20px;
   text-align: center;
@@ -704,7 +700,7 @@ button:disabled {
   min-height: 100vh;
   place-items: center;
   padding: 24px;
-  background: linear-gradient(135deg, #11100f, #3d2c12);
+  background: var(--color-ink);
 }
 
 .login-card {
