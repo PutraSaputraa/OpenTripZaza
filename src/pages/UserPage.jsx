@@ -244,21 +244,22 @@ export function CustomerLoginPage({ loginCustomer, navigate }) {
   }
 
   return (
-    <main className="login-page">
-      <section className="login-card">
-        <button className="brand" onClick={() => navigate('/')}>Zaza Open Trip</button>
-        <p className="eyebrow">Login customer</p>
-        <h1>Masuk Customer</h1>
-        <p className="muted">Masuk dengan akun customer yang sudah terdaftar.</p>
-        <form className="data-form compact" onSubmit={onSubmit}>
+    <AuthShell navigate={navigate}>
+      <section className="auth-panel">
+        <div className="auth-panel-head">
+          <p className="eyebrow">Login customer</p>
+          <h1>Masuk Customer</h1>
+          <p className="muted">Gunakan akun yang sudah terdaftar untuk lanjut memilih dan mendaftar trip.</p>
+        </div>
+        <form className="auth-form" onSubmit={onSubmit}>
           {error && <p className="form-error">{error}</p>}
-          <label>Email<input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></label>
-          <label>Password<input type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} /></label>
+          <label>Email<input type="email" placeholder="nama@email.com" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></label>
+          <label>Password<input type="password" placeholder="Masukkan password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} /></label>
           <button className="primary-btn" type="submit">Masuk</button>
         </form>
-        <p className="auth-switch">Belum punya akun? <button onClick={() => navigate('/signup')}>Signup customer</button></p>
+        <p className="auth-switch">Belum punya akun? <button onClick={() => navigate('/signup')}>Buat akun</button></p>
       </section>
-    </main>
+    </AuthShell>
   )
 }
 
@@ -285,22 +286,46 @@ export function CustomerSignupPage({ signupCustomer, navigate }) {
   }
 
   return (
-    <main className="login-page">
-      <section className="login-card">
-        <button className="brand" onClick={() => navigate('/')}>Zaza Open Trip</button>
-        <p className="eyebrow">Signup customer</p>
-        <h1>Buat Akun</h1>
-        <p className="muted">Akun customer dipakai untuk mengisi data pendaftaran lebih cepat.</p>
-        <form className="data-form compact" onSubmit={onSubmit}>
+    <AuthShell navigate={navigate}>
+      <section className="auth-panel auth-panel-wide">
+        <div className="auth-panel-head">
+          <p className="eyebrow">Signup customer</p>
+          <h1>Buat Akun</h1>
+          <p className="muted">Simpan data kontak sekali, lalu gunakan lagi saat mendaftar open trip berikutnya.</p>
+        </div>
+        <form className="auth-form auth-form-grid" onSubmit={onSubmit}>
           {error && <p className="form-error">{error}</p>}
-          <label>Nama lengkap<input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></label>
-          <label>Nomor WhatsApp<input value={form.whatsapp} onChange={(e) => setForm({ ...form, whatsapp: e.target.value })} /></label>
-          <label>Email<input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></label>
-          <label>Password<input type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} /></label>
-          <label>Konfirmasi password<input type="password" value={form.confirmPassword} onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })} /></label>
-          <button className="primary-btn" type="submit">Buat akun</button>
+          <label>Nama lengkap<input placeholder="Nama sesuai identitas" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></label>
+          <label>Nomor WhatsApp<input placeholder="08xxxxxxxxxx" value={form.whatsapp} onChange={(e) => setForm({ ...form, whatsapp: e.target.value })} /></label>
+          <label className="full">Email<input type="email" placeholder="nama@email.com" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></label>
+          <label>Password<input type="password" placeholder="Minimal 6 karakter" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} /></label>
+          <label>Konfirmasi password<input type="password" placeholder="Ulangi password" value={form.confirmPassword} onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })} /></label>
+          <button className="primary-btn full" type="submit">Buat akun</button>
         </form>
-        <p className="auth-switch">Sudah punya akun? <button onClick={() => navigate('/login')}>Login customer</button></p>
+        <p className="auth-switch">Sudah punya akun? <button onClick={() => navigate('/login')}>Masuk customer</button></p>
+      </section>
+    </AuthShell>
+  )
+}
+
+function AuthShell({ children, navigate }) {
+  return (
+    <main className="login-page">
+      <section className="auth-shell">
+        <aside className="auth-brand-panel">
+          <button className="brand" onClick={() => navigate('/')}>Zaza Open Trip</button>
+          <div>
+            <p className="eyebrow">Customer area</p>
+            <h2>Mulai perjalanan dari data yang rapi.</h2>
+            <p>Masuk atau buat akun untuk menyimpan kontak pendaftaran dan melanjutkan proses trip dengan lebih nyaman.</p>
+          </div>
+          <div className="auth-note-list">
+            <span>Approval admin</span>
+            <span>Data kontak tersimpan</span>
+            <span>Trip lebih mudah dipantau</span>
+          </div>
+        </aside>
+        {children}
       </section>
     </main>
   )
