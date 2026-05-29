@@ -3,6 +3,38 @@ import { accounts, registrationStatuses, tripStatuses } from '../config/constant
 import { formatCurrency, formatDate, tripName } from '../utils/formatters'
 import { Badge, DataPanel, Metric, Sidebar } from './shared'
 
+const createItineraryDays = (count, existingDays = []) => {
+  const totalDays = Math.max(1, Number(count) || 1)
+  return Array.from({ length: totalDays }, (_, index) => {
+    const current = existingDays[index]
+    return {
+      day: index + 1,
+      text: typeof current === 'string' ? current : current?.text || '',
+    }
+  })
+}
+
+const normalizeTripForm = (trip) => {
+  const itineraryDays = Array.isArray(trip?.itineraryDays) && trip.itineraryDays.length
+    ? createItineraryDays(trip.itineraryDays.length, trip.itineraryDays)
+    : createItineraryDays(1, trip?.itinerary ? [{ text: trip.itinerary }] : [])
+
+  return {
+    name: '',
+    destination: '',
+    date: '',
+    price: 0,
+    quota: 10,
+    slots: 10,
+    description: '',
+    facilities: '',
+    status: 'Tersedia',
+    ...trip,
+    durationDays: itineraryDays.length,
+    itineraryDays,
+  }
+}
+
 function AdminShell({ title, children, navigate, logout }) {
   return (
     <main className="app-shell">
@@ -83,11 +115,32 @@ export function AdminTrips(props) {
 
 export function TripForm({ tripId, trips, saveTrip, navigate, ...props }) {
   const selected = trips.find((item) => item.id === tripId)
-  const [form, setForm] = useState(selected || { name: '', destination: '', date: '', price: 0, quota: 10, slots: 10, description: '', facilities: '', itinerary: '', status: 'Tersedia' })
+  const [form, setForm] = useState(normalizeTripForm(selected))
+
+  const updateDurationDays = (value) => {
+    const durationDays = Math.max(1, Number(value) || 1)
+    setForm({ ...form, durationDays, itineraryDays: createItineraryDays(durationDays, form.itineraryDays) })
+  }
+
+  const updateItineraryDay = (index, text) => {
+    const itineraryDays = form.itineraryDays.map((item, itemIndex) => (
+      itemIndex === index ? { ...item, text } : item
+    ))
+    setForm({ ...form, itineraryDays })
+  }
 
   const onSubmit = async (event) => {
     event.preventDefault()
-    await saveTrip({ ...form, price: Number(form.price), quota: Number(form.quota), slots: Number(form.slots) })
+    const itineraryDays = createItineraryDays(form.durationDays, form.itineraryDays)
+    await saveTrip({
+      ...form,
+      price: Number(form.price),
+      quota: Number(form.quota),
+      slots: Number(form.slots),
+      durationDays: itineraryDays.length,
+      itineraryDays,
+      itinerary: itineraryDays.map((item) => `Hari ${item.day}: ${item.text}`).join('\n\n'),
+    })
   }
 
   return (
@@ -111,7 +164,23 @@ export function TripForm({ tripId, trips, saveTrip, navigate, ...props }) {
           <label>Status<select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>{tripStatuses.map((status) => <option key={status}>{status}</option>)}</select></label>
           <label className="full">Deskripsi<textarea required value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></label>
           <label className="full">Fasilitas<textarea required value={form.facilities} onChange={(e) => setForm({ ...form, facilities: e.target.value })} /></label>
-          <label className="full">Itinerary<textarea required value={form.itinerary} onChange={(e) => setForm({ ...form, itinerary: e.target.value })} /></label>
+          <div className="itinerary-builder full">
+            <div className="itinerary-builder-head">
+              <div>
+                <h3>Itinerary per hari</h3>
+                <p className="muted">Tentukan durasi trip, lalu isi detail kegiatan untuk tiap hari.</p>
+              </div>
+              <label>Jumlah hari<input required type="number" min="1" value={form.durationDays} onChange={(e) => updateDurationDays(e.target.value)} /></label>
+            </div>
+            <div className="itinerary-day-list">
+              {form.itineraryDays.map((item, index) => (
+                <label key={item.day}>
+                  Hari {item.day}
+                  <textarea required placeholder={`Kegiatan hari ${item.day}`} value={item.text} onChange={(e) => updateItineraryDay(index, e.target.value)} />
+                </label>
+              ))}
+            </div>
+          </div>
           <button className="primary-btn full" type="submit">Simpan open trip</button>
         </form>
       </section>

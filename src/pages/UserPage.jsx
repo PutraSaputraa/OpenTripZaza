@@ -90,6 +90,31 @@ function TripVisual({ trip, large }) {
   )
 }
 
+function ItineraryBlock({ trip }) {
+  const days = Array.isArray(trip.itineraryDays) && trip.itineraryDays.length
+    ? trip.itineraryDays.map((item, index) => ({
+      day: item.day || index + 1,
+      text: typeof item === 'string' ? item : item.text,
+    })).filter((item) => item.text)
+    : []
+
+  if (!days.length) return <InfoBlock title="Itinerary" text={trip.itinerary} />
+
+  return (
+    <section className="info-block itinerary-block">
+      <h3>Itinerary</h3>
+      <div className="itinerary-timeline">
+        {days.map((item) => (
+          <article key={item.day} className="itinerary-day">
+            <span>Hari {item.day}</span>
+            <p>{item.text}</p>
+          </article>
+        ))}
+      </div>
+    </section>
+  )
+}
+
 export function TripDetail({ tripId, trips, navigate, session, logout }) {
   const trip = trips.find((item) => item.id === tripId)
   if (!trip) return <NotFound navigate={navigate} />
@@ -108,7 +133,7 @@ export function TripDetail({ tripId, trips, navigate, session, logout }) {
             <TripVisual trip={trip} />
             <InfoBlock title="Deskripsi" text={trip.description} />
             <InfoBlock title="Destinasi" text={trip.destination} />
-            <InfoBlock title="Itinerary" text={trip.itinerary} />
+            <ItineraryBlock trip={trip} />
             <InfoBlock title="Fasilitas" text={trip.facilities} />
           </article>
 

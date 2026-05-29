@@ -161,6 +161,10 @@ button:disabled {
   width: 100%;
 }
 
+.data-form .full {
+  grid-column: 1 / -1;
+}
+
 .hero-band {
   position: relative;
   display: grid;
@@ -402,6 +406,10 @@ button:disabled {
 .muted,
 .info-block p {
   color: var(--color-muted);
+}
+
+.info-block p {
+  white-space: pre-line;
 }
 
 .trip-card dl {
@@ -891,6 +899,51 @@ button:disabled {
   resize: vertical;
 }
 
+.itinerary-builder {
+  display: grid;
+  gap: 14px;
+  border: 1px solid var(--color-line);
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 16px;
+}
+
+.itinerary-builder-head {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.itinerary-builder-head h3 {
+  margin: 0;
+  color: var(--color-text);
+  font-size: 20px;
+}
+
+.itinerary-builder-head .muted {
+  margin-top: 6px;
+  line-height: 1.5;
+}
+
+.itinerary-builder-head label {
+  width: min(100%, 180px);
+}
+
+.itinerary-day-list {
+  display: grid;
+  gap: 12px;
+}
+
+.itinerary-day-list label {
+  border-top: 1px solid var(--color-line);
+  padding-top: 12px;
+}
+
+.itinerary-day-list textarea {
+  min-height: 118px;
+}
+
 .form-error {
   grid-column: 1 / -1;
   border-radius: 8px;
@@ -1269,6 +1322,40 @@ th {
   font-weight: 500;
 }
 
+.itinerary-block {
+  display: grid;
+  gap: 14px;
+}
+
+.itinerary-timeline {
+  display: grid;
+  gap: 12px;
+}
+
+.itinerary-day {
+  display: grid;
+  grid-template-columns: 92px minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+  border-top: 1px solid var(--color-line);
+  padding-top: 14px;
+}
+
+.itinerary-day span {
+  width: max-content;
+  border-radius: 999px;
+  background: var(--color-gold-soft);
+  color: var(--color-gold-dark);
+  padding: 7px 10px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.itinerary-day p {
+  margin: 0;
+  white-space: pre-line;
+}
+
 .job-grid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
@@ -1346,10 +1433,19 @@ th {
   .registration-hero,
   .admin-page-head,
   .dashboard-hero,
+  .itinerary-builder-head,
   .schedule-card-head,
   .registration-submit {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .itinerary-builder-head label {
+    width: 100%;
+  }
+
+  .itinerary-day {
+    grid-template-columns: 1fr;
   }
 
   .dashboard-actions {
