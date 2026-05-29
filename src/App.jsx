@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
+import { collection, deleteDoc, doc, onSnapshot, orderBy, query, setDoc, updateDoc } from 'firebase/firestore'
 import './App.css'
+import { db } from './firebase'
 
 const tripStatuses = ['Tersedia', 'Penuh', 'Selesai']
 const registrationStatuses = ['Menunggu Approval', 'Disetujui', 'Ditolak', 'Selesai']
@@ -8,129 +10,26 @@ const jobStatuses = ['Tersedia', 'Diambil', 'Sedang Berjalan', 'Selesai']
 const accounts = {
   admin: { email: 'admin@zazatrip.com', password: 'admin123', role: 'admin', name: 'Admin Zaza' },
   worker: { email: 'pekerja@zazatrip.com', password: 'pekerja123', role: 'pekerja', name: 'Raka Field Crew' },
-  customer: { email: 'customer@demo.com', password: 'customer123', role: 'customer', name: 'Customer Demo' },
 }
 
-const initialCustomerAccounts = [accounts.customer]
+const collections = {
+  trips: 'trips',
+  registrations: 'registrations',
+  jobs: 'jobs',
+  customers: 'customers',
+}
 
-const initialTrips = [
-  {
-    id: 1,
-    name: 'Bromo Sunrise Explorer',
-    destination: 'Gunung Bromo, Jawa Timur',
-    date: '2026-06-14',
-    price: 875000,
-    quota: 18,
-    slots: 14,
-    status: 'Tersedia',
-    image: 'https://images.unsplash.com/photo-1570789210967-2cac24afeb00?auto=format&fit=crop&w=1200&q=80',
-    description: 'Perjalanan dua hari satu malam mengejar sunrise Bromo, jeep savana, pasir berbisik, dan spot foto terbaik.',
-    facilities: 'Transport PP, jeep Bromo, tiket kawasan, penginapan, makan 3x, dokumentasi, tour leader.',
-    itinerary: 'Hari 1: Berangkat dari Surabaya, check-in homestay. Hari 2: Sunrise Penanjakan, kawah Bromo, savana, kembali.',
-  },
-  {
-    id: 2,
-    name: 'Labuan Bajo Komodo Sail',
-    destination: 'Labuan Bajo, Nusa Tenggara Timur',
-    date: '2026-07-05',
-    price: 3250000,
-    quota: 12,
-    slots: 11,
-    status: 'Tersedia',
-    image: 'https://images.unsplash.com/photo-1573790387438-4da905039392?auto=format&fit=crop&w=1200&q=80',
-    description: 'Live on board tiga hari dua malam ke Pulau Padar, Pink Beach, Taka Makassar, dan Pulau Komodo.',
-    facilities: 'Kapal AC sharing cabin, makan selama trip, guide, dokumentasi, alat snorkeling, tiket destinasi.',
-    itinerary: 'Hari 1: Kelor dan Manjarite. Hari 2: Padar, Pink Beach, Komodo. Hari 3: Kanawa dan kembali ke pelabuhan.',
-  },
-  {
-    id: 3,
-    name: 'Dieng Culture Weekend',
-    destination: 'Dataran Tinggi Dieng, Jawa Tengah',
-    date: '2026-06-27',
-    price: 650000,
-    quota: 3,
-    slots: 0,
-    status: 'Penuh',
-    image: 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80',
-    description: 'Weekend singkat menikmati sunrise Sikunir, kompleks candi, Telaga Warna, dan kuliner khas Dieng.',
-    facilities: 'Transport, homestay, tiket wisata, makan 2x, guide lokal, dokumentasi.',
-    itinerary: 'Hari 1: Perjalanan dan Telaga Warna. Hari 2: Sunrise Sikunir, Candi Arjuna, pusat oleh-oleh.',
-  },
-  {
-    id: 4,
-    name: 'Raja Ampat Island Hop',
-    destination: 'Raja Ampat, Papua Barat Daya',
-    date: '2026-08-18',
-    price: 6850000,
-    quota: 10,
-    slots: 9,
-    status: 'Tersedia',
-    image: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=1200&q=80',
-    description: 'Trip premium ke Piaynemo, Telaga Bintang, pasir timbul, dan spot snorkeling air jernih Raja Ampat.',
-    facilities: 'Speedboat, resort sharing room, makan, guide, tiket konservasi, dokumentasi bawah air.',
-    itinerary: 'Hari 1: Sorong ke Waisai. Hari 2: Piaynemo dan Telaga Bintang. Hari 3: Snorkeling dan pasir timbul.',
-  },
-  {
-    id: 5,
-    name: 'Nusa Penida Blue Escape',
-    destination: 'Nusa Penida, Bali',
-    date: '2026-06-08',
-    price: 725000,
-    quota: 8,
-    slots: 8,
-    status: 'Tersedia',
-    image: 'https://images.unsplash.com/photo-1537953773345-d172ccf13cf1?auto=format&fit=crop&w=1200&q=80',
-    description: 'Eksplorasi satu hari ke Kelingking Beach, Broken Beach, Angel Billabong, dan Crystal Bay.',
-    facilities: 'Fast boat PP, transport lokal, tiket wisata, makan siang, dokumentasi, driver guide.',
-    itinerary: 'Pagi: Berangkat Sanur. Siang: West Nusa Penida tour. Sore: Crystal Bay dan kembali.',
-  },
-  {
-    id: 6,
-    name: 'Ijen Blue Fire Night Trip',
-    destination: 'Kawah Ijen, Banyuwangi',
-    date: '2026-05-02',
-    price: 540000,
-    quota: 2,
-    slots: 0,
-    status: 'Selesai',
-    image: 'https://images.unsplash.com/photo-1516690561799-46d8f74f9abf?auto=format&fit=crop&w=1200&q=80',
-    description: 'Pendakian malam Kawah Ijen untuk melihat blue fire, sunrise, dan danau kawah.',
-    facilities: 'Transport lokal, tiket masuk, masker gas, headlamp, guide, air mineral.',
-    itinerary: 'Malam: Start Banyuwangi. Dini hari: Trekking Ijen. Pagi: Sunrise dan kembali.',
-  },
-]
-
-const initialRegistrations = [
-  { id: 1, name: 'Aulia Rahman', whatsapp: '081234560001', email: 'aulia@mail.com', participants: 2, tripId: 1, notes: 'Request seat depan.', status: 'Menunggu Approval' },
-  { id: 2, name: 'Bima Santoso', whatsapp: '081234560002', email: 'bima@mail.com', participants: 1, tripId: 2, notes: 'Vegetarian.', status: 'Disetujui' },
-  { id: 3, name: 'Citra Lestari', whatsapp: '081234560003', email: 'citra@mail.com', participants: 3, tripId: 3, notes: '-', status: 'Disetujui' },
-  { id: 4, name: 'Dewi Puspita', whatsapp: '081234560004', email: 'dewi@mail.com', participants: 2, tripId: 4, notes: 'Butuh invoice.', status: 'Menunggu Approval' },
-  { id: 5, name: 'Eka Pratama', whatsapp: '081234560005', email: 'eka@mail.com', participants: 1, tripId: 5, notes: 'Solo traveler.', status: 'Ditolak' },
-  { id: 6, name: 'Fajar Nugroho', whatsapp: '081234560006', email: 'fajar@mail.com', participants: 4, tripId: 1, notes: 'Berangkat dari Malang.', status: 'Disetujui' },
-  { id: 7, name: 'Gita Amalia', whatsapp: '081234560007', email: 'gita@mail.com', participants: 2, tripId: 2, notes: '-', status: 'Menunggu Approval' },
-  { id: 8, name: 'Hendra Wijaya', whatsapp: '081234560008', email: 'hendra@mail.com', participants: 2, tripId: 6, notes: 'Sudah lunas.', status: 'Selesai' },
-  { id: 9, name: 'Intan Maharani', whatsapp: '081234560009', email: 'intan@mail.com', participants: 1, tripId: 4, notes: 'Snorkeling pemula.', status: 'Disetujui' },
-  { id: 10, name: 'Joko Firmansyah', whatsapp: '081234560010', email: 'joko@mail.com', participants: 2, tripId: 5, notes: 'Minta pickup hotel.', status: 'Menunggu Approval' },
-]
-
-const initialJobs = [
-  { id: 1, tripId: 1, task: 'Tour leader, absensi peserta, koordinasi jeep Bromo.', status: 'Tersedia', worker: '' },
-  { id: 2, tripId: 2, task: 'Koordinasi kapal, briefing snorkeling, dokumentasi harian.', status: 'Diambil', worker: 'Raka Field Crew' },
-  { id: 3, tripId: 4, task: 'Pendamping island hop dan pengecekan perlengkapan snorkeling.', status: 'Tersedia', worker: '' },
-  { id: 4, tripId: 5, task: 'Handle fast boat, transport lokal, dan check point peserta.', status: 'Sedang Berjalan', worker: 'Maya Trip Officer' },
-  { id: 5, tripId: 6, task: 'Closing trip, rekap dokumentasi, laporan kendala lapangan.', status: 'Selesai', worker: 'Raka Field Crew' },
-]
+const sortById = (items) => [...items].sort((a, b) => Number(a.id) - Number(b.id))
+const withNumericId = (snapshot) => snapshot.docs.map((item) => ({ id: Number(item.data().id || item.id), ...item.data() }))
 
 function App() {
   const [path, setPath] = useState(window.location.pathname)
-  const [session, setSession] = useState(() => JSON.parse(localStorage.getItem('zaza-session') || 'null'))
-  const [trips, setTrips] = useState(initialTrips)
-  const [registrations, setRegistrations] = useState(initialRegistrations)
-  const [jobs, setJobs] = useState(initialJobs)
-  const [customerAccounts, setCustomerAccounts] = useState(() => {
-    const saved = JSON.parse(localStorage.getItem('zaza-customers') || 'null')
-    return saved || initialCustomerAccounts
-  })
+  const [session, setSession] = useState(null)
+  const [trips, setTrips] = useState([])
+  const [registrations, setRegistrations] = useState([])
+  const [jobs, setJobs] = useState([])
+  const [customerAccounts, setCustomerAccounts] = useState([])
+  const [isLoadingData, setIsLoadingData] = useState(true)
   const [toast, setToast] = useState('')
 
   const navigate = (target) => {
@@ -145,11 +44,24 @@ function App() {
     return () => window.removeEventListener('popstate', handlePopState)
   }, [])
 
+  useEffect(() => {
+    const unsubscribers = [
+      onSnapshot(query(collection(db, collections.trips), orderBy('id')), (snapshot) => {
+        setTrips(sortById(withNumericId(snapshot)))
+        setIsLoadingData(false)
+      }, () => setIsLoadingData(false)),
+      onSnapshot(query(collection(db, collections.registrations), orderBy('id', 'desc')), (snapshot) => setRegistrations(withNumericId(snapshot))),
+      onSnapshot(query(collection(db, collections.jobs), orderBy('id')), (snapshot) => setJobs(sortById(withNumericId(snapshot)))),
+      onSnapshot(collection(db, collections.customers), (snapshot) => setCustomerAccounts(snapshot.docs.map((item) => item.data()))),
+    ]
+
+    return () => unsubscribers.forEach((unsubscribe) => unsubscribe())
+  }, [])
+
   const login = (role, form) => {
     const account = role === 'admin' ? accounts.admin : accounts.worker
     if (form.email === account.email && form.password === account.password) {
       const nextSession = { role: account.role, name: account.name, email: account.email }
-      localStorage.setItem('zaza-session', JSON.stringify(nextSession))
       setSession(nextSession)
       navigate(role === 'admin' ? '/admin/dashboard' : '/pekerja/dashboard')
       return true
@@ -161,20 +73,16 @@ function App() {
     const account = customerAccounts.find((item) => item.email === form.email && item.password === form.password)
     if (!account) return false
     const nextSession = { role: 'customer', name: account.name, email: account.email, whatsapp: account.whatsapp || '' }
-    localStorage.setItem('zaza-session', JSON.stringify(nextSession))
     setSession(nextSession)
     navigate('/open-trip')
     return true
   }
 
-  const signupCustomer = (form) => {
+  const signupCustomer = async (form) => {
     const exists = customerAccounts.some((item) => item.email === form.email)
     if (exists) return false
     const nextAccount = { name: form.name, whatsapp: form.whatsapp, email: form.email, password: form.password, role: 'customer' }
-    const nextAccounts = [nextAccount, ...customerAccounts]
-    localStorage.setItem('zaza-customers', JSON.stringify(nextAccounts))
-    localStorage.setItem('zaza-session', JSON.stringify({ role: 'customer', name: form.name, email: form.email, whatsapp: form.whatsapp }))
-    setCustomerAccounts(nextAccounts)
+    await setDoc(doc(db, collections.customers, form.email), nextAccount)
     setSession({ role: 'customer', name: form.name, email: form.email, whatsapp: form.whatsapp })
     navigate('/open-trip')
     showToast('Akun customer berhasil dibuat.')
@@ -182,7 +90,6 @@ function App() {
   }
 
   const logout = () => {
-    localStorage.removeItem('zaza-session')
     setSession(null)
     navigate('/')
   }
@@ -201,26 +108,25 @@ function App() {
     }, {})
   }, [registrations])
 
-  const updateTripSlots = (tripId, nextRegistrations = registrations) => {
+  const updateTripSlots = async (tripId, nextRegistrations = registrations) => {
     const approvedCount = nextRegistrations
       .filter((item) => item.tripId === tripId && (item.status === 'Disetujui' || item.status === 'Selesai'))
       .reduce((total, item) => total + Number(item.participants), 0)
 
-    setTrips((items) =>
-      items.map((trip) => {
-        if (trip.id !== tripId) return trip
-        const slots = Math.max(trip.quota - approvedCount, 0)
-        const status = trip.status === 'Selesai' ? 'Selesai' : slots === 0 ? 'Penuh' : 'Tersedia'
-        return { ...trip, slots, status }
-      }),
-    )
+    const trip = trips.find((item) => item.id === tripId)
+    if (!trip) return
+
+    const slots = Math.max(trip.quota - approvedCount, 0)
+    const status = trip.status === 'Selesai' ? 'Selesai' : slots === 0 ? 'Penuh' : 'Tersedia'
+    await updateDoc(doc(db, collections.trips, String(tripId)), { slots, status })
   }
 
-  const submitRegistration = (form) => {
+  const submitRegistration = async (form) => {
     const trip = trips.find((item) => item.id === Number(form.tripId))
     if (!trip || trip.slots < Number(form.participants) || trip.status !== 'Tersedia') return false
+    const id = Date.now()
     const nextItem = {
-      id: Date.now(),
+      id,
       name: form.name,
       whatsapp: form.whatsapp,
       email: form.email,
@@ -229,45 +135,51 @@ function App() {
       notes: form.notes || '-',
       status: 'Menunggu Approval',
     }
-    setRegistrations((items) => [nextItem, ...items])
+    await setDoc(doc(db, collections.registrations, String(id)), nextItem)
     showToast('Pendaftaran berhasil dikirim. Status awal: Menunggu Approval.')
     navigate('/open-trip')
     return true
   }
 
-  const setRegistrationStatus = (id, status) => {
+  const setRegistrationStatus = async (id, status) => {
     const current = registrations.find((item) => item.id === id)
     const next = registrations.map((item) => (item.id === id ? { ...item, status } : item))
-    setRegistrations(next)
-    if (current) updateTripSlots(current.tripId, next)
+    await updateDoc(doc(db, collections.registrations, String(id)), { status })
+    if (current) await updateTripSlots(current.tripId, next)
   }
 
-  const saveTrip = (trip) => {
+  const saveTrip = async (trip) => {
     if (trip.id) {
-      setTrips((items) => items.map((item) => (item.id === trip.id ? { ...trip, id: item.id } : item)))
+      await setDoc(doc(db, collections.trips, String(trip.id)), { ...trip, id: Number(trip.id) })
     } else {
-      const id = Math.max(...trips.map((item) => item.id)) + 1
+      const id = Date.now()
       const nextTrip = { ...trip, id, slots: Number(trip.slots), quota: Number(trip.quota), price: Number(trip.price) }
-      setTrips((items) => [nextTrip, ...items])
-      setJobs((items) => [{ id: Date.now(), tripId: id, task: 'Briefing peserta, koordinasi operasional, dan laporan perjalanan.', status: 'Tersedia', worker: '' }, ...items])
+      const nextJob = { id: Date.now() + 1, tripId: id, task: 'Briefing peserta, koordinasi operasional, dan laporan perjalanan.', status: 'Tersedia', worker: '' }
+      await Promise.all([
+        setDoc(doc(db, collections.trips, String(id)), nextTrip),
+        setDoc(doc(db, collections.jobs, String(nextJob.id)), nextJob),
+      ])
     }
     navigate('/admin/open-trip')
   }
 
-  const deleteTrip = (id) => {
-    setTrips((items) => items.filter((item) => item.id !== id))
-    setJobs((items) => items.filter((item) => item.tripId !== id))
+  const deleteTrip = async (id) => {
+    const relatedJobs = jobs.filter((item) => item.tripId === id)
+    await Promise.all([
+      deleteDoc(doc(db, collections.trips, String(id))),
+      ...relatedJobs.map((job) => deleteDoc(doc(db, collections.jobs, String(job.id)))),
+    ])
   }
 
-  const takeJob = (id) => {
-    setJobs((items) =>
-      items.map((job) => (job.id === id && job.status === 'Tersedia' ? { ...job, status: 'Diambil', worker: session?.name || accounts.worker.name } : job)),
-    )
+  const takeJob = async (id) => {
+    const job = jobs.find((item) => item.id === id)
+    if (!job || job.status !== 'Tersedia') return
+    await updateDoc(doc(db, collections.jobs, String(id)), { status: 'Diambil', worker: session?.name || accounts.worker.name })
     showToast('Job berhasil diambil.')
   }
 
-  const updateJobStatus = (id, status) => {
-    setJobs((items) => items.map((job) => (job.id === id ? { ...job, status } : job)))
+  const updateJobStatus = async (id, status) => {
+    await updateDoc(doc(db, collections.jobs, String(id)), { status })
   }
 
   const props = { path, session, trips, registrations, jobs, approvedByTrip, navigate, login, loginCustomer, signupCustomer, logout, submitRegistration, setRegistrationStatus, saveTrip, deleteTrip, takeJob, updateJobStatus }
@@ -275,7 +187,7 @@ function App() {
   return (
     <>
       {toast && <div className="toast">{toast}</div>}
-      <RouteRenderer {...props} />
+      {isLoadingData ? <LoadingPage /> : <RouteRenderer {...props} />}
     </>
   )
 }
@@ -336,7 +248,20 @@ function PublicNav({ navigate, session, logout }) {
   )
 }
 
+function LoadingPage() {
+  return (
+    <main className="login-page">
+      <section className="login-card">
+        <h1>Memuat data</h1>
+        <p className="muted">Menghubungkan aplikasi ke Firebase...</p>
+      </section>
+    </main>
+  )
+}
+
 function CustomerCatalog({ trips, navigate, session, logout }) {
+  const featuredTrip = trips[0] || { name: 'Open Trip Zaza' }
+
   return (
     <main className="public-page">
       <PublicNav navigate={navigate} session={session} logout={logout} />
@@ -346,7 +271,7 @@ function CustomerCatalog({ trips, navigate, session, logout }) {
           <h1>Temukan perjalanan kelompok yang rapi, aman, dan siap berangkat.</h1>
           <p className="hero-copy">Pilih destinasi, cek slot, lalu daftar. Tim admin akan memverifikasi pendaftaran sebelum peserta masuk jadwal keberangkatan.</p>
         </div>
-        <TripVisual trip={trips[0]} large />
+        <TripVisual trip={featuredTrip} large />
       </section>
 
       <section className="section-head">
@@ -387,8 +312,8 @@ function TripCard({ trip, navigate }) {
 
 function TripVisual({ trip, large }) {
   return (
-    <div className={large ? 'trip-visual trip-visual-large' : 'trip-visual'} role="img" aria-label={trip.name}>
-      <span>{trip.name}</span>
+    <div className={large ? 'trip-visual trip-visual-large' : 'trip-visual'} role="img" aria-label={trip?.name || 'Open trip'}>
+      <span>{trip?.name || 'Open Trip'}</span>
     </div>
   )
 }
@@ -432,7 +357,7 @@ function RegistrationPage({ tripId, trips, submitRegistration, navigate, session
 
   if (!trip) return <NotFound navigate={navigate} />
 
-  const onSubmit = (event) => {
+  const onSubmit = async (event) => {
     event.preventDefault()
     if (!form.name || !form.whatsapp || !form.email || Number(form.participants) < 1) {
       setError('Lengkapi nama, WhatsApp, email, dan jumlah peserta.')
@@ -442,7 +367,8 @@ function RegistrationPage({ tripId, trips, submitRegistration, navigate, session
       setError('Jumlah peserta melebihi slot tersedia.')
       return
     }
-    submitRegistration(form)
+    const isSubmitted = await submitRegistration(form)
+    if (!isSubmitted) setError('Pendaftaran gagal dikirim. Cek slot dan koneksi Firebase.')
   }
 
   return (
@@ -470,10 +396,10 @@ function RegistrationPage({ tripId, trips, submitRegistration, navigate, session
 }
 
 function CustomerLoginPage({ loginCustomer, navigate }) {
-  const [form, setForm] = useState({ email: accounts.customer.email, password: accounts.customer.password })
+  const [form, setForm] = useState({ email: '', password: '' })
   const [error, setError] = useState('')
 
-  const onSubmit = (event) => {
+  const onSubmit = async (event) => {
     event.preventDefault()
     if (!form.email || !form.password) {
       setError('Email dan password wajib diisi.')
@@ -488,7 +414,7 @@ function CustomerLoginPage({ loginCustomer, navigate }) {
         <button className="brand" onClick={() => navigate('/')}>Zaza Open Trip</button>
         <p className="eyebrow">Login customer</p>
         <h1>Masuk Customer</h1>
-        <p className="muted">Demo: {accounts.customer.email} / {accounts.customer.password}</p>
+        <p className="muted">Masuk dengan akun customer yang sudah terdaftar.</p>
         <form className="data-form compact" onSubmit={onSubmit}>
           {error && <p className="form-error">{error}</p>}
           <label>Email<input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></label>
@@ -505,7 +431,7 @@ function CustomerSignupPage({ signupCustomer, navigate }) {
   const [form, setForm] = useState({ name: '', whatsapp: '', email: '', password: '', confirmPassword: '' })
   const [error, setError] = useState('')
 
-  const onSubmit = (event) => {
+  const onSubmit = async (event) => {
     event.preventDefault()
     if (!form.name || !form.whatsapp || !form.email || !form.password) {
       setError('Lengkapi nama, WhatsApp, email, dan password.')
@@ -519,7 +445,8 @@ function CustomerSignupPage({ signupCustomer, navigate }) {
       setError('Konfirmasi password belum sama.')
       return
     }
-    if (!signupCustomer(form)) setError('Email sudah terdaftar. Silakan login.')
+    const isCreated = await signupCustomer(form)
+    if (!isCreated) setError('Email sudah terdaftar. Silakan login.')
   }
 
   return (
@@ -660,11 +587,11 @@ function AdminTrips(props) {
 
 function TripForm({ tripId, trips, saveTrip, navigate, ...props }) {
   const selected = trips.find((item) => item.id === tripId)
-  const [form, setForm] = useState(selected || { name: '', destination: '', date: '', price: 0, quota: 10, slots: 10, description: '', facilities: '', itinerary: '', image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80', status: 'Tersedia' })
+  const [form, setForm] = useState(selected || { name: '', destination: '', date: '', price: 0, quota: 10, slots: 10, description: '', facilities: '', itinerary: '', status: 'Tersedia' })
 
-  const onSubmit = (event) => {
+  const onSubmit = async (event) => {
     event.preventDefault()
-    saveTrip({ ...form, price: Number(form.price), quota: Number(form.quota), slots: Number(form.slots) })
+    await saveTrip({ ...form, price: Number(form.price), quota: Number(form.quota), slots: Number(form.slots) })
   }
 
   return (
@@ -676,7 +603,6 @@ function TripForm({ tripId, trips, saveTrip, navigate, ...props }) {
         <label>Harga<input required type="number" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} /></label>
         <label>Kuota peserta<input required type="number" value={form.quota} onChange={(e) => setForm({ ...form, quota: e.target.value })} /></label>
         <label>Slot tersedia<input required type="number" value={form.slots} onChange={(e) => setForm({ ...form, slots: e.target.value })} /></label>
-        <label>Gambar destinasi<input required value={form.image} onChange={(e) => setForm({ ...form, image: e.target.value })} /></label>
         <label>Status<select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>{tripStatuses.map((status) => <option key={status}>{status}</option>)}</select></label>
         <label className="full">Deskripsi<textarea required value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></label>
         <label className="full">Fasilitas<textarea required value={form.facilities} onChange={(e) => setForm({ ...form, facilities: e.target.value })} /></label>
