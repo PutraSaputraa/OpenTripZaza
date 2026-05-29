@@ -9,14 +9,14 @@ textarea {
 :root {
   --color-ink: #080808;
   --color-charcoal: #141312;
-  --color-panel: #ffffff;
-  --color-surface: #f8f5ee;
-  --color-line: #e6ddcb;
-  --color-muted: #6f6658;
+  --color-panel: #f5f9f7;
+  --color-surface: #f5f9f7;
+  --color-line: #e5ddae;
+  --color-muted: #68685d;
   --color-text: #17130d;
-  --color-gold: #d8b36a;
-  --color-gold-dark: #a9792f;
-  --color-gold-soft: #f4e4bf;
+  --color-gold: #f0c84c;
+  --color-gold-dark: #9b7600;
+  --color-gold-soft: #fff3bf;
   --shadow-soft: 0 14px 34px rgba(23, 19, 13, 0.08);
 }
 
@@ -56,7 +56,7 @@ button:disabled {
   justify-content: space-between;
   gap: 16px;
   padding: 18px clamp(18px, 4vw, 56px);
-  background: rgba(248, 245, 238, 0.92);
+  background: rgba(245, 249, 247, 0.92);
   border-bottom: 1px solid var(--color-line);
   backdrop-filter: blur(14px);
 }
@@ -287,7 +287,7 @@ button:disabled {
   aspect-ratio: 16 / 10;
   place-items: center;
   border-bottom: 1px solid var(--color-line);
-  background: #fbf7ed;
+  background: #fff3bf;
   color: var(--color-text);
   padding: 20px;
   text-align: center;
@@ -345,7 +345,7 @@ button:disabled {
 
 .empty-state {
   grid-column: 1 / -1;
-  border: 1px dashed #d3c3a5;
+  border: 1px dashed #d6b33f;
   border-radius: 8px;
   background: var(--color-panel);
   color: var(--color-muted);
@@ -438,8 +438,8 @@ button:disabled {
 
 .badge-tersedia,
 .badge-disetujui {
-  background: #efe3bf;
-  color: #6f4f18;
+  background: #fff3bf;
+  color: #745700;
 }
 
 .badge-penuh,
@@ -449,19 +449,19 @@ button:disabled {
 }
 
 .badge-selesai {
-  background: #e9e1d3;
-  color: #5b5347;
+  background: #eef3f0;
+  color: #4d5751;
 }
 
 .badge-menunggu-approval {
-  background: #f4e4bf;
-  color: #7a5317;
+  background: #fff3bf;
+  color: #745700;
 }
 
 .badge-diambil,
 .badge-sedang-berjalan {
-  background: #eee7db;
-  color: #5f4d2b;
+  background: #fff8d8;
+  color: #6a5200;
 }
 
 .form-shell {
@@ -799,9 +799,9 @@ button:disabled {
 .registration-fields select,
 .registration-fields textarea {
   width: 100%;
-  border: 1px solid #d8ceb9;
+  border: 1px solid #d9c765;
   border-radius: 8px;
-  background: #fffdf8;
+  background: #ffffff;
   color: var(--color-text);
   padding: 12px 13px;
   outline: 0;
@@ -879,9 +879,9 @@ button:disabled {
 .status-control select {
   width: 100%;
   box-sizing: border-box;
-  border: 1px solid #d8ceb9;
+  border: 1px solid #d9c765;
   border-radius: 8px;
-  background: #fffdf8;
+  background: #ffffff;
   color: var(--color-text);
   padding: 11px 12px;
 }
@@ -1012,7 +1012,7 @@ td {
 }
 
 th {
-  background: #f2e7cf;
+  background: #fff3bf;
   color: var(--color-text);
   font-size: 12px;
   font-weight: 900;
