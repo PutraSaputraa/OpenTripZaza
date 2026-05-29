@@ -964,22 +964,6 @@ button:disabled {
   line-height: 1.65;
 }
 
-.auth-note-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.auth-note-list span {
-  border: 1px solid rgba(23, 19, 13, 0.16);
-  border-radius: 999px;
-  background: rgba(245, 249, 247, 0.42);
-  padding: 9px 12px;
-  color: rgba(23, 19, 13, 0.78);
-  font-size: 13px;
-  font-weight: 500;
-}
-
 .auth-panel {
   display: grid;
   align-content: center;

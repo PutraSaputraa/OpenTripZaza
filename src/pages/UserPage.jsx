@@ -319,11 +319,6 @@ function AuthShell({ children, navigate }) {
             <h2>Mulai perjalanan dari data yang rapi.</h2>
             <p>Masuk atau buat akun untuk menyimpan kontak pendaftaran dan melanjutkan proses trip dengan lebih nyaman.</p>
           </div>
-          <div className="auth-note-list">
-            <span>Approval admin</span>
-            <span>Data kontak tersimpan</span>
-            <span>Trip lebih mudah dipantau</span>
-          </div>
         </aside>
         {children}
       </section>
