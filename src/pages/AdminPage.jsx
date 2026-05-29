@@ -312,20 +312,6 @@ function AdminScheduleDetail({ trip, registrations, jobs, setRegistrationStatus,
           <RegistrationStatusColumn title="Disetujui" items={approvedParticipants} setRegistrationStatus={setRegistrationStatus} />
           <RegistrationStatusColumn title="Ditolak" items={rejectedRegistrations} setRegistrationStatus={setRegistrationStatus} />
         </section>
-
-        <DataPanel title="Semua Pendaftar Trip">
-          <div className="table-wrap">
-            <table>
-              <thead><tr><th>Customer</th><th>WhatsApp</th><th>Email</th><th>Peserta</th><th>Catatan</th><th>Status</th></tr></thead>
-              <tbody>{tripRegistrations.length ? tripRegistrations.map((item) => (
-                <tr key={item.id}>
-                  <td>{item.name}</td><td>{item.whatsapp}</td><td>{item.email}</td><td>{item.participants}</td><td>{item.notes}</td>
-                  <td><select className="status-select" value={item.status} onChange={(e) => setRegistrationStatus(item.id, e.target.value)}>{registrationStatuses.map((status) => <option key={status}>{status}</option>)}</select></td>
-                </tr>
-              )) : <tr><td colSpan="6">Belum ada pendaftar untuk trip ini.</td></tr>}</tbody>
-            </table>
-          </div>
-        </DataPanel>
       </section>
     </AdminShell>
   )
