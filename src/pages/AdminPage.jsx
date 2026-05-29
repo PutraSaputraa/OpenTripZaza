@@ -56,18 +56,27 @@ export function AdminDashboard(props) {
 export function AdminTrips(props) {
   return (
     <AdminShell title="Manajemen Open Trip" {...props}>
-      <div className="toolbar"><button className="primary-btn" onClick={() => props.navigate('/admin/open-trip/tambah')}>Tambah open trip</button></div>
-      <div className="table-wrap">
-        <table>
-          <thead><tr><th>Nama</th><th>Destinasi</th><th>Tanggal</th><th>Harga</th><th>Kuota</th><th>Slot</th><th>Status</th><th>Aksi</th></tr></thead>
-          <tbody>{props.trips.map((trip) => (
-            <tr key={trip.id}>
-              <td>{trip.name}</td><td>{trip.destination}</td><td>{formatDate(trip.date)}</td><td>{formatCurrency(trip.price)}</td><td>{trip.quota}</td><td>{trip.slots}</td><td><Badge status={trip.status} /></td>
-              <td className="table-actions"><button onClick={() => props.navigate(`/admin/open-trip/edit/${trip.id}`)}>Edit</button><button onClick={() => props.deleteTrip(trip.id)}>Hapus</button></td>
-            </tr>
-          ))}</tbody>
-        </table>
-      </div>
+      <section className="admin-page-stack">
+        <div className="admin-page-head">
+          <div>
+            <p className="eyebrow">Katalog trip</p>
+            <h2>Atur paket open trip yang tampil untuk customer.</h2>
+            <p className="muted">Tambah, edit, atau tutup slot trip dari daftar utama ini.</p>
+          </div>
+          <button className="primary-btn" onClick={() => props.navigate('/admin/open-trip/tambah')}>Tambah open trip</button>
+        </div>
+        <div className="admin-table-card table-wrap">
+          <table>
+            <thead><tr><th>Nama</th><th>Destinasi</th><th>Tanggal</th><th>Harga</th><th>Kuota</th><th>Slot</th><th>Status</th><th>Aksi</th></tr></thead>
+            <tbody>{props.trips.map((trip) => (
+              <tr key={trip.id}>
+                <td>{trip.name}</td><td>{trip.destination}</td><td>{formatDate(trip.date)}</td><td>{formatCurrency(trip.price)}</td><td>{trip.quota}</td><td>{trip.slots}</td><td><Badge status={trip.status} /></td>
+                <td className="table-actions"><button onClick={() => props.navigate(`/admin/open-trip/edit/${trip.id}`)}>Edit</button><button onClick={() => props.deleteTrip(trip.id)}>Hapus</button></td>
+              </tr>
+            ))}</tbody>
+          </table>
+        </div>
+      </section>
     </AdminShell>
   )
 }
@@ -83,19 +92,29 @@ export function TripForm({ tripId, trips, saveTrip, navigate, ...props }) {
 
   return (
     <AdminShell title={selected ? 'Edit Open Trip' : 'Tambah Open Trip'} navigate={navigate} {...props}>
-      <form className="data-form admin-form" onSubmit={onSubmit}>
-        <label>Nama open trip<input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></label>
-        <label>Destinasi<input required value={form.destination} onChange={(e) => setForm({ ...form, destination: e.target.value })} /></label>
-        <label>Tanggal keberangkatan<input required type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} /></label>
-        <label>Harga<input required type="number" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} /></label>
-        <label>Kuota peserta<input required type="number" value={form.quota} onChange={(e) => setForm({ ...form, quota: e.target.value })} /></label>
-        <label>Slot tersedia<input required type="number" value={form.slots} onChange={(e) => setForm({ ...form, slots: e.target.value })} /></label>
-        <label>Status<select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>{tripStatuses.map((status) => <option key={status}>{status}</option>)}</select></label>
-        <label className="full">Deskripsi<textarea required value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></label>
-        <label className="full">Fasilitas<textarea required value={form.facilities} onChange={(e) => setForm({ ...form, facilities: e.target.value })} /></label>
-        <label className="full">Itinerary<textarea required value={form.itinerary} onChange={(e) => setForm({ ...form, itinerary: e.target.value })} /></label>
-        <button className="primary-btn full" type="submit">Simpan open trip</button>
-      </form>
+      <section className="admin-page-stack">
+        <div className="admin-page-head">
+          <div>
+            <p className="eyebrow">{selected ? 'Update trip' : 'Trip baru'}</p>
+            <h2>{selected ? 'Perbarui detail open trip.' : 'Lengkapi informasi open trip baru.'}</h2>
+            <p className="muted">Informasi ini akan muncul di katalog customer dan dipakai untuk monitoring internal.</p>
+          </div>
+          <button className="outline-btn" onClick={() => navigate('/admin/open-trip')}>Kembali</button>
+        </div>
+        <form className="data-form admin-form admin-form-card" onSubmit={onSubmit}>
+          <label>Nama open trip<input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></label>
+          <label>Destinasi<input required value={form.destination} onChange={(e) => setForm({ ...form, destination: e.target.value })} /></label>
+          <label>Tanggal keberangkatan<input required type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} /></label>
+          <label>Harga<input required type="number" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} /></label>
+          <label>Kuota peserta<input required type="number" value={form.quota} onChange={(e) => setForm({ ...form, quota: e.target.value })} /></label>
+          <label>Slot tersedia<input required type="number" value={form.slots} onChange={(e) => setForm({ ...form, slots: e.target.value })} /></label>
+          <label>Status<select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>{tripStatuses.map((status) => <option key={status}>{status}</option>)}</select></label>
+          <label className="full">Deskripsi<textarea required value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></label>
+          <label className="full">Fasilitas<textarea required value={form.facilities} onChange={(e) => setForm({ ...form, facilities: e.target.value })} /></label>
+          <label className="full">Itinerary<textarea required value={form.itinerary} onChange={(e) => setForm({ ...form, itinerary: e.target.value })} /></label>
+          <button className="primary-btn full" type="submit">Simpan open trip</button>
+        </form>
+      </section>
     </AdminShell>
   )
 }
@@ -103,7 +122,16 @@ export function TripForm({ tripId, trips, saveTrip, navigate, ...props }) {
 export function AdminRegistrations(props) {
   return (
     <AdminShell title="Manajemen Pendaftaran" {...props}>
-      <RegistrationTable {...props} />
+      <section className="admin-page-stack">
+        <div className="admin-page-head">
+          <div>
+            <p className="eyebrow">Approval customer</p>
+            <h2>Review pendaftaran yang masuk dari customer.</h2>
+            <p className="muted">Ubah status pendaftaran setelah data dan slot peserta sudah dicek.</p>
+          </div>
+        </div>
+        <div className="admin-table-card"><RegistrationTable {...props} /></div>
+      </section>
     </AdminShell>
   )
 }
@@ -129,19 +157,27 @@ export function AdminSchedule(props) {
   const { trips, registrations } = props
   return (
     <AdminShell title="Monitoring Jadwal" {...props}>
-      <div className="schedule-list">
-        {trips.map((trip) => {
-          const participants = registrations.filter((item) => item.tripId === trip.id && (item.status === 'Disetujui' || item.status === 'Selesai'))
-          return (
-            <article className="schedule-card" key={trip.id}>
-              <div><h3>{trip.name}</h3><p>{trip.destination} - {formatDate(trip.date)}</p></div>
-              <Badge status={trip.status} />
-              <p className="muted">Peserta disetujui: {participants.reduce((sum, item) => sum + item.participants, 0)} dari {trip.quota}</p>
-              <div className="participant-list">{participants.length ? participants.map((item) => <span key={item.id}>{item.name} ({item.participants})</span>) : <span>Belum ada peserta disetujui</span>}</div>
-            </article>
-          )
-        })}
-      </div>
+      <section className="admin-page-stack">
+        <div className="admin-page-head">
+          <div>
+            <p className="eyebrow">Jadwal keberangkatan</p>
+            <h2>Lihat trip berjalan dan peserta yang sudah disetujui.</h2>
+            <p className="muted">Daftar ini membantu admin mengecek kesiapan peserta sebelum hari keberangkatan.</p>
+          </div>
+        </div>
+        <div className="schedule-list admin-card-grid">
+          {trips.map((trip) => {
+            const participants = registrations.filter((item) => item.tripId === trip.id && (item.status === 'Disetujui' || item.status === 'Selesai'))
+            return (
+              <article className="schedule-card" key={trip.id}>
+                <div className="schedule-card-head"><div><h3>{trip.name}</h3><p>{trip.destination} - {formatDate(trip.date)}</p></div><Badge status={trip.status} /></div>
+                <p className="muted">Peserta disetujui: {participants.reduce((sum, item) => sum + item.participants, 0)} dari {trip.quota}</p>
+                <div className="participant-list">{participants.length ? participants.map((item) => <span key={item.id}>{item.name} ({item.participants})</span>) : <span>Belum ada peserta disetujui</span>}</div>
+              </article>
+            )
+          })}
+        </div>
+      </section>
     </AdminShell>
   )
 }
@@ -149,7 +185,16 @@ export function AdminSchedule(props) {
 export function AdminJobs(props) {
   return (
     <AdminShell title="Monitoring Job Pekerja" {...props}>
-      <JobTable {...props} />
+      <section className="admin-page-stack">
+        <div className="admin-page-head">
+          <div>
+            <p className="eyebrow">Job operasional</p>
+            <h2>Pantau tugas pekerja untuk setiap open trip.</h2>
+            <p className="muted">Lihat status job, pekerja yang mengambil tugas, dan detail pekerjaan lapangan.</p>
+          </div>
+        </div>
+        <div className="admin-table-card"><JobTable {...props} /></div>
+      </section>
     </AdminShell>
   )
 }
@@ -182,28 +227,37 @@ export function AdminWorkers(props) {
 
   return (
     <AdminShell title="Akun Pekerja" {...props}>
-      <section className="two-col">
-        <DataPanel title="Buat Akun Pekerja">
-          <form className="data-form compact" onSubmit={onSubmit}>
-            {error && <p className="form-error">{error}</p>}
-            <label>Nama pekerja<input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></label>
-            <label>Email<input required type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></label>
-            <label>Password<input required type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} /></label>
-            <button className="primary-btn" type="submit">Buat akun pekerja</button>
-          </form>
-        </DataPanel>
-        <DataPanel title="Daftar Akun Pekerja">
-          <div className="table-wrap">
-            <table>
-              <thead><tr><th>Nama</th><th>Email</th><th>Role</th></tr></thead>
-              <tbody>
-                {[accounts.worker, ...workerAccounts].map((worker) => (
-                  <tr key={worker.email}><td>{worker.name}</td><td>{worker.email}</td><td>{worker.role}</td></tr>
-                ))}
-              </tbody>
-            </table>
+      <section className="admin-page-stack">
+        <div className="admin-page-head">
+          <div>
+            <p className="eyebrow">Tim pekerja</p>
+            <h2>Buat dan pantau akun pekerja operasional.</h2>
+            <p className="muted">Akun ini dipakai pekerja untuk mengambil job dan mengubah status tugas.</p>
           </div>
-        </DataPanel>
+        </div>
+        <section className="two-col admin-workers-layout">
+          <DataPanel title="Buat Akun Pekerja">
+            <form className="data-form compact" onSubmit={onSubmit}>
+              {error && <p className="form-error">{error}</p>}
+              <label>Nama pekerja<input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></label>
+              <label>Email<input required type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></label>
+              <label>Password<input required type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} /></label>
+              <button className="primary-btn" type="submit">Buat akun pekerja</button>
+            </form>
+          </DataPanel>
+          <DataPanel title="Daftar Akun Pekerja">
+            <div className="table-wrap">
+              <table>
+                <thead><tr><th>Nama</th><th>Email</th><th>Role</th></tr></thead>
+                <tbody>
+                  {[accounts.worker, ...workerAccounts].map((worker) => (
+                    <tr key={worker.email}><td>{worker.name}</td><td>{worker.email}</td><td>{worker.role}</td></tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </DataPanel>
+        </section>
       </section>
     </AdminShell>
   )

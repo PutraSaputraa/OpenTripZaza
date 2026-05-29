@@ -1094,6 +1094,40 @@ button:disabled {
   gap: 22px;
 }
 
+.admin-page-stack {
+  display: grid;
+  gap: 18px;
+}
+
+.admin-page-head {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 18px;
+  border: 1px solid var(--color-line);
+  border-radius: 8px;
+  background: #ffffff;
+  padding: clamp(18px, 3vw, 26px);
+  box-shadow: var(--shadow-soft);
+}
+
+.admin-page-head > div {
+  max-width: 760px;
+}
+
+.admin-page-head h2 {
+  margin: 0;
+  color: var(--color-text);
+  font-size: clamp(24px, 3vw, 36px);
+  line-height: 1.08;
+  letter-spacing: 0;
+}
+
+.admin-page-head .muted {
+  margin-top: 10px;
+  line-height: 1.6;
+}
+
 .dashboard-hero {
   display: flex;
   align-items: end;
@@ -1139,6 +1173,44 @@ button:disabled {
 
 .stat-grid.dashboard-stats {
   margin-bottom: 0;
+}
+
+.admin-table-card {
+  border: 1px solid var(--color-line);
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 12px;
+  box-shadow: var(--shadow-soft);
+}
+
+.admin-table-card.table-wrap,
+.admin-table-card .table-wrap {
+  overflow-x: auto;
+}
+
+.admin-table-card table {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.admin-form-card {
+  width: min(100%, 980px);
+  box-shadow: var(--shadow-soft);
+}
+
+.admin-card-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.schedule-card-head {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.admin-workers-layout .data-panel {
+  min-width: 0;
 }
 
 .two-col {
@@ -1218,6 +1290,7 @@ th {
   .form-shell,
   .registration-layout,
   .auth-shell,
+  .admin-card-grid,
   .hero-band {
     grid-template-columns: 1fr;
   }
@@ -1271,7 +1344,9 @@ th {
   }
 
   .registration-hero,
+  .admin-page-head,
   .dashboard-hero,
+  .schedule-card-head,
   .registration-submit {
     align-items: stretch;
     flex-direction: column;
