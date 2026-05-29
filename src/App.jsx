@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { collection, deleteDoc, doc, onSnapshot, orderBy, query, setDoc, updateDoc } from 'firebase/firestore'
 import './App.css'
 import { db } from './firebase'
+import cinematicVideo from './assets/cinematic1.mp4'
 
 const tripStatuses = ['Tersedia', 'Penuh', 'Selesai']
 const registrationStatuses = ['Menunggu Approval', 'Disetujui', 'Ditolak', 'Selesai']
@@ -284,21 +285,31 @@ function LoadingPage() {
 }
 
 function CustomerCatalog({ trips, navigate, session, logout }) {
-  const featuredTrip = trips[0] || { name: 'Open Trip Zaza' }
+  const availableTrips = trips.filter((trip) => trip.status === 'Tersedia').length
 
   return (
-    <main className="public-page">
+    <main className="public-page home-page">
       <PublicNav navigate={navigate} session={session} logout={logout} />
       <section className="hero-band">
-        <div>
-          <p className="eyebrow">Open trip profesional</p>
-          <h1>Temukan perjalanan kelompok yang rapi, aman, dan siap berangkat.</h1>
-          <p className="hero-copy">Pilih destinasi, cek slot, lalu daftar. Tim admin akan memverifikasi pendaftaran sebelum peserta masuk jadwal keberangkatan.</p>
+        <video className="hero-video" src={cinematicVideo} autoPlay muted loop playsInline aria-hidden="true" />
+        <div className="hero-shade" />
+        <div className="hero-content">
+          <p className="eyebrow">Zaza Open Trip</p>
+          <h1>Perjalanan kecil yang terasa rapi dari awal berangkat sampai pulang.</h1>
+          <p className="hero-copy">Pilih jadwal, cek slot, lalu daftar ke trip yang paling pas. Semua pendaftaran masuk ke tim admin untuk diverifikasi sebelum keberangkatan.</p>
+          <div className="hero-actions">
+            <button className="primary-btn" onClick={() => document.getElementById('open-trip-list')?.scrollIntoView({ behavior: 'smooth' })}>Lihat open trip</button>
+            {!session?.role && <button className="hero-secondary-btn" onClick={() => navigate('/login')}>Masuk customer</button>}
+          </div>
+          <div className="hero-facts">
+            <span><strong>{trips.length}</strong> total trip</span>
+            <span><strong>{availableTrips}</strong> tersedia</span>
+            <span><strong>Admin</strong> terverifikasi</span>
+          </div>
         </div>
-        <TripVisual trip={featuredTrip} large />
       </section>
 
-      <section className="section-head">
+      <section className="section-head" id="open-trip-list">
         <div>
           <p className="eyebrow">Katalog customer</p>
           <h2>Open trip tersedia</h2>
@@ -306,7 +317,7 @@ function CustomerCatalog({ trips, navigate, session, logout }) {
       </section>
 
       <section className="trip-grid">
-        {trips.map((trip) => <TripCard key={trip.id} trip={trip} navigate={navigate} />)}
+        {trips.length ? trips.map((trip) => <TripCard key={trip.id} trip={trip} navigate={navigate} />) : <p className="empty-state">Belum ada open trip yang tersedia.</p>}
       </section>
     </main>
   )
