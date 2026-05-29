@@ -17,6 +17,7 @@ const collections = {
   registrations: 'registrations',
   jobs: 'jobs',
   customers: 'customers',
+  workers: 'workers',
 }
 
 const sortById = (items) => [...items].sort((a, b) => Number(a.id) - Number(b.id))
@@ -29,6 +30,7 @@ function App() {
   const [registrations, setRegistrations] = useState([])
   const [jobs, setJobs] = useState([])
   const [customerAccounts, setCustomerAccounts] = useState([])
+  const [workerAccounts, setWorkerAccounts] = useState([])
   const [isLoadingData, setIsLoadingData] = useState(true)
   const [toast, setToast] = useState('')
 
@@ -53,13 +55,17 @@ function App() {
       onSnapshot(query(collection(db, collections.registrations), orderBy('id', 'desc')), (snapshot) => setRegistrations(withNumericId(snapshot))),
       onSnapshot(query(collection(db, collections.jobs), orderBy('id')), (snapshot) => setJobs(sortById(withNumericId(snapshot)))),
       onSnapshot(collection(db, collections.customers), (snapshot) => setCustomerAccounts(snapshot.docs.map((item) => item.data()))),
+      onSnapshot(collection(db, collections.workers), (snapshot) => setWorkerAccounts(snapshot.docs.map((item) => item.data()))),
     ]
 
     return () => unsubscribers.forEach((unsubscribe) => unsubscribe())
   }, [])
 
   const login = (role, form) => {
-    const account = role === 'admin' ? accounts.admin : accounts.worker
+    const account = role === 'admin'
+      ? accounts.admin
+      : workerAccounts.find((item) => item.email === form.email && item.password === form.password) || accounts.worker
+
     if (form.email === account.email && form.password === account.password) {
       const nextSession = { role: account.role, name: account.name, email: account.email }
       setSession(nextSession)
@@ -67,6 +73,23 @@ function App() {
       return true
     }
     return false
+  }
+
+  const createWorkerAccount = async (form) => {
+    const normalizedEmail = form.email.trim().toLowerCase()
+    const exists = workerAccounts.some((item) => item.email === normalizedEmail) || accounts.worker.email === normalizedEmail
+    if (exists) return false
+
+    const nextWorker = {
+      name: form.name.trim(),
+      email: normalizedEmail,
+      password: form.password,
+      role: 'pekerja',
+    }
+
+    await setDoc(doc(db, collections.workers, normalizedEmail), nextWorker)
+    showToast('Akun pekerja berhasil dibuat.')
+    return true
   }
 
   const loginCustomer = (form) => {
@@ -182,7 +205,7 @@ function App() {
     await updateDoc(doc(db, collections.jobs, String(id)), { status })
   }
 
-  const props = { path, session, trips, registrations, jobs, approvedByTrip, navigate, login, loginCustomer, signupCustomer, logout, submitRegistration, setRegistrationStatus, saveTrip, deleteTrip, takeJob, updateJobStatus }
+  const props = { path, session, trips, registrations, jobs, customerAccounts, workerAccounts, approvedByTrip, navigate, login, loginCustomer, signupCustomer, createWorkerAccount, logout, submitRegistration, setRegistrationStatus, saveTrip, deleteTrip, takeJob, updateJobStatus }
 
   return (
     <>
@@ -217,6 +240,7 @@ function RouteRenderer(props) {
   if (path === '/admin/pendaftaran') return <AdminRegistrations {...props} />
   if (path === '/admin/jadwal') return <AdminSchedule {...props} />
   if (path === '/admin/job') return <AdminJobs {...props} />
+  if (path === '/admin/pekerja') return <AdminWorkers {...props} />
   if (path === '/pekerja/login') return <LoginPage role="pekerja" {...props} />
   if (path === '/pekerja/dashboard') return <WorkerDashboard {...props} />
   if (path === '/pekerja/job') return <WorkerJobs {...props} />
@@ -508,6 +532,7 @@ function AdminShell({ title, children, navigate, logout }) {
         ['/admin/pendaftaran', 'Pendaftaran'],
         ['/admin/jadwal', 'Jadwal'],
         ['/admin/job', 'Job Pekerja'],
+        ['/admin/pekerja', 'Akun Pekerja'],
       ]} navigate={navigate} logout={logout} />
       <section className="workspace">
         <h1>{title}</h1>
@@ -663,6 +688,61 @@ function AdminJobs(props) {
   return (
     <AdminShell title="Monitoring Job Pekerja" {...props}>
       <JobTable {...props} />
+    </AdminShell>
+  )
+}
+
+function AdminWorkers(props) {
+  const { workerAccounts, createWorkerAccount } = props
+  const [form, setForm] = useState({ name: '', email: '', password: '' })
+  const [error, setError] = useState('')
+
+  const onSubmit = async (event) => {
+    event.preventDefault()
+    if (!form.name || !form.email || !form.password) {
+      setError('Lengkapi nama, email, dan password pekerja.')
+      return
+    }
+    if (form.password.length < 6) {
+      setError('Password minimal 6 karakter.')
+      return
+    }
+
+    const isCreated = await createWorkerAccount(form)
+    if (!isCreated) {
+      setError('Email pekerja sudah terdaftar.')
+      return
+    }
+
+    setForm({ name: '', email: '', password: '' })
+    setError('')
+  }
+
+  return (
+    <AdminShell title="Akun Pekerja" {...props}>
+      <section className="two-col">
+        <DataPanel title="Buat Akun Pekerja">
+          <form className="data-form compact" onSubmit={onSubmit}>
+            {error && <p className="form-error">{error}</p>}
+            <label>Nama pekerja<input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></label>
+            <label>Email<input required type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></label>
+            <label>Password<input required type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} /></label>
+            <button className="primary-btn" type="submit">Buat akun pekerja</button>
+          </form>
+        </DataPanel>
+        <DataPanel title="Daftar Akun Pekerja">
+          <div className="table-wrap">
+            <table>
+              <thead><tr><th>Nama</th><th>Email</th><th>Role</th></tr></thead>
+              <tbody>
+                {[accounts.worker, ...workerAccounts].map((worker) => (
+                  <tr key={worker.email}><td>{worker.name}</td><td>{worker.email}</td><td>{worker.role}</td></tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </DataPanel>
+      </section>
     </AdminShell>
   )
 }
