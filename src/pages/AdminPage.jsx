@@ -264,6 +264,7 @@ function AdminScheduleDetail({ trip, registrations, jobs, setRegistrationStatus,
   const tripRegistrations = registrations.filter((item) => item.tripId === trip.id)
   const approvedParticipants = tripRegistrations.filter((item) => item.status === 'Disetujui' || item.status === 'Selesai')
   const waitingRegistrations = tripRegistrations.filter((item) => item.status === 'Menunggu Approval')
+  const rejectedRegistrations = tripRegistrations.filter((item) => item.status === 'Ditolak')
   const tripJobs = jobs.filter((job) => job.tripId === trip.id)
   const assignedJobs = tripJobs.filter((job) => job.worker)
   const approvedCount = approvedParticipants.reduce((sum, item) => sum + Number(item.participants), 0)
@@ -306,7 +307,13 @@ function AdminScheduleDetail({ trip, registrations, jobs, setRegistrationStatus,
           </DataPanel>
         </section>
 
-        <DataPanel title="Pendaftar Trip">
+        <section className="registration-status-board">
+          <RegistrationStatusColumn title="Menunggu Approval" items={waitingRegistrations} setRegistrationStatus={setRegistrationStatus} />
+          <RegistrationStatusColumn title="Disetujui" items={approvedParticipants} setRegistrationStatus={setRegistrationStatus} />
+          <RegistrationStatusColumn title="Ditolak" items={rejectedRegistrations} setRegistrationStatus={setRegistrationStatus} />
+        </section>
+
+        <DataPanel title="Semua Pendaftar Trip">
           <div className="table-wrap">
             <table>
               <thead><tr><th>Customer</th><th>WhatsApp</th><th>Email</th><th>Peserta</th><th>Catatan</th><th>Status</th></tr></thead>
@@ -321,6 +328,31 @@ function AdminScheduleDetail({ trip, registrations, jobs, setRegistrationStatus,
         </DataPanel>
       </section>
     </AdminShell>
+  )
+}
+
+function RegistrationStatusColumn({ title, items, setRegistrationStatus }) {
+  return (
+    <section className="registration-status-column">
+      <div className="registration-status-head">
+        <h3>{title}</h3>
+        <span>{items.length}</span>
+      </div>
+      <div className="registration-status-list">
+        {items.length ? items.map((item) => (
+          <article className="registration-status-card" key={item.id}>
+            <div>
+              <h4>{item.name}</h4>
+              <p>{item.participants} peserta</p>
+              <p>{item.whatsapp}</p>
+            </div>
+            <select className="status-select" value={item.status} onChange={(e) => setRegistrationStatus(item.id, e.target.value)}>
+              {registrationStatuses.map((status) => <option key={status}>{status}</option>)}
+            </select>
+          </article>
+        )) : <p className="empty-column">Belum ada data.</p>}
+      </div>
+    </section>
   )
 }
 

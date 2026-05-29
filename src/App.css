@@ -1276,6 +1276,79 @@ button:disabled {
   min-width: 0;
 }
 
+.registration-status-board {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.registration-status-column {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  border: 1px solid var(--color-line);
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 14px;
+  box-shadow: var(--shadow-soft);
+}
+
+.registration-status-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.registration-status-head h3 {
+  margin: 0;
+  color: var(--color-text);
+  font-size: 18px;
+}
+
+.registration-status-head span {
+  display: grid;
+  min-width: 30px;
+  height: 30px;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--color-gold-soft);
+  color: var(--color-gold-dark);
+  font-weight: 600;
+}
+
+.registration-status-list {
+  display: grid;
+  gap: 10px;
+}
+
+.registration-status-card {
+  display: grid;
+  gap: 12px;
+  border: 1px solid var(--color-line);
+  border-radius: 8px;
+  background: var(--color-surface);
+  padding: 12px;
+}
+
+.registration-status-card h4 {
+  margin: 0 0 5px;
+  color: var(--color-text);
+  font-size: 16px;
+}
+
+.registration-status-card p {
+  color: var(--color-muted);
+  line-height: 1.45;
+}
+
+.empty-column {
+  border: 1px dashed var(--color-line);
+  border-radius: 8px;
+  color: var(--color-muted);
+  padding: 14px;
+}
+
 .admin-workers-layout .data-panel {
   min-width: 0;
 }
@@ -1403,6 +1476,7 @@ th {
   .auth-shell,
   .admin-card-grid,
   .schedule-detail-grid,
+  .registration-status-board,
   .hero-band {
     grid-template-columns: 1fr;
   }
