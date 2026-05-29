@@ -491,14 +491,20 @@ button:disabled {
 }
 
 .trip-detail-page {
-  padding: clamp(20px, 4vw, 56px);
+  padding: 0 0 clamp(20px, 4vw, 56px);
 }
 
 .trip-detail-page > .trip-visual {
-  min-height: clamp(280px, 48vw, 520px);
-  border: 1px solid #e1e9f2;
-  border-radius: 8px;
-  box-shadow: 0 24px 60px rgba(14, 69, 116, 0.16);
+  aspect-ratio: 12 / 2;
+  min-height: 180px;
+  max-height: 280px;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.trip-detail-page > .trip-visual span {
+  font-size: clamp(30px, 5vw, 64px);
 }
 
 .trip-detail-layout {
@@ -507,6 +513,7 @@ button:disabled {
   gap: 24px;
   align-items: start;
   margin-top: 24px;
+  padding: 0 clamp(20px, 4vw, 56px);
 }
 
 .trip-detail-main {
@@ -845,11 +852,16 @@ th {
   }
 
   .trip-detail-page > .trip-visual {
-    min-height: 260px;
+    aspect-ratio: 3 / 1;
+    min-height: 160px;
   }
 
   .trip-detail-page {
-    padding: 20px;
+    padding-bottom: 20px;
+  }
+
+  .trip-detail-layout {
+    padding: 0 20px;
   }
 
   .toast {
