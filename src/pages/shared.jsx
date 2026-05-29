@@ -11,19 +11,39 @@ export function LoginPage({ role, login, navigate }) {
     if (!login(role, form)) setError('Email atau password tidak sesuai.')
   }
 
+  const isAdmin = role === 'admin'
+  const title = isAdmin ? 'Dashboard Admin' : 'Dashboard Pekerja'
+  const eyebrow = isAdmin ? 'Login admin' : 'Login pekerja'
+  const panelTitle = isAdmin ? 'Kelola operasional trip dari satu tempat.' : 'Pantau dan ambil job trip dengan lebih rapi.'
+  const panelCopy = isAdmin
+    ? 'Masuk untuk mengatur open trip, approval pendaftaran, jadwal, dan akun pekerja.'
+    : 'Masuk untuk melihat job tersedia, mengambil tugas, dan memperbarui status pekerjaan.'
+
   return (
     <main className="login-page">
-      <section className="login-card">
-        <button className="brand" onClick={() => navigate('/')}>Zaza Open Trip</button>
-        <p className="eyebrow">{role === 'admin' ? 'Login admin' : 'Login pekerja'}</p>
-        <h1>{role === 'admin' ? 'Dashboard Admin' : 'Dashboard Pekerja'}</h1>
-        <p className="muted">Demo: {account.email} / {account.password}</p>
-        <form className="data-form compact" onSubmit={onSubmit}>
-          {error && <p className="form-error">{error}</p>}
-          <label>Email<input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></label>
-          <label>Password<input type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} /></label>
-          <button className="primary-btn" type="submit">Masuk</button>
-        </form>
+      <section className="auth-shell">
+        <aside className="auth-brand-panel">
+          <button className="brand" onClick={() => navigate('/')}>Zaza Open Trip</button>
+          <div>
+            <p className="eyebrow">{isAdmin ? 'Admin area' : 'Pekerja area'}</p>
+            <h2>{panelTitle}</h2>
+            <p>{panelCopy}</p>
+          </div>
+        </aside>
+
+        <section className="auth-panel">
+          <div className="auth-panel-head">
+            <p className="eyebrow">{eyebrow}</p>
+            <h1>{title}</h1>
+            <p className="muted">Demo: {account.email} / {account.password}</p>
+          </div>
+          <form className="auth-form" onSubmit={onSubmit}>
+            {error && <p className="form-error">{error}</p>}
+            <label>Email<input type="email" placeholder="nama@email.com" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></label>
+            <label>Password<input type="password" placeholder="Masukkan password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} /></label>
+            <button className="primary-btn" type="submit">Masuk</button>
+          </form>
+        </section>
       </section>
     </main>
   )
