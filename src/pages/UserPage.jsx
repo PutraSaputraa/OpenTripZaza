@@ -93,28 +93,39 @@ function TripVisual({ trip, large }) {
 export function TripDetail({ tripId, trips, navigate, session, logout }) {
   const trip = trips.find((item) => item.id === tripId)
   if (!trip) return <NotFound navigate={navigate} />
+  const isOpen = trip.slots > 0 && trip.status === 'Tersedia'
 
   return (
     <main className="public-page">
       <PublicNav navigate={navigate} session={session} logout={logout} />
-      <section className="detail-layout">
+      <section className="trip-detail-page">
         <TripVisual trip={trip} large />
-        <div className="detail-panel">
-          <Badge status={trip.status} />
-          <h1>{trip.name}</h1>
-          <p className="muted">{trip.destination}</p>
-          <div className="metric-row">
-            <Metric label="Tanggal" value={formatDate(trip.date)} />
-            <Metric label="Harga" value={formatCurrency(trip.price)} />
-            <Metric label="Kuota" value={trip.quota} />
-            <Metric label="Slot" value={trip.slots} />
-          </div>
-          <InfoBlock title="Deskripsi perjalanan" text={trip.description} />
-          <InfoBlock title="Fasilitas" text={trip.facilities} />
-          <InfoBlock title="Itinerary singkat" text={trip.itinerary} />
-          <button className="primary-btn wide" disabled={trip.slots <= 0 || trip.status !== 'Tersedia'} onClick={() => navigate(`/daftar/${trip.id}`)}>
-            {trip.slots > 0 && trip.status === 'Tersedia' ? 'Daftar open trip' : 'Pendaftaran ditutup'}
-          </button>
+        <div className="trip-detail-layout">
+          <article className="trip-detail-main">
+            <Badge status={trip.status} />
+            <h1>{trip.name}</h1>
+            <p className="detail-destination">{trip.destination}</p>
+            <TripVisual trip={trip} />
+            <InfoBlock title="Deskripsi" text={trip.description} />
+            <InfoBlock title="Destinasi" text={trip.destination} />
+            <InfoBlock title="Itinerary" text={trip.itinerary} />
+            <InfoBlock title="Fasilitas" text={trip.facilities} />
+          </article>
+
+          <aside className="trip-detail-sidebar">
+            <section className="detail-side-card">
+              <Metric label="Tanggal" value={formatDate(trip.date)} />
+              <Metric label="Kuota" value={`${trip.quota} peserta`} />
+              <Metric label="Slot tersedia" value={`${trip.slots} peserta`} />
+            </section>
+            <section className="detail-side-card checkout-card">
+              <span>Harga per orang</span>
+              <strong>{formatCurrency(trip.price)}</strong>
+              <button className="primary-btn wide" disabled={!isOpen} onClick={() => navigate(`/daftar/${trip.id}`)}>
+                {isOpen ? 'Checkout' : 'Pendaftaran ditutup'}
+              </button>
+            </section>
+          </aside>
         </div>
       </section>
     </main>

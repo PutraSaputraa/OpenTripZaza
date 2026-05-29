@@ -452,19 +452,11 @@ button:disabled {
   color: #1d4ed8;
 }
 
-.detail-layout,
 .form-shell {
   display: grid;
   grid-template-columns: minmax(320px, 0.8fr) minmax(360px, 1fr);
   gap: 24px;
   padding: clamp(24px, 4vw, 56px);
-}
-
-.detail-layout > .trip-visual {
-  width: 100%;
-  min-height: 420px;
-  height: 100%;
-  border-radius: 8px;
 }
 
 .detail-panel {
@@ -496,6 +488,92 @@ button:disabled {
 .info-block {
   border-top: 1px solid #e2e8f0;
   padding-top: 14px;
+}
+
+.trip-detail-page {
+  padding: clamp(20px, 4vw, 56px);
+}
+
+.trip-detail-page > .trip-visual {
+  min-height: clamp(280px, 48vw, 520px);
+  border: 1px solid #e1e9f2;
+  border-radius: 8px;
+  box-shadow: 0 24px 60px rgba(14, 69, 116, 0.16);
+}
+
+.trip-detail-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 360px);
+  gap: 24px;
+  align-items: start;
+  margin-top: 24px;
+}
+
+.trip-detail-main {
+  display: grid;
+  gap: 18px;
+  min-width: 0;
+}
+
+.trip-detail-main h1 {
+  margin: 0;
+  color: #0f172a;
+  font-size: clamp(34px, 5vw, 58px);
+  line-height: 1.02;
+  letter-spacing: 0;
+}
+
+.detail-destination {
+  margin: -6px 0 2px;
+  color: #607083;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.trip-detail-main > .trip-visual {
+  border: 1px solid #e1e9f2;
+  border-radius: 8px;
+}
+
+.trip-detail-main .info-block {
+  border: 1px solid #e1e9f2;
+  border-radius: 8px;
+  background: #fff;
+  padding: 18px;
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.05);
+}
+
+.trip-detail-sidebar {
+  position: sticky;
+  top: 92px;
+  display: grid;
+  gap: 14px;
+}
+
+.detail-side-card {
+  display: grid;
+  gap: 12px;
+  border: 1px solid #e1e9f2;
+  border-radius: 8px;
+  background: #fff;
+  padding: 16px;
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.06);
+}
+
+.detail-side-card .metric {
+  box-shadow: none;
+}
+
+.checkout-card span {
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.checkout-card strong {
+  color: #0f172a;
+  font-size: 30px;
 }
 
 .form-shell {
@@ -715,10 +793,14 @@ th {
   }
 
   .two-col,
-  .detail-layout,
+  .trip-detail-layout,
   .form-shell,
   .hero-band {
     grid-template-columns: 1fr;
+  }
+
+  .trip-detail-sidebar {
+    position: static;
   }
 }
 
@@ -762,8 +844,12 @@ th {
     padding: 20px;
   }
 
-  .detail-layout > .trip-visual {
+  .trip-detail-page > .trip-visual {
     min-height: 260px;
+  }
+
+  .trip-detail-page {
+    padding: 20px;
   }
 
   .toast {
