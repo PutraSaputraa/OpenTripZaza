@@ -36,7 +36,7 @@ const normalizeTripForm = (trip) => {
   }
 }
 
-function AdminShell({ title, children, navigate, logout }) {
+function AdminShell({ title, children, navigate, logout, path }) {
   return (
     <main className="app-shell">
       <Sidebar title="Admin" links={[
@@ -44,7 +44,7 @@ function AdminShell({ title, children, navigate, logout }) {
         ['/admin/open-trip', 'Open Trip'],
         ['/admin/jadwal', 'Jadwal'],
         ['/admin/pekerja', 'Akun Pekerja'],
-      ]} navigate={navigate} logout={logout} />
+      ]} navigate={navigate} logout={logout} path={path} />
       <section className="workspace">
         <h1>{title}</h1>
         {children}
@@ -228,7 +228,7 @@ function RegistrationTable({ registrations, trips, setRegistrationStatus, compac
 }
 
 export function AdminSchedule(props) {
-  const { trips, registrations, scheduleTripId } = props
+  const { trips, registrations, jobs, scheduleTripId } = props
   const selectedTrip = trips.find((trip) => trip.id === scheduleTripId)
   if (scheduleTripId && selectedTrip) return <AdminScheduleDetail trip={selectedTrip} {...props} />
 
@@ -245,12 +245,33 @@ export function AdminSchedule(props) {
         <div className="schedule-list admin-card-grid">
           {trips.map((trip) => {
             const participants = registrations.filter((item) => item.tripId === trip.id && (item.status === 'Disetujui' || item.status === 'Selesai'))
+            const waitingCount = registrations.filter((item) => item.tripId === trip.id && item.status === 'Menunggu Approval').length
+            const tripJobs = jobs.filter((job) => job.tripId === trip.id)
+            const assignedJobs = tripJobs.filter((job) => job.worker).length
+            const approvedCount = participants.reduce((sum, item) => sum + Number(item.participants), 0)
+            const workerTarget = tripJobs.length || trip.workerCount || 1
             return (
               <article className="schedule-card" key={trip.id}>
-                <div className="schedule-card-head"><div><h3>{trip.name}</h3><p>{trip.destination} - {formatDate(trip.date)}</p></div><Badge status={trip.status} /></div>
-                <p className="muted">Peserta disetujui: {participants.reduce((sum, item) => sum + item.participants, 0)} dari {trip.quota}</p>
-                <div className="participant-list">{participants.length ? participants.map((item) => <span key={item.id}>{item.name} ({item.participants})</span>) : <span>Belum ada peserta disetujui</span>}</div>
-                <button className="outline-btn" onClick={() => props.navigate(`/admin/jadwal/${trip.id}`)}>Detail jadwal</button>
+                <div className="schedule-card-head">
+                  <div>
+                    <h3>{trip.name}</h3>
+                    <p>{trip.destination}</p>
+                  </div>
+                  <Badge status={trip.status} />
+                </div>
+                <div className="schedule-date-row">
+                  <span>Tanggal</span>
+                  <strong>{formatDate(trip.date)}</strong>
+                </div>
+                <dl className="schedule-metrics">
+                  <div><dt>Peserta</dt><dd>{approvedCount}/{trip.quota}</dd></div>
+                  <div><dt>Menunggu</dt><dd>{waitingCount}</dd></div>
+                  <div><dt>Pekerja</dt><dd>{assignedJobs}/{workerTarget}</dd></div>
+                </dl>
+                <div className="schedule-card-footer">
+                  <div className="participant-list">{participants.length ? participants.slice(0, 3).map((item) => <span key={item.id}>{item.name} ({item.participants})</span>) : <span>Belum ada peserta disetujui</span>}</div>
+                  <button className="outline-btn" onClick={() => props.navigate(`/admin/jadwal/${trip.id}`)}>Detail jadwal</button>
+                </div>
               </article>
             )
           })}

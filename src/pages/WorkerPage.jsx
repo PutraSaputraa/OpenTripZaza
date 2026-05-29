@@ -2,14 +2,14 @@ import { jobStatuses } from '../config/constants'
 import { formatDate } from '../utils/formatters'
 import { Badge, InfoBlock, Metric, NotFound, Sidebar } from './shared'
 
-function WorkerShell({ title, children, navigate, logout }) {
+function WorkerShell({ title, children, navigate, logout, path }) {
   return (
     <main className="app-shell">
       <Sidebar title="Pekerja" links={[
         ['/pekerja/dashboard', 'Dashboard'],
         ['/pekerja/job', 'Job tersedia'],
         ['/pekerja/job-saya', 'Job saya'],
-      ]} navigate={navigate} logout={logout} />
+      ]} navigate={navigate} logout={logout} path={path} />
       <section className="workspace">
         <h1>{title}</h1>
         {children}
