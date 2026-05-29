@@ -341,14 +341,18 @@ function RegistrationStatusColumn({ title, items, setRegistrationStatus }) {
       <div className="registration-status-list">
         {items.length ? items.map((item) => (
           <article className="registration-status-card" key={item.id}>
-            <div>
+            <div className="registration-card-main">
               <h4>{item.name}</h4>
-              <p>{item.participants} peserta</p>
-              <p>{item.whatsapp}</p>
+              <dl>
+                <div><dt>Email</dt><dd>{item.email}</dd></div>
+                <div><dt>WhatsApp</dt><dd>{item.whatsapp}</dd></div>
+                <div><dt>Peserta</dt><dd>{item.participants} orang</dd></div>
+                <div><dt>Catatan</dt><dd>{item.notes || '-'}</dd></div>
+              </dl>
             </div>
-            <select className="status-select" value={item.status} onChange={(e) => setRegistrationStatus(item.id, e.target.value)}>
-              {registrationStatuses.map((status) => <option key={status}>{status}</option>)}
-            </select>
+            <label className="registration-card-status">Status<select className="status-select" value={item.status} onChange={(e) => setRegistrationStatus(item.id, e.target.value)}>
+                {registrationStatuses.map((status) => <option key={status}>{status}</option>)}
+              </select></label>
           </article>
         )) : <p className="empty-column">Belum ada data.</p>}
       </div>
