@@ -42,7 +42,6 @@ function AdminShell({ title, children, navigate, logout }) {
       <Sidebar title="Admin" links={[
         ['/admin/dashboard', 'Dashboard'],
         ['/admin/open-trip', 'Open Trip'],
-        ['/admin/pendaftaran', 'Pendaftaran'],
         ['/admin/jadwal', 'Jadwal'],
         ['/admin/job', 'Job Pekerja'],
         ['/admin/pekerja', 'Akun Pekerja'],
@@ -77,7 +76,7 @@ export function AdminDashboard(props) {
           </div>
           <div className="dashboard-actions">
             <button className="primary-btn" onClick={() => props.navigate('/admin/open-trip')}>Kelola open trip</button>
-            <button className="outline-btn" onClick={() => props.navigate('/admin/pendaftaran')}>Lihat pendaftaran</button>
+            <button className="outline-btn" onClick={() => props.navigate('/admin/jadwal')}>Lihat jadwal</button>
           </div>
         </div>
         <section className="stat-grid dashboard-stats">{stats.map(([label, value]) => <Metric key={label} label={label} value={value} />)}</section>
@@ -230,7 +229,10 @@ function RegistrationTable({ registrations, trips, setRegistrationStatus, compac
 }
 
 export function AdminSchedule(props) {
-  const { trips, registrations } = props
+  const { trips, registrations, scheduleTripId } = props
+  const selectedTrip = trips.find((trip) => trip.id === scheduleTripId)
+  if (scheduleTripId && selectedTrip) return <AdminScheduleDetail trip={selectedTrip} {...props} />
+
   return (
     <AdminShell title="Monitoring Jadwal" {...props}>
       <section className="admin-page-stack">
@@ -249,10 +251,75 @@ export function AdminSchedule(props) {
                 <div className="schedule-card-head"><div><h3>{trip.name}</h3><p>{trip.destination} - {formatDate(trip.date)}</p></div><Badge status={trip.status} /></div>
                 <p className="muted">Peserta disetujui: {participants.reduce((sum, item) => sum + item.participants, 0)} dari {trip.quota}</p>
                 <div className="participant-list">{participants.length ? participants.map((item) => <span key={item.id}>{item.name} ({item.participants})</span>) : <span>Belum ada peserta disetujui</span>}</div>
+                <button className="outline-btn" onClick={() => props.navigate(`/admin/jadwal/${trip.id}`)}>Detail jadwal</button>
               </article>
             )
           })}
         </div>
+      </section>
+    </AdminShell>
+  )
+}
+
+function AdminScheduleDetail({ trip, registrations, jobs, setRegistrationStatus, navigate, ...props }) {
+  const tripRegistrations = registrations.filter((item) => item.tripId === trip.id)
+  const approvedParticipants = tripRegistrations.filter((item) => item.status === 'Disetujui' || item.status === 'Selesai')
+  const waitingRegistrations = tripRegistrations.filter((item) => item.status === 'Menunggu Approval')
+  const tripJobs = jobs.filter((job) => job.tripId === trip.id)
+  const assignedJobs = tripJobs.filter((job) => job.worker)
+  const approvedCount = approvedParticipants.reduce((sum, item) => sum + Number(item.participants), 0)
+
+  return (
+    <AdminShell title="Detail Jadwal" navigate={navigate} {...props}>
+      <section className="admin-page-stack">
+        <div className="admin-page-head">
+          <div>
+            <p className="eyebrow">Detail trip</p>
+            <h2>{trip.name}</h2>
+            <p className="muted">{trip.destination} - {formatDate(trip.date)}</p>
+          </div>
+          <button className="outline-btn" onClick={() => navigate('/admin/jadwal')}>Kembali ke jadwal</button>
+        </div>
+
+        <section className="stat-grid dashboard-stats">
+          <Metric label="Total pendaftar" value={tripRegistrations.length} />
+          <Metric label="Menunggu approval" value={waitingRegistrations.length} />
+          <Metric label="Peserta disetujui" value={`${approvedCount}/${trip.quota}`} />
+          <Metric label="Pekerja terisi" value={`${assignedJobs.length}/${tripJobs.length || trip.workerCount || 1}`} />
+        </section>
+
+        <section className="schedule-detail-grid">
+          <DataPanel title="Peserta Disetujui">
+            <div className="participant-list">
+              {approvedParticipants.length ? approvedParticipants.map((item) => <span key={item.id}>{item.name} ({item.participants})</span>) : <span>Belum ada peserta disetujui</span>}
+            </div>
+          </DataPanel>
+
+          <DataPanel title="Pekerja Trip">
+            <div className="table-wrap compact-table">
+              <table>
+                <thead><tr><th>Slot</th><th>Pekerja</th><th>Status</th></tr></thead>
+                <tbody>{tripJobs.length ? tripJobs.map((job) => (
+                  <tr key={job.id}><td>{job.slot || 1} dari {job.totalWorkers || trip.workerCount || 1}</td><td>{job.worker || '-'}</td><td><Badge status={job.status} /></td></tr>
+                )) : <tr><td colSpan="3">Belum ada job untuk trip ini.</td></tr>}</tbody>
+              </table>
+            </div>
+          </DataPanel>
+        </section>
+
+        <DataPanel title="Pendaftar Trip">
+          <div className="table-wrap">
+            <table>
+              <thead><tr><th>Customer</th><th>WhatsApp</th><th>Email</th><th>Peserta</th><th>Catatan</th><th>Status</th></tr></thead>
+              <tbody>{tripRegistrations.length ? tripRegistrations.map((item) => (
+                <tr key={item.id}>
+                  <td>{item.name}</td><td>{item.whatsapp}</td><td>{item.email}</td><td>{item.participants}</td><td>{item.notes}</td>
+                  <td><select className="status-select" value={item.status} onChange={(e) => setRegistrationStatus(item.id, e.target.value)}>{registrationStatuses.map((status) => <option key={status}>{status}</option>)}</select></td>
+                </tr>
+              )) : <tr><td colSpan="6">Belum ada pendaftar untuk trip ini.</td></tr>}</tbody>
+            </table>
+          </div>
+        </DataPanel>
       </section>
     </AdminShell>
   )

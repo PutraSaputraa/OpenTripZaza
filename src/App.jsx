@@ -3,7 +3,7 @@ import { collection, deleteDoc, doc, onSnapshot, orderBy, query, setDoc, updateD
 import './App.css'
 import { accounts } from './config/constants'
 import { db } from './firebase'
-import { AdminDashboard, AdminJobs, AdminRegistrations, AdminSchedule, AdminTrips, AdminWorkers, TripForm } from './pages/AdminPage'
+import { AdminDashboard, AdminJobs, AdminSchedule, AdminTrips, AdminWorkers, TripForm } from './pages/AdminPage'
 import { CustomerCatalog, CustomerLoginPage, CustomerSignupPage, RegistrationPage, TripDetail } from './pages/UserPage'
 import { MyJobs, WorkerDashboard, WorkerJobDetail, WorkerJobs } from './pages/WorkerPage'
 import { LoadingPage, LoginPage, NotFound } from './pages/shared'
@@ -298,8 +298,9 @@ function RouteRenderer(props) {
   if (path === '/admin/open-trip') return <AdminTrips {...props} />
   if (path === '/admin/open-trip/tambah') return <TripForm {...props} />
   if (parts[0] === 'admin' && parts[1] === 'open-trip' && parts[2] === 'edit') return <TripForm tripId={Number(parts[3])} {...props} />
-  if (path === '/admin/pendaftaran') return <AdminRegistrations {...props} />
+  if (path === '/admin/pendaftaran') return <AdminSchedule {...props} />
   if (path === '/admin/jadwal') return <AdminSchedule {...props} />
+  if (parts[0] === 'admin' && parts[1] === 'jadwal' && Number(parts[2])) return <AdminSchedule scheduleTripId={Number(parts[2])} {...props} />
   if (path === '/admin/job') return <AdminJobs {...props} />
   if (path === '/admin/pekerja') return <AdminWorkers {...props} />
   if (path === '/pekerja/login') return <LoginPage role="pekerja" {...props} />
