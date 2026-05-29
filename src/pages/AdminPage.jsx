@@ -43,7 +43,6 @@ function AdminShell({ title, children, navigate, logout }) {
         ['/admin/dashboard', 'Dashboard'],
         ['/admin/open-trip', 'Open Trip'],
         ['/admin/jadwal', 'Jadwal'],
-        ['/admin/job', 'Job Pekerja'],
         ['/admin/pekerja', 'Akun Pekerja'],
       ]} navigate={navigate} logout={logout} />
       <section className="workspace">
@@ -320,23 +319,6 @@ function AdminScheduleDetail({ trip, registrations, jobs, setRegistrationStatus,
             </table>
           </div>
         </DataPanel>
-      </section>
-    </AdminShell>
-  )
-}
-
-export function AdminJobs(props) {
-  return (
-    <AdminShell title="Monitoring Job Pekerja" {...props}>
-      <section className="admin-page-stack">
-        <div className="admin-page-head">
-          <div>
-            <p className="eyebrow">Job operasional</p>
-            <h2>Pantau tugas pekerja untuk setiap open trip.</h2>
-            <p className="muted">Lihat status job, pekerja yang mengambil tugas, dan detail pekerjaan lapangan.</p>
-          </div>
-        </div>
-        <div className="admin-table-card"><JobTable {...props} /></div>
       </section>
     </AdminShell>
   )

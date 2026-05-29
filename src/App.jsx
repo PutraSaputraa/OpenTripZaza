@@ -3,7 +3,7 @@ import { collection, deleteDoc, doc, onSnapshot, orderBy, query, setDoc, updateD
 import './App.css'
 import { accounts } from './config/constants'
 import { db } from './firebase'
-import { AdminDashboard, AdminJobs, AdminSchedule, AdminTrips, AdminWorkers, TripForm } from './pages/AdminPage'
+import { AdminDashboard, AdminSchedule, AdminTrips, AdminWorkers, TripForm } from './pages/AdminPage'
 import { CustomerCatalog, CustomerLoginPage, CustomerSignupPage, RegistrationPage, TripDetail } from './pages/UserPage'
 import { MyJobs, WorkerDashboard, WorkerJobDetail, WorkerJobs } from './pages/WorkerPage'
 import { LoadingPage, LoginPage, NotFound } from './pages/shared'
@@ -237,7 +237,13 @@ function App() {
   const takeJob = async (id) => {
     const job = jobs.find((item) => item.id === id)
     if (!job || job.status !== 'Tersedia') return
-    await updateDoc(doc(db, collections.jobs, String(id)), { status: 'Diambil', worker: session?.name || accounts.worker.name })
+    const workerName = session?.name || accounts.worker.name
+    const alreadyTookTrip = jobs.some((item) => item.tripId === job.tripId && item.worker === workerName)
+    if (alreadyTookTrip) {
+      showToast('Kamu sudah mengambil job untuk trip ini.')
+      return
+    }
+    await updateDoc(doc(db, collections.jobs, String(id)), { status: 'Diambil', worker: workerName })
     showToast('Job berhasil diambil.')
   }
 
@@ -301,7 +307,6 @@ function RouteRenderer(props) {
   if (path === '/admin/pendaftaran') return <AdminSchedule {...props} />
   if (path === '/admin/jadwal') return <AdminSchedule {...props} />
   if (parts[0] === 'admin' && parts[1] === 'jadwal' && Number(parts[2])) return <AdminSchedule scheduleTripId={Number(parts[2])} {...props} />
-  if (path === '/admin/job') return <AdminJobs {...props} />
   if (path === '/admin/pekerja') return <AdminWorkers {...props} />
   if (path === '/pekerja/login') return <LoginPage role="pekerja" {...props} />
   if (path === '/pekerja/dashboard') return <WorkerDashboard {...props} />

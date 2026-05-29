@@ -20,10 +20,11 @@ function WorkerShell({ title, children, navigate, logout }) {
 
 export function WorkerDashboard(props) {
   const ownJobs = props.jobs.filter((job) => job.worker === props.session?.name)
+  const takenTripIds = new Set(ownJobs.map((job) => job.tripId))
   return (
     <WorkerShell title="Dashboard Pekerja" {...props}>
       <section className="stat-grid">
-        <Metric label="Job tersedia" value={props.jobs.filter((job) => job.status === 'Tersedia').length} />
+        <Metric label="Job tersedia" value={props.jobs.filter((job) => job.status === 'Tersedia' && !takenTripIds.has(job.tripId)).length} />
         <Metric label="Job saya" value={ownJobs.length} />
         <Metric label="Sedang berjalan" value={ownJobs.filter((job) => job.status === 'Sedang Berjalan').length} />
       </section>
@@ -33,9 +34,10 @@ export function WorkerDashboard(props) {
 }
 
 export function WorkerJobs(props) {
+  const takenTripIds = new Set(props.jobs.filter((job) => job.worker === props.session?.name).map((job) => job.tripId))
   const content = (
     <div className="job-grid">
-      {props.jobs.filter((job) => job.status === 'Tersedia').map((job) => <JobCard key={job.id} job={job} {...props} />)}
+      {props.jobs.filter((job) => job.status === 'Tersedia' && !takenTripIds.has(job.tripId)).map((job) => <JobCard key={job.id} job={job} {...props} />)}
     </div>
   )
   if (props.embedded) return content
@@ -56,6 +58,7 @@ export function WorkerJobDetail({ jobId, jobs, trips, takeJob, updateJobStatus, 
   const job = jobs.find((item) => item.id === jobId)
   if (!job) return <NotFound navigate={navigate} />
   const trip = trips.find((item) => item.id === job.tripId)
+  const alreadyTookTrip = jobs.some((item) => item.tripId === job.tripId && item.worker === props.session?.name)
   return (
     <WorkerShell title="Detail Job" navigate={navigate} {...props}>
       <article className="detail-panel standalone">
@@ -69,7 +72,7 @@ export function WorkerJobDetail({ jobId, jobs, trips, takeJob, updateJobStatus, 
           <Metric label="Pekerja" value={job.worker || '-'} />
         </div>
         <InfoBlock title="Detail tugas" text={job.task} />
-        {job.status === 'Tersedia' ? <button className="primary-btn" onClick={() => takeJob(job.id)}>Ambil job</button> : (
+        {job.status === 'Tersedia' ? <button className="primary-btn" disabled={alreadyTookTrip} onClick={() => takeJob(job.id)}>{alreadyTookTrip ? 'Sudah ambil trip ini' : 'Ambil job'}</button> : (
           <label className="status-control">Update status<select value={job.status} onChange={(e) => updateJobStatus(job.id, e.target.value)}>{jobStatuses.filter((status) => status !== 'Tersedia').map((status) => <option key={status}>{status}</option>)}</select></label>
         )}
       </article>
