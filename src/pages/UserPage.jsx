@@ -201,7 +201,6 @@ export function RegistrationPage({ tripId, trips, submitRegistration, navigate, 
               <label>Nama lengkap<input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></label>
               <label>Nomor WhatsApp<input value={form.whatsapp} onChange={(e) => setForm({ ...form, whatsapp: e.target.value })} /></label>
               <label className="full">Email<input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></label>
-              <label className="full">KTP<input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></label>
             </div>
 
             <div className="form-section-head">
