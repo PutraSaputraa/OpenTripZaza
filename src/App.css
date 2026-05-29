@@ -155,18 +155,6 @@ button:disabled {
   color: #fff;
 }
 
-.hero-band::after {
-  position: absolute;
-  right: 0;
-  bottom: -1px;
-  left: 0;
-  height: clamp(90px, 16vw, 180px);
-  background: linear-gradient(180deg, rgba(247, 250, 252, 0), #f7fafc 82%);
-  content: '';
-  pointer-events: none;
-  z-index: 1;
-}
-
 .hero-video,
 .hero-shade {
   position: absolute;
