@@ -65,6 +65,7 @@ export function WorkerJobDetail({ jobId, jobs, trips, takeJob, updateJobStatus, 
         <div className="metric-row">
           <Metric label="Jumlah peserta" value={trip.quota - trip.slots} />
           <Metric label="Status job" value={job.status} />
+          <Metric label="Slot pekerja" value={`${job.slot || 1}/${job.totalWorkers || trip.workerCount || 1}`} />
           <Metric label="Pekerja" value={job.worker || '-'} />
         </div>
         <InfoBlock title="Detail tugas" text={job.task} />
@@ -82,6 +83,7 @@ function JobCard({ job, trips, navigate, takeJob, mine, updateJobStatus }) {
     <article className="job-card">
       <div><h3>{trip?.name}</h3><p>{trip?.destination}</p></div>
       <Badge status={job.status} />
+      <p className="job-slot-label">Slot pekerja {job.slot || 1} dari {job.totalWorkers || trip?.workerCount || 1}</p>
       <p>{formatDate(trip?.date)} - peserta terdaftar {trip ? trip.quota - trip.slots : 0}</p>
       <p className="muted">{job.task}</p>
       {job.status === 'Tersedia' && !mine && <button className="primary-btn" onClick={() => takeJob(job.id)}>Ambil job</button>}

@@ -26,6 +26,7 @@ const normalizeTripForm = (trip) => {
     price: 0,
     quota: 10,
     slots: 10,
+    workerCount: 1,
     description: '',
     facilities: '',
     status: 'Tersedia',
@@ -99,10 +100,10 @@ export function AdminTrips(props) {
         </div>
         <div className="admin-table-card table-wrap">
           <table>
-            <thead><tr><th>Nama</th><th>Destinasi</th><th>Tanggal</th><th>Harga</th><th>Kuota</th><th>Slot</th><th>Status</th><th>Aksi</th></tr></thead>
+            <thead><tr><th>Nama</th><th>Destinasi</th><th>Tanggal</th><th>Harga</th><th>Kuota</th><th>Slot</th><th>Pekerja</th><th>Status</th><th>Aksi</th></tr></thead>
             <tbody>{props.trips.map((trip) => (
               <tr key={trip.id}>
-                <td>{trip.name}</td><td>{trip.destination}</td><td>{formatDate(trip.date)}</td><td>{formatCurrency(trip.price)}</td><td>{trip.quota}</td><td>{trip.slots}</td><td><Badge status={trip.status} /></td>
+                <td>{trip.name}</td><td>{trip.destination}</td><td>{formatDate(trip.date)}</td><td>{formatCurrency(trip.price)}</td><td>{trip.quota}</td><td>{trip.slots}</td><td>{trip.workerCount || props.jobs.filter((job) => job.tripId === trip.id).length || 1} orang</td><td><Badge status={trip.status} /></td>
                 <td className="table-actions"><button onClick={() => props.navigate(`/admin/open-trip/edit/${trip.id}`)}>Edit</button><button onClick={() => props.deleteTrip(trip.id)}>Hapus</button></td>
               </tr>
             ))}</tbody>
@@ -115,7 +116,11 @@ export function AdminTrips(props) {
 
 export function TripForm({ tripId, trips, saveTrip, navigate, ...props }) {
   const selected = trips.find((item) => item.id === tripId)
-  const [form, setForm] = useState(normalizeTripForm(selected))
+  const selectedJobCount = selected ? props.jobs.filter((job) => job.tripId === selected.id).length : 1
+  const [form, setForm] = useState({
+    ...normalizeTripForm(selected),
+    workerCount: selected?.workerCount || selectedJobCount || 1,
+  })
 
   const updateDurationDays = (value) => {
     const durationDays = Math.max(1, Number(value) || 1)
@@ -137,6 +142,7 @@ export function TripForm({ tripId, trips, saveTrip, navigate, ...props }) {
       price: Number(form.price),
       quota: Number(form.quota),
       slots: Number(form.slots),
+      workerCount: Math.max(1, Number(form.workerCount) || 1),
       durationDays: itineraryDays.length,
       itineraryDays,
       itinerary: itineraryDays.map((item) => `Hari ${item.day}: ${item.text}`).join('\n\n'),
@@ -161,6 +167,7 @@ export function TripForm({ tripId, trips, saveTrip, navigate, ...props }) {
           <label>Harga<input required type="number" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} /></label>
           <label>Kuota peserta<input required type="number" value={form.quota} onChange={(e) => setForm({ ...form, quota: e.target.value })} /></label>
           <label>Slot tersedia<input required type="number" value={form.slots} onChange={(e) => setForm({ ...form, slots: e.target.value })} /></label>
+          <label>Kebutuhan pekerja<input required type="number" min="1" value={form.workerCount} onChange={(e) => setForm({ ...form, workerCount: e.target.value })} /></label>
           <label>Status<select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>{tripStatuses.map((status) => <option key={status}>{status}</option>)}</select></label>
           <label className="full">Deskripsi<textarea required value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></label>
           <label className="full">Fasilitas<textarea required value={form.facilities} onChange={(e) => setForm({ ...form, facilities: e.target.value })} /></label>
@@ -337,10 +344,10 @@ export function JobTable({ jobs, trips, compact }) {
   return (
     <div className="table-wrap">
       <table>
-        <thead><tr><th>Open trip</th><th>Destinasi</th><th>Tanggal</th><th>Tugas</th><th>Status job</th><th>Pekerja</th></tr></thead>
+        <thead><tr><th>Open trip</th><th>Destinasi</th><th>Tanggal</th><th>Slot</th><th>Tugas</th><th>Status job</th><th>Pekerja</th></tr></thead>
         <tbody>{rows.map((job) => {
           const trip = trips.find((item) => item.id === job.tripId)
-          return <tr key={job.id}><td>{trip?.name}</td><td>{trip?.destination}</td><td>{formatDate(trip?.date)}</td><td>{job.task}</td><td><Badge status={job.status} /></td><td>{job.worker || '-'}</td></tr>
+          return <tr key={job.id}><td>{trip?.name}</td><td>{trip?.destination}</td><td>{formatDate(trip?.date)}</td><td>{job.slot || 1} dari {job.totalWorkers || trip?.workerCount || 1}</td><td>{job.task}</td><td><Badge status={job.status} /></td><td>{job.worker || '-'}</td></tr>
         })}</tbody>
       </table>
     </div>

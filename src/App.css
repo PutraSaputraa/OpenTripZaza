@@ -1365,6 +1365,16 @@ th {
   gap: 12px;
 }
 
+.job-slot-label {
+  width: max-content;
+  border-radius: 999px;
+  background: var(--color-gold-soft);
+  color: var(--color-gold-dark);
+  padding: 7px 10px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
 @media (max-width: 1080px) {
   .trip-grid,
   .job-grid,
