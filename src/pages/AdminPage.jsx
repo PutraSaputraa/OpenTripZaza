@@ -96,16 +96,35 @@ export function AdminTrips(props) {
           </div>
           <button className="primary-btn" onClick={() => props.navigate('/admin/open-trip/tambah')}>Tambah open trip</button>
         </div>
-        <div className="admin-table-card table-wrap">
-          <table>
-            <thead><tr><th>Nama</th><th>Destinasi</th><th>Tanggal</th><th>Harga</th><th>Kuota</th><th>Slot</th><th>Pekerja</th><th>Status</th><th>Aksi</th></tr></thead>
-            <tbody>{props.trips.map((trip) => (
-              <tr key={trip.id}>
-                <td>{trip.name}</td><td>{trip.destination}</td><td>{formatDate(trip.date)}</td><td>{formatCurrency(trip.price)}</td><td>{trip.quota}</td><td>{trip.slots}</td><td>{trip.workerCount || props.jobs.filter((job) => job.tripId === trip.id).length || 1} orang</td><td><Badge status={trip.status} /></td>
-                <td className="table-actions"><button onClick={() => props.navigate(`/admin/open-trip/edit/${trip.id}`)}>Edit</button><button onClick={() => props.deleteTrip(trip.id)}>Hapus</button></td>
-              </tr>
-            ))}</tbody>
-          </table>
+        <div className="admin-trip-grid">
+          {props.trips.length ? props.trips.map((trip) => {
+            const workerCount = trip.workerCount || props.jobs.filter((job) => job.tripId === trip.id).length || 1
+            return (
+              <article className="admin-trip-card" key={trip.id}>
+                <div className="admin-trip-card-head">
+                  <div>
+                    <h3>{trip.name}</h3>
+                    <p>{trip.destination}</p>
+                  </div>
+                  <Badge status={trip.status} />
+                </div>
+                <div className="admin-trip-price">
+                  <span>Harga</span>
+                  <strong>{formatCurrency(trip.price)}</strong>
+                </div>
+                <dl className="admin-trip-meta">
+                  <div><dt>Tanggal</dt><dd>{formatDate(trip.date)}</dd></div>
+                  <div><dt>Kuota</dt><dd>{trip.quota} peserta</dd></div>
+                  <div><dt>Slot</dt><dd>{trip.slots} tersedia</dd></div>
+                  <div><dt>Pekerja</dt><dd>{workerCount} orang</dd></div>
+                </dl>
+                <div className="admin-trip-actions">
+                  <button className="outline-btn" onClick={() => props.navigate(`/admin/open-trip/edit/${trip.id}`)}>Edit</button>
+                  <button className="outline-btn danger-btn" onClick={() => props.deleteTrip(trip.id)}>Hapus</button>
+                </div>
+              </article>
+            )
+          }) : <p className="empty-state">Belum ada open trip.</p>}
         </div>
       </section>
     </AdminShell>
