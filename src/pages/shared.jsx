@@ -63,10 +63,16 @@ export function LoadingPage() {
 export function Sidebar({ title, links, navigate, logout }) {
   return (
     <aside className="sidebar">
-      <button className="brand inverse" onClick={() => navigate('/')}>Zaza Trip</button>
-      <p>{title}</p>
-      {links.map(([href, label]) => <button key={href} onClick={() => navigate(href)}>{label}</button>)}
-      <button className="logout-btn" onClick={logout}>Keluar</button>
+      <div className="sidebar-brand">
+        <button className="brand inverse" onClick={() => navigate('/')}>Zaza Trip</button>
+        <span>{title}</span>
+      </div>
+      <nav className="sidebar-nav">
+        {links.map(([href, label]) => <button key={href} onClick={() => navigate(href)}>{label}</button>)}
+      </nav>
+      <div className="sidebar-footer">
+        <button className="logout-btn" onClick={logout}>Keluar</button>
+      </div>
     </aside>
   )
 }
