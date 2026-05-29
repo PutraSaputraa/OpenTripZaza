@@ -285,8 +285,6 @@ function LoadingPage() {
 }
 
 function CustomerCatalog({ trips, navigate, session, logout }) {
-  const availableTrips = trips.filter((trip) => trip.status === 'Tersedia').length
-
   return (
     <main className="public-page home-page">
       <PublicNav navigate={navigate} session={session} logout={logout} />
