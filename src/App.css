@@ -152,57 +152,10 @@ button:disabled {
   padding: 0;
 }
 
-.nav-icon {
-  position: relative;
-  display: block;
+.nav-icon-btn img {
   width: 20px;
   height: 20px;
-}
-
-.nav-icon-account::before {
-  position: absolute;
-  top: 2px;
-  left: 6px;
-  width: 8px;
-  height: 8px;
-  border: 2px solid currentColor;
-  border-radius: 999px;
-  content: '';
-}
-
-.nav-icon-account::after {
-  position: absolute;
-  right: 2px;
-  bottom: 1px;
-  left: 2px;
-  height: 8px;
-  border: 2px solid currentColor;
-  border-radius: 999px 999px 4px 4px;
-  content: '';
-}
-
-.nav-icon-logout::before {
-  position: absolute;
-  top: 3px;
-  left: 2px;
-  width: 9px;
-  height: 14px;
-  border: 2px solid currentColor;
-  border-right: 0;
-  border-radius: 4px 0 0 4px;
-  content: '';
-}
-
-.nav-icon-logout::after {
-  position: absolute;
-  top: 6px;
-  right: 1px;
-  width: 11px;
-  height: 7px;
-  border-top: 2px solid currentColor;
-  border-right: 2px solid currentColor;
-  content: '';
-  transform: rotate(45deg);
+  object-fit: contain;
 }
 
 .primary-btn {
