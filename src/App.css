@@ -106,7 +106,7 @@ button:disabled {
   background: transparent;
   color: var(--color-text);
   font-size: 18px;
-  font-weight: 800;
+  font-weight: 700;
 }
 
 .brand.inverse {
@@ -125,7 +125,7 @@ button:disabled {
   background: var(--color-panel);
   color: var(--color-text);
   padding: 10px 14px;
-  font-weight: 700;
+  font-weight: 500;
 }
 
 .public-nav nav .nav-accent {
@@ -142,7 +142,7 @@ button:disabled {
   background: var(--color-gold-soft);
   color: var(--color-text);
   padding: 10px 14px;
-  font-weight: 800;
+  font-weight: 500;
 }
 
 .primary-btn {
@@ -151,7 +151,7 @@ button:disabled {
   background: var(--color-gold);
   color: var(--color-ink);
   padding: 12px 16px;
-  font-weight: 800;
+  font-weight: 600;
   box-shadow: 0 10px 22px rgba(169, 121, 47, 0.24);
 }
 
@@ -277,7 +277,7 @@ button:disabled {
   background: rgba(255, 255, 255, 0.12);
   color: #fff;
   padding: 12px 16px;
-  font-weight: 800;
+  font-weight: 500;
   backdrop-filter: blur(10px);
 }
 
@@ -296,7 +296,7 @@ button:disabled {
 .trip-visual span {
   max-width: 80%;
   font-size: 20px;
-  font-weight: 900;
+  font-weight: 700;
   line-height: 1.2;
 }
 
@@ -316,7 +316,7 @@ button:disabled {
   margin: 0 0 10px;
   color: var(--color-gold-dark);
   font-size: 13px;
-  font-weight: 900;
+  font-weight: 600;
   letter-spacing: 0;
   text-transform: uppercase;
 }
@@ -351,7 +351,7 @@ button:disabled {
   color: var(--color-muted);
   padding: 28px;
   text-align: center;
-  font-weight: 800;
+  font-weight: 500;
 }
 
 .trip-card,
@@ -415,14 +415,14 @@ button:disabled {
 .metric span {
   color: var(--color-muted);
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 500;
   text-transform: uppercase;
 }
 
 .trip-card dd {
   margin: 0;
   color: var(--color-text);
-  font-weight: 800;
+  font-weight: 500;
 }
 
 .badge {
@@ -432,7 +432,7 @@ button:disabled {
   border-radius: 999px;
   padding: 6px 10px;
   font-size: 12px;
-  font-weight: 900;
+  font-weight: 600;
   white-space: nowrap;
 }
 
@@ -546,7 +546,7 @@ button:disabled {
   margin: -6px 0 2px;
   color: var(--color-muted);
   font-size: 18px;
-  font-weight: 800;
+  font-weight: 500;
 }
 
 .trip-detail-main > .trip-visual {
@@ -600,19 +600,19 @@ button:disabled {
 
 .tour-detail-list dt {
   color: var(--color-text);
-  font-weight: 900;
+  font-weight: 600;
 }
 
 .tour-detail-list dd {
   margin: 0;
   color: var(--color-muted);
-  font-weight: 700;
+  font-weight: 400;
 }
 
 .checkout-card span {
   color: var(--color-muted);
   font-size: 12px;
-  font-weight: 900;
+  font-weight: 500;
   text-transform: uppercase;
 }
 
@@ -631,7 +631,7 @@ button:disabled {
 .checkout-price small {
   color: var(--color-muted);
   font-size: 13px;
-  font-weight: 800;
+  font-weight: 400;
 }
 
 .form-shell {
@@ -711,7 +711,7 @@ button:disabled {
 
 .summary-body p {
   color: var(--color-muted);
-  font-weight: 700;
+  font-weight: 400;
 }
 
 .summary-list {
@@ -732,14 +732,14 @@ button:disabled {
 .summary-list dt {
   color: var(--color-muted);
   font-size: 12px;
-  font-weight: 900;
+  font-weight: 500;
   text-transform: uppercase;
 }
 
 .summary-list dd {
   margin: 0;
   color: var(--color-text);
-  font-weight: 900;
+  font-weight: 500;
 }
 
 .registration-form {
@@ -763,7 +763,7 @@ button:disabled {
   border-radius: 999px;
   background: var(--color-gold-soft);
   color: var(--color-gold-dark);
-  font-weight: 950;
+  font-weight: 600;
 }
 
 .form-section-head h2 {
@@ -788,7 +788,7 @@ button:disabled {
   display: grid;
   gap: 7px;
   color: var(--color-text);
-  font-weight: 850;
+  font-weight: 500;
 }
 
 .registration-fields .full {
@@ -832,7 +832,7 @@ button:disabled {
   display: block;
   color: var(--color-muted);
   font-size: 12px;
-  font-weight: 900;
+  font-weight: 500;
   text-transform: uppercase;
 }
 
@@ -869,7 +869,7 @@ button:disabled {
   display: grid;
   gap: 7px;
   color: var(--color-text);
-  font-weight: 800;
+  font-weight: 500;
 }
 
 .data-form input,
@@ -897,7 +897,7 @@ button:disabled {
   background: #fee2e2;
   color: #991b1b;
   padding: 12px;
-  font-weight: 800;
+  font-weight: 500;
 }
 
 .login-page {
@@ -925,7 +925,7 @@ button:disabled {
   border: 0;
   background: transparent;
   color: var(--color-gold-dark);
-  font-weight: 900;
+  font-weight: 600;
   padding: 0;
 }
 
@@ -950,7 +950,7 @@ button:disabled {
 
 .sidebar p {
   margin: 10px 0;
-  font-weight: 800;
+  font-weight: 500;
 }
 
 .sidebar button {
@@ -1015,7 +1015,7 @@ th {
   background: #fff3bf;
   color: var(--color-text);
   font-size: 12px;
-  font-weight: 900;
+  font-weight: 600;
   text-transform: uppercase;
 }
 
@@ -1037,7 +1037,7 @@ th {
   background: var(--color-gold-soft);
   color: var(--color-text);
   padding: 7px 10px;
-  font-weight: 800;
+  font-weight: 500;
 }
 
 .job-grid {
