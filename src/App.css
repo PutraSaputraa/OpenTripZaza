@@ -638,6 +638,211 @@ button:disabled {
   align-items: start;
 }
 
+.registration-page {
+  display: grid;
+  gap: 24px;
+  padding: clamp(24px, 4vw, 56px);
+}
+
+.registration-hero {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.registration-hero > div {
+  max-width: 820px;
+}
+
+.registration-hero h1 {
+  margin: 0;
+  color: var(--color-text);
+  font-size: clamp(34px, 5vw, 58px);
+  line-height: 1.02;
+  letter-spacing: 0;
+  text-wrap: balance;
+}
+
+.registration-hero .muted {
+  max-width: 660px;
+  margin-top: 14px;
+  font-size: 17px;
+  line-height: 1.65;
+}
+
+.registration-layout {
+  display: grid;
+  grid-template-columns: minmax(300px, 390px) minmax(0, 1fr);
+  gap: 22px;
+  align-items: start;
+}
+
+.registration-summary,
+.registration-form {
+  border: 1px solid var(--color-line);
+  border-radius: 8px;
+  background: var(--color-panel);
+  box-shadow: var(--shadow-soft);
+}
+
+.registration-summary {
+  position: sticky;
+  top: 94px;
+  overflow: hidden;
+}
+
+.registration-summary .trip-visual {
+  aspect-ratio: 16 / 11;
+}
+
+.summary-body {
+  display: grid;
+  gap: 14px;
+  padding: 20px;
+}
+
+.summary-body h2 {
+  margin: 0;
+  color: var(--color-text);
+  font-size: 26px;
+  line-height: 1.12;
+}
+
+.summary-body p {
+  color: var(--color-muted);
+  font-weight: 700;
+}
+
+.summary-list {
+  display: grid;
+  gap: 0;
+  margin: 4px 0 0;
+  border-top: 1px solid var(--color-line);
+}
+
+.summary-list div {
+  display: grid;
+  grid-template-columns: minmax(112px, 0.8fr) minmax(0, 1fr);
+  gap: 12px;
+  padding: 13px 0;
+  border-bottom: 1px solid var(--color-line);
+}
+
+.summary-list dt {
+  color: var(--color-muted);
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.summary-list dd {
+  margin: 0;
+  color: var(--color-text);
+  font-weight: 900;
+}
+
+.registration-form {
+  display: grid;
+  gap: 20px;
+  padding: clamp(18px, 3vw, 28px);
+}
+
+.form-section-head {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+}
+
+.form-section-head span {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--color-gold-soft);
+  color: var(--color-gold-dark);
+  font-weight: 950;
+}
+
+.form-section-head h2 {
+  margin: 0;
+  color: var(--color-text);
+  font-size: 22px;
+}
+
+.form-section-head p {
+  margin-top: 4px;
+  color: var(--color-muted);
+  line-height: 1.5;
+}
+
+.registration-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.registration-fields label {
+  display: grid;
+  gap: 7px;
+  color: var(--color-text);
+  font-weight: 850;
+}
+
+.registration-fields .full {
+  grid-column: 1 / -1;
+}
+
+.registration-fields input,
+.registration-fields select,
+.registration-fields textarea {
+  width: 100%;
+  border: 1px solid #d8ceb9;
+  border-radius: 8px;
+  background: #fffdf8;
+  color: var(--color-text);
+  padding: 12px 13px;
+  outline: 0;
+}
+
+.registration-fields input:focus,
+.registration-fields select:focus,
+.registration-fields textarea:focus {
+  border-color: var(--color-gold-dark);
+  box-shadow: 0 0 0 3px rgba(216, 179, 106, 0.24);
+}
+
+.registration-fields textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.registration-submit {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border-top: 1px solid var(--color-line);
+  padding-top: 20px;
+}
+
+.registration-submit span {
+  display: block;
+  color: var(--color-muted);
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.registration-submit strong {
+  display: block;
+  margin-top: 4px;
+  color: var(--color-text);
+  font-size: clamp(22px, 3vw, 30px);
+}
+
 .data-form {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -854,11 +1059,13 @@ th {
   .two-col,
   .trip-detail-layout,
   .form-shell,
+  .registration-layout,
   .hero-band {
     grid-template-columns: 1fr;
   }
 
-  .trip-detail-sidebar {
+  .trip-detail-sidebar,
+  .registration-summary {
     position: static;
   }
 }
@@ -881,8 +1088,19 @@ th {
   .trip-grid,
   .job-grid,
   .stat-grid,
-  .data-form {
+  .data-form,
+  .registration-fields {
     grid-template-columns: 1fr;
+  }
+
+  .registration-hero,
+  .registration-submit {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .registration-submit .primary-btn {
+    width: 100%;
   }
 
   .section-head {

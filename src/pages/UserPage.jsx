@@ -140,6 +140,8 @@ export function RegistrationPage({ tripId, trips, submitRegistration, navigate, 
   const [form, setForm] = useState({ name: session?.role === 'customer' ? session.name : '', whatsapp: session?.whatsapp || '', email: session?.role === 'customer' ? session.email : '', participants: 1, tripId, notes: '' })
   const [error, setError] = useState('')
   const selectedTrip = trips.find((item) => item.id === Number(form.tripId)) || trip
+  const participants = Number(form.participants) || 1
+  const estimatedTotal = selectedTrip ? selectedTrip.price * participants : 0
 
   if (!trip) return <NotFound navigate={navigate} />
 
@@ -160,22 +162,69 @@ export function RegistrationPage({ tripId, trips, submitRegistration, navigate, 
   return (
     <main className="public-page">
       <PublicNav navigate={navigate} session={session} logout={logout} />
-      <section className="form-shell">
-        <div>
-          <p className="eyebrow">Form pendaftaran</p>
-          <h1>{trip.name}</h1>
-          <p className="muted">Slot tersedia: {trip.slots} peserta. Status pendaftaran akan masuk dashboard admin sebagai Menunggu Approval.</p>
+      <section className="registration-page">
+        <div className="registration-hero">
+          <div>
+            <p className="eyebrow">Pendaftaran trip</p>
+            <h1>Lengkapi data untuk ikut {trip.name}</h1>
+            <p className="muted">Data kamu akan dikirim ke dashboard admin dan masuk sebagai Menunggu Approval sebelum keberangkatan.</p>
+          </div>
+          <button className="outline-btn" onClick={() => navigate(`/open-trip/${trip.id}`)}>Kembali ke detail</button>
         </div>
-        <form className="data-form" onSubmit={onSubmit}>
-          {error && <p className="form-error">{error}</p>}
-          <label>Nama lengkap<input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></label>
-          <label>Nomor WhatsApp<input value={form.whatsapp} onChange={(e) => setForm({ ...form, whatsapp: e.target.value })} /></label>
-          <label>Email<input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></label>
-          <label>Jumlah peserta<input type="number" min="1" max={trip.slots} value={form.participants} onChange={(e) => setForm({ ...form, participants: e.target.value })} /></label>
-          <label>Pilihan open trip<select value={form.tripId} onChange={(e) => setForm({ ...form, tripId: Number(e.target.value) })}>{trips.filter((item) => item.status === 'Tersedia').map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
-          <label className="full">Catatan tambahan<textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></label>
-          <button className="primary-btn full" type="submit">Kirim pendaftaran</button>
-        </form>
+
+        <div className="registration-layout">
+          <aside className="registration-summary">
+            <TripVisual trip={selectedTrip} />
+            <div className="summary-body">
+              <Badge status={selectedTrip.status} />
+              <h2>{selectedTrip.name}</h2>
+              <p>{selectedTrip.destination}</p>
+              <dl className="summary-list">
+                <div><dt>Tanggal</dt><dd>{formatDate(selectedTrip.date)}</dd></div>
+                <div><dt>Harga</dt><dd>{formatCurrency(selectedTrip.price)} / orang</dd></div>
+                <div><dt>Slot</dt><dd>{selectedTrip.slots} peserta tersedia</dd></div>
+                <div><dt>Total estimasi</dt><dd>{formatCurrency(estimatedTotal)}</dd></div>
+              </dl>
+            </div>
+          </aside>
+
+          <form className="registration-form" onSubmit={onSubmit}>
+            <div className="form-section-head">
+              <span>1</span>
+              <div>
+                <h2>Data pemesan</h2>
+                <p>Pastikan kontak aktif supaya admin mudah menghubungi kamu.</p>
+              </div>
+            </div>
+            {error && <p className="form-error">{error}</p>}
+            <div className="registration-fields">
+              <label>Nama lengkap<input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></label>
+              <label>Nomor WhatsApp<input value={form.whatsapp} onChange={(e) => setForm({ ...form, whatsapp: e.target.value })} /></label>
+              <label className="full">Email<input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></label>
+            </div>
+
+            <div className="form-section-head">
+              <span>2</span>
+              <div>
+                <h2>Detail trip</h2>
+                <p>Pilih trip dan jumlah peserta yang akan didaftarkan.</p>
+              </div>
+            </div>
+            <div className="registration-fields">
+              <label>Jumlah peserta<input type="number" min="1" max={selectedTrip.slots} value={form.participants} onChange={(e) => setForm({ ...form, participants: e.target.value })} /></label>
+              <label>Pilihan open trip<select value={form.tripId} onChange={(e) => setForm({ ...form, tripId: Number(e.target.value), participants: 1 })}>{trips.filter((item) => item.status === 'Tersedia').map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
+              <label className="full">Catatan tambahan<textarea placeholder="Contoh: request pickup, alergi makanan, atau catatan rombongan." value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></label>
+            </div>
+
+            <div className="registration-submit">
+              <div>
+                <span>Total estimasi</span>
+                <strong>{formatCurrency(estimatedTotal)}</strong>
+              </div>
+              <button className="primary-btn" type="submit">Kirim pendaftaran</button>
+            </div>
+          </form>
+        </div>
       </section>
     </main>
   )
