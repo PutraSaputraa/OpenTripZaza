@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import cinematicVideo from '../assets/cinematic1.mp4'
-import { formatCurrency, formatDate } from '../utils/formatters'
+import { formatCurrency, formatDate, tripName } from '../utils/formatters'
 import { Badge, InfoBlock, NotFound } from './shared'
 
 export function PublicNav({ navigate, session, logout }) {
@@ -12,6 +12,7 @@ export function PublicNav({ navigate, session, logout }) {
         {session?.role === 'customer' ? (
           <>
             <span className="customer-name">{session.name}</span>
+            <button onClick={() => navigate('/akun')}>Akun</button>
             <button onClick={logout}>Keluar</button>
           </>
         ) : (
@@ -250,6 +251,66 @@ export function RegistrationPage({ tripId, trips, submitRegistration, navigate, 
             </div>
           </form>
         </div>
+      </section>
+    </main>
+  )
+}
+
+export function CustomerAccountPage({ registrations, trips, navigate, session, logout }) {
+  if (session?.role !== 'customer') {
+    navigate('/login')
+    return null
+  }
+
+  const myRegistrations = registrations.filter((item) => item.email === session.email)
+
+  return (
+    <main className="public-page">
+      <PublicNav navigate={navigate} session={session} logout={logout} />
+      <section className="account-page">
+        <div className="account-hero">
+          <div>
+            <p className="eyebrow">Akun customer</p>
+            <h1>Halo, {session.name}</h1>
+            <p className="muted">Pantau semua pendaftaran open trip kamu dari sini, termasuk status approval dari admin.</p>
+          </div>
+          <button className="outline-btn" onClick={() => navigate('/open-trip')}>Lihat open trip</button>
+        </div>
+
+        <section className="account-summary-grid">
+          <div className="metric"><span>Total pendaftaran</span><strong>{myRegistrations.length}</strong></div>
+          <div className="metric"><span>Menunggu approval</span><strong>{myRegistrations.filter((item) => item.status === 'Menunggu Approval').length}</strong></div>
+          <div className="metric"><span>Disetujui</span><strong>{myRegistrations.filter((item) => item.status === 'Disetujui').length}</strong></div>
+          <div className="metric"><span>Ditolak</span><strong>{myRegistrations.filter((item) => item.status === 'Ditolak').length}</strong></div>
+        </section>
+
+        <section className="account-registration-list">
+          {myRegistrations.length ? myRegistrations.map((item) => {
+            const trip = trips.find((tripItem) => tripItem.id === item.tripId)
+            return (
+              <article className="account-registration-card" key={item.id}>
+                <div className="account-registration-head">
+                  <div>
+                    <h2>{tripName(trips, item.tripId)}</h2>
+                    <p>{trip?.destination || 'Destinasi belum tersedia'}</p>
+                  </div>
+                  <Badge status={item.status} />
+                </div>
+                <dl>
+                  <div><dt>Tanggal</dt><dd>{trip ? formatDate(trip.date) : '-'}</dd></div>
+                  <div><dt>Peserta</dt><dd>{item.participants} orang</dd></div>
+                  <div><dt>WhatsApp</dt><dd>{item.whatsapp}</dd></div>
+                  <div><dt>Catatan</dt><dd>{item.notes || '-'}</dd></div>
+                </dl>
+                <button className="outline-btn" onClick={() => navigate(`/open-trip/${item.tripId}`)}>Lihat detail trip</button>
+              </article>
+            )
+          }) : (
+            <div className="empty-state">
+              Belum ada pendaftaran. Pilih open trip dulu untuk mulai mendaftar.
+            </div>
+          )}
+        </section>
       </section>
     </main>
   )

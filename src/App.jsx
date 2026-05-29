@@ -4,7 +4,7 @@ import './App.css'
 import { accounts } from './config/constants'
 import { db } from './firebase'
 import { AdminDashboard, AdminSchedule, AdminTrips, AdminWorkers, TripForm } from './pages/AdminPage'
-import { CustomerCatalog, CustomerLoginPage, CustomerSignupPage, RegistrationPage, TripDetail } from './pages/UserPage'
+import { CustomerAccountPage, CustomerCatalog, CustomerLoginPage, CustomerSignupPage, RegistrationPage, TripDetail } from './pages/UserPage'
 import { MyJobs, WorkerDashboard, WorkerJobDetail, WorkerJobs } from './pages/WorkerPage'
 import { LoadingPage, LoginPage, NotFound } from './pages/shared'
 
@@ -295,6 +295,7 @@ function RouteRenderer(props) {
   }
 
   if (path === '/' || path === '/open-trip') return <CustomerCatalog {...props} />
+  if (path === '/akun') return <CustomerAccountPage {...props} />
   if (path === '/login' || path === '/customer/login') return <CustomerLoginPage {...props} />
   if (path === '/signup' || path === '/customer/signup') return <CustomerSignupPage {...props} />
   if (parts[0] === 'open-trip' && id) return <TripDetail tripId={id} {...props} />
