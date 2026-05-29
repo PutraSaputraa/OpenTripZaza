@@ -1373,7 +1373,7 @@ button:disabled {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
-  margin: 0;
+  margin: 4px 0 0;
 }
 
 .schedule-metrics div {
