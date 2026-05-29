@@ -155,18 +155,6 @@ button:disabled {
   color: #fff;
 }
 
-.hero-band::after {
-  position: absolute;
-  right: 0;
-  bottom: -1px;
-  left: 0;
-  height: clamp(90px, 16vw, 180px);
-  background: linear-gradient(180deg, rgba(247, 250, 252, 0), #f7fafc 78%);
-  content: '';
-  pointer-events: none;
-  z-index: 1;
-}
-
 .hero-video,
 .hero-shade {
   position: absolute;
@@ -187,7 +175,7 @@ button:disabled {
 
 .hero-content {
   position: relative;
-  z-index: 2;
+  z-index: 1;
   width: min(100%, 820px);
 }
 
@@ -290,10 +278,7 @@ button:disabled {
   align-items: end;
   justify-content: space-between;
   gap: 16px;
-  position: relative;
-  z-index: 2;
-  margin-top: clamp(-54px, -6vw, -28px);
-  padding: 0 clamp(18px, 4vw, 56px) 18px;
+  padding: 38px clamp(18px, 4vw, 56px) 18px;
   scroll-margin-top: 92px;
 }
 
