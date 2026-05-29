@@ -300,6 +300,9 @@ function CustomerCatalog({ trips, navigate, session, logout }) {
             {!session?.role && <button className="hero-secondary-btn" onClick={() => navigate('/login')}>Masuk customer</button>}
           </div>
         </div>
+        <button className="scroll-down-btn" onClick={() => document.getElementById('open-trip-list')?.scrollIntoView({ behavior: 'smooth' })} aria-label="Lihat katalog open trip">
+          <span />
+        </button>
       </section>
 
       <section className="section-head" id="open-trip-list">

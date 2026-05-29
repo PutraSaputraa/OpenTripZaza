@@ -148,11 +148,23 @@ button:disabled {
 .hero-band {
   position: relative;
   display: grid;
-  min-height: min(820px, 92vh);
+  min-height: 100vh;
   align-items: end;
   overflow: hidden;
-  padding: 128px clamp(18px, 5vw, 72px) clamp(42px, 8vw, 86px);
+  padding: 128px clamp(18px, 5vw, 72px) clamp(78px, 12vw, 112px);
   color: #fff;
+}
+
+.hero-band::after {
+  position: absolute;
+  right: 0;
+  bottom: -1px;
+  left: 0;
+  height: clamp(90px, 16vw, 180px);
+  background: linear-gradient(180deg, rgba(247, 250, 252, 0), #f7fafc 82%);
+  content: '';
+  pointer-events: none;
+  z-index: 1;
 }
 
 .hero-video,
@@ -175,7 +187,7 @@ button:disabled {
 
 .hero-content {
   position: relative;
-  z-index: 1;
+  z-index: 2;
   width: min(100%, 820px);
 }
 
@@ -219,6 +231,42 @@ button:disabled {
 .hero-actions {
   gap: 12px;
   margin-top: 28px;
+}
+
+.scroll-down-btn {
+  position: absolute;
+  bottom: 28px;
+  left: 50%;
+  z-index: 3;
+  display: grid;
+  width: 46px;
+  height: 46px;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.38);
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.32);
+  transform: translateX(-50%);
+  backdrop-filter: blur(12px);
+}
+
+.scroll-down-btn span {
+  width: 13px;
+  height: 13px;
+  border-right: 2px solid #fff;
+  border-bottom: 2px solid #fff;
+  transform: rotate(45deg) translate(-2px, -2px);
+  animation: arrow-bounce 1.6s ease-in-out infinite;
+}
+
+@keyframes arrow-bounce {
+  0%,
+  100% {
+    transform: rotate(45deg) translate(-2px, -2px);
+  }
+
+  50% {
+    transform: rotate(45deg) translate(3px, 3px);
+  }
 }
 
 .hero-secondary-btn {
