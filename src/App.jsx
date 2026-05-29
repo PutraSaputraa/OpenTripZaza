@@ -1,17 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
 import { collection, deleteDoc, doc, onSnapshot, orderBy, query, setDoc, updateDoc } from 'firebase/firestore'
 import './App.css'
+import { accounts } from './config/constants'
 import { db } from './firebase'
-import cinematicVideo from './assets/cinematic1.mp4'
-
-const tripStatuses = ['Tersedia', 'Penuh', 'Selesai']
-const registrationStatuses = ['Menunggu Approval', 'Disetujui', 'Ditolak', 'Selesai']
-const jobStatuses = ['Tersedia', 'Diambil', 'Sedang Berjalan', 'Selesai']
-
-const accounts = {
-  admin: { email: 'admin@zazatrip.com', password: 'admin123', role: 'admin', name: 'Admin Zaza' },
-  worker: { email: 'pekerja@zazatrip.com', password: 'pekerja123', role: 'pekerja', name: 'Raka Field Crew' },
-}
+import { AdminDashboard, AdminJobs, AdminRegistrations, AdminSchedule, AdminTrips, AdminWorkers, TripForm } from './pages/AdminPage'
+import { CustomerCatalog, CustomerLoginPage, CustomerSignupPage, RegistrationPage, TripDetail } from './pages/UserPage'
+import { MyJobs, WorkerDashboard, WorkerJobDetail, WorkerJobs } from './pages/WorkerPage'
+import { LoadingPage, LoginPage, NotFound } from './pages/shared'
 
 const collections = {
   trips: 'trips',
@@ -39,6 +34,11 @@ function App() {
     window.history.pushState({}, '', target)
     setPath(target)
     window.scrollTo(0, 0)
+  }
+
+  const showToast = (message) => {
+    setToast(message)
+    window.setTimeout(() => setToast(''), 3200)
   }
 
   useEffect(() => {
@@ -76,23 +76,6 @@ function App() {
     return false
   }
 
-  const createWorkerAccount = async (form) => {
-    const normalizedEmail = form.email.trim().toLowerCase()
-    const exists = workerAccounts.some((item) => item.email === normalizedEmail) || accounts.worker.email === normalizedEmail
-    if (exists) return false
-
-    const nextWorker = {
-      name: form.name.trim(),
-      email: normalizedEmail,
-      password: form.password,
-      role: 'pekerja',
-    }
-
-    await setDoc(doc(db, collections.workers, normalizedEmail), nextWorker)
-    showToast('Akun pekerja berhasil dibuat.')
-    return true
-  }
-
   const loginCustomer = (form) => {
     const account = customerAccounts.find((item) => item.email === form.email && item.password === form.password)
     if (!account) return false
@@ -113,14 +96,26 @@ function App() {
     return true
   }
 
+  const createWorkerAccount = async (form) => {
+    const normalizedEmail = form.email.trim().toLowerCase()
+    const exists = workerAccounts.some((item) => item.email === normalizedEmail) || accounts.worker.email === normalizedEmail
+    if (exists) return false
+
+    const nextWorker = {
+      name: form.name.trim(),
+      email: normalizedEmail,
+      password: form.password,
+      role: 'pekerja',
+    }
+
+    await setDoc(doc(db, collections.workers, normalizedEmail), nextWorker)
+    showToast('Akun pekerja berhasil dibuat.')
+    return true
+  }
+
   const logout = () => {
     setSession(null)
     navigate('/')
-  }
-
-  const showToast = (message) => {
-    setToast(message)
-    window.setTimeout(() => setToast(''), 3200)
   }
 
   const approvedByTrip = useMemo(() => {
@@ -206,7 +201,28 @@ function App() {
     await updateDoc(doc(db, collections.jobs, String(id)), { status })
   }
 
-  const props = { path, session, trips, registrations, jobs, customerAccounts, workerAccounts, approvedByTrip, navigate, login, loginCustomer, signupCustomer, createWorkerAccount, logout, submitRegistration, setRegistrationStatus, saveTrip, deleteTrip, takeJob, updateJobStatus }
+  const props = {
+    path,
+    session,
+    trips,
+    registrations,
+    jobs,
+    customerAccounts,
+    workerAccounts,
+    approvedByTrip,
+    navigate,
+    login,
+    loginCustomer,
+    signupCustomer,
+    createWorkerAccount,
+    logout,
+    submitRegistration,
+    setRegistrationStatus,
+    saveTrip,
+    deleteTrip,
+    takeJob,
+    updateJobStatus,
+  }
 
   return (
     <>
@@ -249,638 +265,6 @@ function RouteRenderer(props) {
   if (path === '/pekerja/job-saya') return <MyJobs {...props} />
 
   return <NotFound navigate={navigate} />
-}
-
-function PublicNav({ navigate, session, logout }) {
-  return (
-    <header className="public-nav">
-      <button className="brand" onClick={() => navigate('/')}>Zaza Open Trip</button>
-      <nav>
-        <button onClick={() => navigate('/open-trip')}>Katalog</button>
-        {session?.role === 'customer' ? (
-          <>
-            <span className="customer-name">{session.name}</span>
-            <button onClick={logout}>Keluar</button>
-          </>
-        ) : (
-          <>
-            <button onClick={() => navigate('/login')}>Login</button>
-            <button className="nav-accent" onClick={() => navigate('/signup')}>Signup</button>
-          </>
-        )}
-      </nav>
-    </header>
-  )
-}
-
-function LoadingPage() {
-  return (
-    <main className="login-page">
-      <section className="login-card">
-        <h1>Memuat data</h1>
-        <p className="muted">Menghubungkan aplikasi ke Firebase...</p>
-      </section>
-    </main>
-  )
-}
-
-function CustomerCatalog({ trips, navigate, session, logout }) {
-  return (
-    <main className="public-page home-page">
-      <PublicNav navigate={navigate} session={session} logout={logout} />
-      <section className="hero-band">
-        <video className="hero-video" src={cinematicVideo} autoPlay muted loop playsInline aria-hidden="true" />
-        <div className="hero-shade" />
-        <div className="hero-content">
-          <p className="eyebrow">Zaza Open Trip</p>
-          <h1>Perjalanan kecil yang terasa rapi dari awal berangkat sampai pulang.</h1>
-          <p className="hero-copy">Pilih jadwal, cek slot, lalu daftar ke trip yang paling pas. Semua pendaftaran masuk ke tim admin untuk diverifikasi sebelum keberangkatan.</p>
-          <div className="hero-actions">
-            <button className="primary-btn" onClick={() => document.getElementById('open-trip-list')?.scrollIntoView({ behavior: 'smooth' })}>Lihat open trip</button>
-            {!session?.role && <button className="hero-secondary-btn" onClick={() => navigate('/login')}>Masuk customer</button>}
-          </div>
-        </div>
-        <button className="scroll-down-btn" onClick={() => document.getElementById('open-trip-list')?.scrollIntoView({ behavior: 'smooth' })} aria-label="Lihat katalog open trip">
-          <span />
-        </button>
-      </section>
-
-      <section className="section-head" id="open-trip-list">
-        <div>
-          <p className="eyebrow">Katalog customer</p>
-          <h2>Open trip tersedia</h2>
-        </div>
-      </section>
-
-      <section className="trip-grid">
-        {trips.length ? trips.map((trip) => <TripCard key={trip.id} trip={trip} navigate={navigate} />) : <p className="empty-state">Belum ada open trip yang tersedia.</p>}
-      </section>
-    </main>
-  )
-}
-
-function TripCard({ trip, navigate }) {
-  return (
-    <article className="trip-card">
-      <TripVisual trip={trip} />
-      <div className="trip-card-body">
-        <div className="card-title-row">
-          <h3>{trip.name}</h3>
-          <Badge status={trip.status} />
-        </div>
-        <p>{trip.destination}</p>
-        <dl>
-          <div><dt>Tanggal</dt><dd>{formatDate(trip.date)}</dd></div>
-          <div><dt>Harga</dt><dd>{formatCurrency(trip.price)}</dd></div>
-          <div><dt>Kuota</dt><dd>{trip.quota} peserta</dd></div>
-          <div><dt>Slot</dt><dd>{trip.slots} tersedia</dd></div>
-        </dl>
-        <button className="primary-btn" onClick={() => navigate(`/open-trip/${trip.id}`)}>Lihat detail</button>
-      </div>
-    </article>
-  )
-}
-
-function TripVisual({ trip, large }) {
-  return (
-    <div className={large ? 'trip-visual trip-visual-large' : 'trip-visual'} role="img" aria-label={trip?.name || 'Open trip'}>
-      <span>{trip?.name || 'Open Trip'}</span>
-    </div>
-  )
-}
-
-function TripDetail({ tripId, trips, navigate, session, logout }) {
-  const trip = trips.find((item) => item.id === tripId)
-  if (!trip) return <NotFound navigate={navigate} />
-
-  return (
-    <main className="public-page">
-      <PublicNav navigate={navigate} session={session} logout={logout} />
-      <section className="detail-layout">
-        <TripVisual trip={trip} large />
-        <div className="detail-panel">
-          <Badge status={trip.status} />
-          <h1>{trip.name}</h1>
-          <p className="muted">{trip.destination}</p>
-          <div className="metric-row">
-            <Metric label="Tanggal" value={formatDate(trip.date)} />
-            <Metric label="Harga" value={formatCurrency(trip.price)} />
-            <Metric label="Kuota" value={trip.quota} />
-            <Metric label="Slot" value={trip.slots} />
-          </div>
-          <InfoBlock title="Deskripsi perjalanan" text={trip.description} />
-          <InfoBlock title="Fasilitas" text={trip.facilities} />
-          <InfoBlock title="Itinerary singkat" text={trip.itinerary} />
-          <button className="primary-btn wide" disabled={trip.slots <= 0 || trip.status !== 'Tersedia'} onClick={() => navigate(`/daftar/${trip.id}`)}>
-            {trip.slots > 0 && trip.status === 'Tersedia' ? 'Daftar open trip' : 'Pendaftaran ditutup'}
-          </button>
-        </div>
-      </section>
-    </main>
-  )
-}
-
-function RegistrationPage({ tripId, trips, submitRegistration, navigate, session, logout }) {
-  const trip = trips.find((item) => item.id === tripId)
-  const [form, setForm] = useState({ name: session?.role === 'customer' ? session.name : '', whatsapp: session?.whatsapp || '', email: session?.role === 'customer' ? session.email : '', participants: 1, tripId, notes: '' })
-  const [error, setError] = useState('')
-  const selectedTrip = trips.find((item) => item.id === Number(form.tripId)) || trip
-
-  if (!trip) return <NotFound navigate={navigate} />
-
-  const onSubmit = async (event) => {
-    event.preventDefault()
-    if (!form.name || !form.whatsapp || !form.email || Number(form.participants) < 1) {
-      setError('Lengkapi nama, WhatsApp, email, dan jumlah peserta.')
-      return
-    }
-    if (Number(form.participants) > selectedTrip.slots) {
-      setError('Jumlah peserta melebihi slot tersedia.')
-      return
-    }
-    const isSubmitted = await submitRegistration(form)
-    if (!isSubmitted) setError('Pendaftaran gagal dikirim. Cek slot dan koneksi Firebase.')
-  }
-
-  return (
-    <main className="public-page">
-      <PublicNav navigate={navigate} session={session} logout={logout} />
-      <section className="form-shell">
-        <div>
-          <p className="eyebrow">Form pendaftaran</p>
-          <h1>{trip.name}</h1>
-          <p className="muted">Slot tersedia: {trip.slots} peserta. Status pendaftaran akan masuk dashboard admin sebagai Menunggu Approval.</p>
-        </div>
-        <form className="data-form" onSubmit={onSubmit}>
-          {error && <p className="form-error">{error}</p>}
-          <label>Nama lengkap<input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></label>
-          <label>Nomor WhatsApp<input value={form.whatsapp} onChange={(e) => setForm({ ...form, whatsapp: e.target.value })} /></label>
-          <label>Email<input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></label>
-          <label>Jumlah peserta<input type="number" min="1" max={trip.slots} value={form.participants} onChange={(e) => setForm({ ...form, participants: e.target.value })} /></label>
-          <label>Pilihan open trip<select value={form.tripId} onChange={(e) => setForm({ ...form, tripId: Number(e.target.value) })}>{trips.filter((item) => item.status === 'Tersedia').map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
-          <label className="full">Catatan tambahan<textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></label>
-          <button className="primary-btn full" type="submit">Kirim pendaftaran</button>
-        </form>
-      </section>
-    </main>
-  )
-}
-
-function CustomerLoginPage({ loginCustomer, navigate }) {
-  const [form, setForm] = useState({ email: '', password: '' })
-  const [error, setError] = useState('')
-
-  const onSubmit = async (event) => {
-    event.preventDefault()
-    if (!form.email || !form.password) {
-      setError('Email dan password wajib diisi.')
-      return
-    }
-    if (!loginCustomer(form)) setError('Akun customer tidak ditemukan atau password salah.')
-  }
-
-  return (
-    <main className="login-page">
-      <section className="login-card">
-        <button className="brand" onClick={() => navigate('/')}>Zaza Open Trip</button>
-        <p className="eyebrow">Login customer</p>
-        <h1>Masuk Customer</h1>
-        <p className="muted">Masuk dengan akun customer yang sudah terdaftar.</p>
-        <form className="data-form compact" onSubmit={onSubmit}>
-          {error && <p className="form-error">{error}</p>}
-          <label>Email<input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></label>
-          <label>Password<input type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} /></label>
-          <button className="primary-btn" type="submit">Masuk</button>
-        </form>
-        <p className="auth-switch">Belum punya akun? <button onClick={() => navigate('/signup')}>Signup customer</button></p>
-      </section>
-    </main>
-  )
-}
-
-function CustomerSignupPage({ signupCustomer, navigate }) {
-  const [form, setForm] = useState({ name: '', whatsapp: '', email: '', password: '', confirmPassword: '' })
-  const [error, setError] = useState('')
-
-  const onSubmit = async (event) => {
-    event.preventDefault()
-    if (!form.name || !form.whatsapp || !form.email || !form.password) {
-      setError('Lengkapi nama, WhatsApp, email, dan password.')
-      return
-    }
-    if (form.password.length < 6) {
-      setError('Password minimal 6 karakter.')
-      return
-    }
-    if (form.password !== form.confirmPassword) {
-      setError('Konfirmasi password belum sama.')
-      return
-    }
-    const isCreated = await signupCustomer(form)
-    if (!isCreated) setError('Email sudah terdaftar. Silakan login.')
-  }
-
-  return (
-    <main className="login-page">
-      <section className="login-card">
-        <button className="brand" onClick={() => navigate('/')}>Zaza Open Trip</button>
-        <p className="eyebrow">Signup customer</p>
-        <h1>Buat Akun</h1>
-        <p className="muted">Akun customer dipakai untuk mengisi data pendaftaran lebih cepat.</p>
-        <form className="data-form compact" onSubmit={onSubmit}>
-          {error && <p className="form-error">{error}</p>}
-          <label>Nama lengkap<input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></label>
-          <label>Nomor WhatsApp<input value={form.whatsapp} onChange={(e) => setForm({ ...form, whatsapp: e.target.value })} /></label>
-          <label>Email<input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></label>
-          <label>Password<input type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} /></label>
-          <label>Konfirmasi password<input type="password" value={form.confirmPassword} onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })} /></label>
-          <button className="primary-btn" type="submit">Buat akun</button>
-        </form>
-        <p className="auth-switch">Sudah punya akun? <button onClick={() => navigate('/login')}>Login customer</button></p>
-      </section>
-    </main>
-  )
-}
-
-function LoginPage({ role, login, navigate }) {
-  const account = role === 'admin' ? accounts.admin : accounts.worker
-  const [form, setForm] = useState({ email: account.email, password: account.password })
-  const [error, setError] = useState('')
-
-  const onSubmit = (event) => {
-    event.preventDefault()
-    if (!login(role, form)) setError('Email atau password tidak sesuai.')
-  }
-
-  return (
-    <main className="login-page">
-      <section className="login-card">
-        <button className="brand" onClick={() => navigate('/')}>Zaza Open Trip</button>
-        <p className="eyebrow">{role === 'admin' ? 'Login admin' : 'Login pekerja'}</p>
-        <h1>{role === 'admin' ? 'Dashboard Admin' : 'Dashboard Pekerja'}</h1>
-        <p className="muted">Demo: {account.email} / {account.password}</p>
-        <form className="data-form compact" onSubmit={onSubmit}>
-          {error && <p className="form-error">{error}</p>}
-          <label>Email<input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></label>
-          <label>Password<input type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} /></label>
-          <button className="primary-btn" type="submit">Masuk</button>
-        </form>
-      </section>
-    </main>
-  )
-}
-
-function AdminShell({ title, children, navigate, logout }) {
-  return (
-    <main className="app-shell">
-      <Sidebar title="Admin" links={[
-        ['/admin/dashboard', 'Dashboard'],
-        ['/admin/open-trip', 'Open Trip'],
-        ['/admin/pendaftaran', 'Pendaftaran'],
-        ['/admin/jadwal', 'Jadwal'],
-        ['/admin/job', 'Job Pekerja'],
-        ['/admin/pekerja', 'Akun Pekerja'],
-      ]} navigate={navigate} logout={logout} />
-      <section className="workspace">
-        <h1>{title}</h1>
-        {children}
-      </section>
-    </main>
-  )
-}
-
-function WorkerShell({ title, children, navigate, logout }) {
-  return (
-    <main className="app-shell">
-      <Sidebar title="Pekerja" links={[
-        ['/pekerja/dashboard', 'Dashboard'],
-        ['/pekerja/job', 'Job tersedia'],
-        ['/pekerja/job-saya', 'Job saya'],
-      ]} navigate={navigate} logout={logout} />
-      <section className="workspace">
-        <h1>{title}</h1>
-        {children}
-      </section>
-    </main>
-  )
-}
-
-function Sidebar({ title, links, navigate, logout }) {
-  return (
-    <aside className="sidebar">
-      <button className="brand inverse" onClick={() => navigate('/')}>Zaza Trip</button>
-      <p>{title}</p>
-      {links.map(([href, label]) => <button key={href} onClick={() => navigate(href)}>{label}</button>)}
-      <button className="logout-btn" onClick={logout}>Keluar</button>
-    </aside>
-  )
-}
-
-function AdminDashboard(props) {
-  const { trips, registrations, jobs } = props
-  const stats = [
-    ['Total open trip', trips.length],
-    ['Total pendaftar', registrations.length],
-    ['Menunggu approval', registrations.filter((item) => item.status === 'Menunggu Approval').length],
-    ['Disetujui', registrations.filter((item) => item.status === 'Disetujui').length],
-    ['Ditolak', registrations.filter((item) => item.status === 'Ditolak').length],
-    ['Job tersedia', jobs.filter((item) => item.status === 'Tersedia').length],
-    ['Job diambil', jobs.filter((item) => item.worker).length],
-  ]
-  return (
-    <AdminShell title="Dashboard Admin" {...props}>
-      <section className="stat-grid">{stats.map(([label, value]) => <Metric key={label} label={label} value={value} />)}</section>
-      <section className="two-col">
-        <DataPanel title="Approval terbaru"><RegistrationTable {...props} compact /></DataPanel>
-        <DataPanel title="Monitoring job"><JobTable {...props} compact /></DataPanel>
-      </section>
-    </AdminShell>
-  )
-}
-
-function AdminTrips(props) {
-  return (
-    <AdminShell title="Manajemen Open Trip" {...props}>
-      <div className="toolbar"><button className="primary-btn" onClick={() => props.navigate('/admin/open-trip/tambah')}>Tambah open trip</button></div>
-      <div className="table-wrap">
-        <table>
-          <thead><tr><th>Nama</th><th>Destinasi</th><th>Tanggal</th><th>Harga</th><th>Kuota</th><th>Slot</th><th>Status</th><th>Aksi</th></tr></thead>
-          <tbody>{props.trips.map((trip) => (
-            <tr key={trip.id}>
-              <td>{trip.name}</td><td>{trip.destination}</td><td>{formatDate(trip.date)}</td><td>{formatCurrency(trip.price)}</td><td>{trip.quota}</td><td>{trip.slots}</td><td><Badge status={trip.status} /></td>
-              <td className="table-actions"><button onClick={() => props.navigate(`/admin/open-trip/edit/${trip.id}`)}>Edit</button><button onClick={() => props.deleteTrip(trip.id)}>Hapus</button></td>
-            </tr>
-          ))}</tbody>
-        </table>
-      </div>
-    </AdminShell>
-  )
-}
-
-function TripForm({ tripId, trips, saveTrip, navigate, ...props }) {
-  const selected = trips.find((item) => item.id === tripId)
-  const [form, setForm] = useState(selected || { name: '', destination: '', date: '', price: 0, quota: 10, slots: 10, description: '', facilities: '', itinerary: '', status: 'Tersedia' })
-
-  const onSubmit = async (event) => {
-    event.preventDefault()
-    await saveTrip({ ...form, price: Number(form.price), quota: Number(form.quota), slots: Number(form.slots) })
-  }
-
-  return (
-    <AdminShell title={selected ? 'Edit Open Trip' : 'Tambah Open Trip'} navigate={navigate} {...props}>
-      <form className="data-form admin-form" onSubmit={onSubmit}>
-        <label>Nama open trip<input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></label>
-        <label>Destinasi<input required value={form.destination} onChange={(e) => setForm({ ...form, destination: e.target.value })} /></label>
-        <label>Tanggal keberangkatan<input required type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} /></label>
-        <label>Harga<input required type="number" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} /></label>
-        <label>Kuota peserta<input required type="number" value={form.quota} onChange={(e) => setForm({ ...form, quota: e.target.value })} /></label>
-        <label>Slot tersedia<input required type="number" value={form.slots} onChange={(e) => setForm({ ...form, slots: e.target.value })} /></label>
-        <label>Status<select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>{tripStatuses.map((status) => <option key={status}>{status}</option>)}</select></label>
-        <label className="full">Deskripsi<textarea required value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></label>
-        <label className="full">Fasilitas<textarea required value={form.facilities} onChange={(e) => setForm({ ...form, facilities: e.target.value })} /></label>
-        <label className="full">Itinerary<textarea required value={form.itinerary} onChange={(e) => setForm({ ...form, itinerary: e.target.value })} /></label>
-        <button className="primary-btn full" type="submit">Simpan open trip</button>
-      </form>
-    </AdminShell>
-  )
-}
-
-function AdminRegistrations(props) {
-  return (
-    <AdminShell title="Manajemen Pendaftaran" {...props}>
-      <RegistrationTable {...props} />
-    </AdminShell>
-  )
-}
-
-function RegistrationTable({ registrations, trips, setRegistrationStatus, compact }) {
-  const rows = compact ? registrations.slice(0, 5) : registrations
-  return (
-    <div className="table-wrap">
-      <table>
-        <thead><tr><th>Customer</th><th>WhatsApp</th><th>Email</th><th>Peserta</th><th>Open trip</th><th>Catatan</th><th>Status</th></tr></thead>
-        <tbody>{rows.map((item) => (
-          <tr key={item.id}>
-            <td>{item.name}</td><td>{item.whatsapp}</td><td>{item.email}</td><td>{item.participants}</td><td>{tripName(trips, item.tripId)}</td><td>{item.notes}</td>
-            <td><select className="status-select" value={item.status} onChange={(e) => setRegistrationStatus(item.id, e.target.value)}>{registrationStatuses.map((status) => <option key={status}>{status}</option>)}</select></td>
-          </tr>
-        ))}</tbody>
-      </table>
-    </div>
-  )
-}
-
-function AdminSchedule(props) {
-  const { trips, registrations } = props
-  return (
-    <AdminShell title="Monitoring Jadwal" {...props}>
-      <div className="schedule-list">
-        {trips.map((trip) => {
-          const participants = registrations.filter((item) => item.tripId === trip.id && (item.status === 'Disetujui' || item.status === 'Selesai'))
-          return (
-            <article className="schedule-card" key={trip.id}>
-              <div><h3>{trip.name}</h3><p>{trip.destination} - {formatDate(trip.date)}</p></div>
-              <Badge status={trip.status} />
-              <p className="muted">Peserta disetujui: {participants.reduce((sum, item) => sum + item.participants, 0)} dari {trip.quota}</p>
-              <div className="participant-list">{participants.length ? participants.map((item) => <span key={item.id}>{item.name} ({item.participants})</span>) : <span>Belum ada peserta disetujui</span>}</div>
-            </article>
-          )
-        })}
-      </div>
-    </AdminShell>
-  )
-}
-
-function AdminJobs(props) {
-  return (
-    <AdminShell title="Monitoring Job Pekerja" {...props}>
-      <JobTable {...props} />
-    </AdminShell>
-  )
-}
-
-function AdminWorkers(props) {
-  const { workerAccounts, createWorkerAccount } = props
-  const [form, setForm] = useState({ name: '', email: '', password: '' })
-  const [error, setError] = useState('')
-
-  const onSubmit = async (event) => {
-    event.preventDefault()
-    if (!form.name || !form.email || !form.password) {
-      setError('Lengkapi nama, email, dan password pekerja.')
-      return
-    }
-    if (form.password.length < 6) {
-      setError('Password minimal 6 karakter.')
-      return
-    }
-
-    const isCreated = await createWorkerAccount(form)
-    if (!isCreated) {
-      setError('Email pekerja sudah terdaftar.')
-      return
-    }
-
-    setForm({ name: '', email: '', password: '' })
-    setError('')
-  }
-
-  return (
-    <AdminShell title="Akun Pekerja" {...props}>
-      <section className="two-col">
-        <DataPanel title="Buat Akun Pekerja">
-          <form className="data-form compact" onSubmit={onSubmit}>
-            {error && <p className="form-error">{error}</p>}
-            <label>Nama pekerja<input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></label>
-            <label>Email<input required type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></label>
-            <label>Password<input required type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} /></label>
-            <button className="primary-btn" type="submit">Buat akun pekerja</button>
-          </form>
-        </DataPanel>
-        <DataPanel title="Daftar Akun Pekerja">
-          <div className="table-wrap">
-            <table>
-              <thead><tr><th>Nama</th><th>Email</th><th>Role</th></tr></thead>
-              <tbody>
-                {[accounts.worker, ...workerAccounts].map((worker) => (
-                  <tr key={worker.email}><td>{worker.name}</td><td>{worker.email}</td><td>{worker.role}</td></tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </DataPanel>
-      </section>
-    </AdminShell>
-  )
-}
-
-function JobTable({ jobs, trips, compact }) {
-  const rows = compact ? jobs.slice(0, 5) : jobs
-  return (
-    <div className="table-wrap">
-      <table>
-        <thead><tr><th>Open trip</th><th>Destinasi</th><th>Tanggal</th><th>Tugas</th><th>Status job</th><th>Pekerja</th></tr></thead>
-        <tbody>{rows.map((job) => {
-          const trip = trips.find((item) => item.id === job.tripId)
-          return <tr key={job.id}><td>{trip?.name}</td><td>{trip?.destination}</td><td>{formatDate(trip?.date)}</td><td>{job.task}</td><td><Badge status={job.status} /></td><td>{job.worker || '-'}</td></tr>
-        })}</tbody>
-      </table>
-    </div>
-  )
-}
-
-function WorkerDashboard(props) {
-  const ownJobs = props.jobs.filter((job) => job.worker === props.session?.name)
-  return (
-    <WorkerShell title="Dashboard Pekerja" {...props}>
-      <section className="stat-grid">
-        <Metric label="Job tersedia" value={props.jobs.filter((job) => job.status === 'Tersedia').length} />
-        <Metric label="Job saya" value={ownJobs.length} />
-        <Metric label="Sedang berjalan" value={ownJobs.filter((job) => job.status === 'Sedang Berjalan').length} />
-      </section>
-      <WorkerJobs {...props} embedded />
-    </WorkerShell>
-  )
-}
-
-function WorkerJobs(props) {
-  const content = (
-    <div className="job-grid">
-      {props.jobs.filter((job) => job.status === 'Tersedia').map((job) => <JobCard key={job.id} job={job} {...props} />)}
-    </div>
-  )
-  if (props.embedded) return content
-  return <WorkerShell title="Job Open Trip Tersedia" {...props}>{content}</WorkerShell>
-}
-
-function MyJobs(props) {
-  return (
-    <WorkerShell title="Job Saya" {...props}>
-      <div className="job-grid">
-        {props.jobs.filter((job) => job.worker === props.session?.name).map((job) => <JobCard key={job.id} job={job} mine {...props} />)}
-      </div>
-    </WorkerShell>
-  )
-}
-
-function WorkerJobDetail({ jobId, jobs, trips, takeJob, updateJobStatus, navigate, ...props }) {
-  const job = jobs.find((item) => item.id === jobId)
-  if (!job) return <NotFound navigate={navigate} />
-  const trip = trips.find((item) => item.id === job.tripId)
-  return (
-    <WorkerShell title="Detail Job" navigate={navigate} {...props}>
-      <article className="detail-panel standalone">
-        <Badge status={job.status} />
-        <h2>{trip.name}</h2>
-        <p className="muted">{trip.destination} - {formatDate(trip.date)}</p>
-        <div className="metric-row">
-          <Metric label="Jumlah peserta" value={trip.quota - trip.slots} />
-          <Metric label="Status job" value={job.status} />
-          <Metric label="Pekerja" value={job.worker || '-'} />
-        </div>
-        <InfoBlock title="Detail tugas" text={job.task} />
-        {job.status === 'Tersedia' ? <button className="primary-btn" onClick={() => takeJob(job.id)}>Ambil job</button> : (
-          <label className="status-control">Update status<select value={job.status} onChange={(e) => updateJobStatus(job.id, e.target.value)}>{jobStatuses.filter((status) => status !== 'Tersedia').map((status) => <option key={status}>{status}</option>)}</select></label>
-        )}
-      </article>
-    </WorkerShell>
-  )
-}
-
-function JobCard({ job, trips, navigate, takeJob, mine, updateJobStatus }) {
-  const trip = trips.find((item) => item.id === job.tripId)
-  return (
-    <article className="job-card">
-      <div><h3>{trip?.name}</h3><p>{trip?.destination}</p></div>
-      <Badge status={job.status} />
-      <p>{formatDate(trip?.date)} - peserta terdaftar {trip ? trip.quota - trip.slots : 0}</p>
-      <p className="muted">{job.task}</p>
-      {job.status === 'Tersedia' && !mine && <button className="primary-btn" onClick={() => takeJob(job.id)}>Ambil job</button>}
-      {mine && <select className="status-select" value={job.status} onChange={(e) => updateJobStatus(job.id, e.target.value)}>{jobStatuses.filter((status) => status !== 'Tersedia').map((status) => <option key={status}>{status}</option>)}</select>}
-      <button className="outline-btn" onClick={() => navigate(`/pekerja/job/${job.id}`)}>Detail</button>
-    </article>
-  )
-}
-
-function DataPanel({ title, children }) {
-  return <section className="data-panel"><h2>{title}</h2>{children}</section>
-}
-
-function Metric({ label, value }) {
-  return <div className="metric"><span>{label}</span><strong>{value}</strong></div>
-}
-
-function InfoBlock({ title, text }) {
-  return <section className="info-block"><h3>{title}</h3><p>{text}</p></section>
-}
-
-function Badge({ status }) {
-  const className = `badge badge-${status.toLowerCase().replaceAll(' ', '-')}`
-  return <span className={className}>{status}</span>
-}
-
-function NotFound({ navigate }) {
-  return (
-    <main className="login-page">
-      <section className="login-card">
-        <h1>Halaman tidak ditemukan</h1>
-        <button className="primary-btn" onClick={() => navigate('/')}>Kembali ke katalog</button>
-      </section>
-    </main>
-  )
-}
-
-function tripName(trips, id) {
-  return trips.find((trip) => trip.id === id)?.name || '-'
-}
-
-function formatDate(date) {
-  if (!date) return '-'
-  return new Intl.DateTimeFormat('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(date))
-}
-
-function formatCurrency(value) {
-  return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(value || 0)
 }
 
 export default App
