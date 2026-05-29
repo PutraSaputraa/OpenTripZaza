@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import cinematicVideo from '../assets/cinematic1.mp4'
 import { formatCurrency, formatDate } from '../utils/formatters'
-import { Badge, InfoBlock, Metric, NotFound } from './shared'
+import { Badge, InfoBlock, NotFound } from './shared'
 
 export function PublicNav({ navigate, session, logout }) {
   return (
@@ -114,9 +114,12 @@ export function TripDetail({ tripId, trips, navigate, session, logout }) {
 
           <aside className="trip-detail-sidebar">
             <section className="detail-side-card">
-              <Metric label="Tanggal" value={formatDate(trip.date)} />
-              <Metric label="Kuota" value={`${trip.quota} peserta`} />
-              <Metric label="Slot tersedia" value={`${trip.slots} peserta`} />
+              <h2>Detail Tur</h2>
+              <dl className="tour-detail-list">
+                <div><dt>Tanggal</dt><dd>{formatDate(trip.date)}</dd></div>
+                <div><dt>Kuota</dt><dd>{trip.quota} peserta</dd></div>
+                <div><dt>Slot tersedia</dt><dd>{trip.slots} peserta</dd></div>
+              </dl>
             </section>
             <section className="detail-side-card checkout-card">
               <span>Mulai dari</span>
