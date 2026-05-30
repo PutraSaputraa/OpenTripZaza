@@ -14,6 +14,11 @@ const createItineraryDays = (count, existingDays = []) => {
   })
 }
 
+const parseImageUrls = (value) => String(value || '')
+  .split(/\r?\n|,/)
+  .map((item) => item.trim())
+  .filter(Boolean)
+
 const normalizeTripForm = (trip) => {
   const itineraryDays = Array.isArray(trip?.itineraryDays) && trip.itineraryDays.length
     ? createItineraryDays(trip.itineraryDays.length, trip.itineraryDays)
@@ -28,10 +33,13 @@ const normalizeTripForm = (trip) => {
     slots: 10,
     workerCount: 1,
     isPrivateTrip: false,
+    imageUrl: '',
+    imageUrls: [],
     description: '',
     facilities: '',
     status: 'Tersedia',
     ...trip,
+    imageUrlsText: parseImageUrls(Array.isArray(trip?.imageUrls) && trip.imageUrls.length ? trip.imageUrls.join('\n') : trip?.imageUrl).join('\n'),
     durationDays: itineraryDays.length,
     itineraryDays,
   }
@@ -165,13 +173,18 @@ export function TripForm({ tripId, trips, saveTrip, navigate, ...props }) {
   const onSubmit = async (event) => {
     event.preventDefault()
     const itineraryDays = createItineraryDays(form.durationDays, form.itineraryDays)
+    const imageUrls = parseImageUrls(form.imageUrlsText || form.imageUrl)
+    const tripForm = { ...form }
+    delete tripForm.imageUrlsText
     await saveTrip({
-      ...form,
+      ...tripForm,
       price: Number(form.price),
       quota: Number(form.quota),
       slots: Number(form.slots),
       workerCount: Math.max(1, Number(form.workerCount) || 1),
       isPrivateTrip: Boolean(form.isPrivateTrip),
+      imageUrl: imageUrls[0] || '',
+      imageUrls,
       durationDays: itineraryDays.length,
       itineraryDays,
       itinerary: itineraryDays.map((item) => `Hari ${item.day}: ${item.text}`).join('\n\n'),
@@ -199,6 +212,7 @@ export function TripForm({ tripId, trips, saveTrip, navigate, ...props }) {
           <label>Kebutuhan pekerja<input required type="number" min="1" value={form.workerCount} onChange={(e) => setForm({ ...form, workerCount: e.target.value })} /></label>
           <label>Jenis trip<select value={form.isPrivateTrip ? 'private' : 'open'} onChange={(e) => setForm({ ...form, isPrivateTrip: e.target.value === 'private' })}><option value="open">Open trip</option><option value="private">Private trip</option></select></label>
           <label>Status<select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>{tripStatuses.map((status) => <option key={status}>{status}</option>)}</select></label>
+          <label className="full">Link gambar trip<textarea placeholder={'https://static.uc.ac.id/htb/2019/01/maxresdefault.jpg\nhttps://contoh.com/gambar-kedua.jpg'} value={form.imageUrlsText} onChange={(e) => setForm({ ...form, imageUrlsText: e.target.value })} /></label>
           <label className="full">Deskripsi<textarea required value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></label>
           <label className="full">Fasilitas<textarea required value={form.facilities} onChange={(e) => setForm({ ...form, facilities: e.target.value })} /></label>
           <div className="itinerary-builder full">

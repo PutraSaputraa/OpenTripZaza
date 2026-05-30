@@ -264,11 +264,44 @@ function TripCard({ trip, navigate }) {
   )
 }
 
+const getTripImages = (trip) => {
+  const urls = Array.isArray(trip?.imageUrls) ? trip.imageUrls : []
+  return [...urls, trip?.imageUrl].filter(Boolean)
+}
+
 function TripVisual({ trip, large }) {
+  const [firstImage] = getTripImages(trip)
+
   return (
     <div className={large ? 'trip-visual trip-visual-large' : 'trip-visual'} role="img" aria-label={trip?.name || 'Open trip'}>
+      {firstImage && <img src={firstImage} alt="" loading="lazy" />}
       <span>{trip?.name || 'Open Trip'}</span>
     </div>
+  )
+}
+
+function TripGallery({ trip }) {
+  const images = getTripImages(trip)
+  const [activeIndex, setActiveIndex] = useState(0)
+  const activeImage = images[activeIndex]
+
+  if (!images.length) return <TripVisual trip={trip} />
+
+  return (
+    <section className="trip-gallery" aria-label={`Galeri ${trip.name}`}>
+      <div className="trip-gallery-main">
+        <img src={activeImage} alt={`Preview ${trip.name}`} />
+      </div>
+      {images.length > 1 && (
+        <div className="trip-gallery-thumbs">
+          {images.map((image, index) => (
+            <button className={index === activeIndex ? 'is-active' : ''} key={image} onClick={() => setActiveIndex(index)} type="button" aria-label={`Tampilkan gambar ${index + 1}`}>
+              <img src={image} alt="" loading="lazy" />
+            </button>
+          ))}
+        </div>
+      )}
+    </section>
   )
 }
 
@@ -314,7 +347,7 @@ export function TripDetail({ tripId, trips, navigate, session, logout }) {
             </div>
             <h1>{trip.name}</h1>
             <p className="detail-destination">{trip.destination}</p>
-            <TripVisual trip={trip} />
+            <TripGallery trip={trip} />
             <InfoBlock title="Deskripsi" text={trip.description} />
             <InfoBlock title="Destinasi" text={trip.destination} />
             <ItineraryBlock trip={trip} />
