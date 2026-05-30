@@ -78,6 +78,13 @@ button:disabled {
   left: 0;
   background: rgba(8, 8, 8, 0.82);
   border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+  transition: background-color 180ms ease, border-color 180ms ease, backdrop-filter 180ms ease;
+}
+
+.home-page .public-nav.nav-on-hero {
+  background: transparent;
+  border-bottom-color: transparent;
+  backdrop-filter: none;
 }
 
 .home-page .brand,

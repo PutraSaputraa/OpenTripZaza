@@ -7,6 +7,27 @@ import { formatCurrency, formatDate, tripName } from '../utils/formatters'
 import { Badge, InfoBlock, NotFound } from './shared'
 
 export function PublicNav({ navigate, session, logout }) {
+  const [isOverHero, setIsOverHero] = useState(() => window.location.pathname === '/' || window.location.pathname === '/open-trip')
+
+  useEffect(() => {
+    const isHomePage = window.location.pathname === '/' || window.location.pathname === '/open-trip'
+    if (!isHomePage) return undefined
+
+    const updateNavState = () => {
+      const hero = document.querySelector('.hero-band')
+      setIsOverHero(Boolean(hero && hero.getBoundingClientRect().bottom > 88))
+    }
+
+    const frame = window.requestAnimationFrame(updateNavState)
+    window.addEventListener('scroll', updateNavState, { passive: true })
+    window.addEventListener('resize', updateNavState)
+    return () => {
+      window.cancelAnimationFrame(frame)
+      window.removeEventListener('scroll', updateNavState)
+      window.removeEventListener('resize', updateNavState)
+    }
+  }, [])
+
   const goHome = () => {
     navigate('/')
   }
@@ -22,7 +43,7 @@ export function PublicNav({ navigate, session, logout }) {
   }
 
   return (
-    <header className="public-nav">
+    <header className={`public-nav ${isOverHero ? 'nav-on-hero' : ''}`}>
       <button className="brand" onClick={goHome}>{session?.role === 'customer' ? `Welcome, ${session.name}` : 'Zaza Open Trip'}</button>
       <nav className="public-nav-center" aria-label="Navigasi halaman">
         <button onClick={() => scrollToHomeSection('open-trip-list')}>Trip</button>
