@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import cinematicVideo from '../assets/cinematic1.mp4'
 import testimoni1 from '../assets/testimoni1.png'
 import testimoni2 from '../assets/testimoni2.png'
@@ -88,6 +88,21 @@ export function CustomerCatalog({ trips, navigate, session, logout }) {
   const openTrips = trips.filter((trip) => !trip.isPrivateTrip)
   const privateTrips = trips.filter((trip) => trip.isPrivateTrip)
 
+  useEffect(() => {
+    const elements = document.querySelectorAll('.reveal-on-scroll')
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-visible')
+          observer.unobserve(entry.target)
+        }
+      })
+    }, { threshold: 0.16 })
+
+    elements.forEach((element) => observer.observe(element))
+    return () => observer.disconnect()
+  }, [openTrips.length, privateTrips.length])
+
   return (
     <main className="public-page home-page">
       <PublicNav navigate={navigate} session={session} logout={logout} />
@@ -139,7 +154,7 @@ export function CustomerCatalog({ trips, navigate, session, logout }) {
 
       <section className="testimonial-grid">
         {testimonials.map((item) => (
-          <article className="testimonial-card" key={item.name}>
+          <article className="testimonial-card reveal-on-scroll" key={item.name}>
             <img src={item.image} alt={`Testimoni ${item.name}`} />
             <div>
               <p>{item.quote}</p>
@@ -157,7 +172,7 @@ export function CustomerCatalog({ trips, navigate, session, logout }) {
         </div>
         <div className="faq-list">
           {faqs.map(([question, answer]) => (
-            <details className="faq-item" key={question}>
+            <details className="faq-item reveal-on-scroll" key={question}>
               <summary>{question}</summary>
               <p>{answer}</p>
             </details>
@@ -165,7 +180,7 @@ export function CustomerCatalog({ trips, navigate, session, logout }) {
         </div>
       </section>
 
-      <footer className="public-footer">
+      <footer className="public-footer reveal-on-scroll">
         <div>
           <h2>Zaza Open Trip</h2>
           <p>Siap bantu rencana perjalanan open trip dan private tour kamu.</p>
@@ -183,7 +198,7 @@ function TripCard({ trip, navigate }) {
   const typeLabel = trip.isPrivateTrip ? 'Private tour' : 'Open trip'
 
   return (
-    <article className="trip-card">
+    <article className="trip-card reveal-on-scroll">
       <TripVisual trip={trip} />
       <div className="trip-card-body">
         <div className="card-title-row">

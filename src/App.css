@@ -42,6 +42,17 @@ button:disabled {
   opacity: 0.55;
 }
 
+.reveal-on-scroll {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 520ms ease, transform 520ms ease, box-shadow 220ms ease;
+}
+
+.reveal-on-scroll.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 .public-page {
   min-height: 100vh;
   background: var(--color-surface);
@@ -470,6 +481,20 @@ button:disabled {
   box-shadow: var(--shadow-soft);
 }
 
+.testimonial-card:hover,
+.faq-item:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 18px 42px rgba(23, 19, 13, 0.12);
+}
+
+.testimonial-card:nth-child(2) {
+  transition-delay: 80ms;
+}
+
+.testimonial-card:nth-child(3) {
+  transition-delay: 150ms;
+}
+
 .testimonial-card img {
   display: block;
   width: 100%;
@@ -525,6 +550,18 @@ button:disabled {
   box-shadow: var(--shadow-soft);
 }
 
+.faq-item:nth-child(2) {
+  transition-delay: 70ms;
+}
+
+.faq-item:nth-child(3) {
+  transition-delay: 140ms;
+}
+
+.faq-item:nth-child(4) {
+  transition-delay: 210ms;
+}
+
 .faq-item summary {
   cursor: pointer;
   padding: 16px 18px;
@@ -578,6 +615,18 @@ button:disabled {
   text-decoration: none;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .reveal-on-scroll,
+  .reveal-on-scroll.is-visible,
+  .trip-card:hover,
+  .testimonial-card:hover,
+  .faq-item:hover {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
 .empty-state {
   grid-column: 1 / -1;
   border: 1px dashed #d6b33f;
@@ -604,6 +653,23 @@ button:disabled {
 
 .trip-card {
   overflow: hidden;
+}
+
+.trip-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 18px 42px rgba(23, 19, 13, 0.12);
+}
+
+.trip-grid .trip-card:nth-child(2) {
+  transition-delay: 80ms;
+}
+
+.trip-grid .trip-card:nth-child(3) {
+  transition-delay: 150ms;
+}
+
+.trip-grid .trip-card:nth-child(4) {
+  transition-delay: 220ms;
 }
 
 .trip-card-body {
