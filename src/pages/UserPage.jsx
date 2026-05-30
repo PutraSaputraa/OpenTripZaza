@@ -339,7 +339,6 @@ export function TripDetail({ tripId, trips, navigate, session, logout }) {
     <main className="public-page">
       <PublicNav navigate={navigate} session={session} logout={logout} />
       <section className="trip-detail-page">
-        <TripVisual trip={trip} large />
         <div className="trip-detail-layout">
           <article className="trip-detail-main">
             <div className="card-badge-stack">
