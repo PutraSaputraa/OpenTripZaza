@@ -52,7 +52,7 @@ button:disabled {
   top: 0;
   z-index: 10;
   display: grid;
-  grid-template-columns: minmax(160px, 1fr) auto minmax(160px, 1fr);
+  grid-template-columns: minmax(180px, 1fr) auto minmax(180px, 1fr);
   align-items: center;
   gap: 16px;
   padding: 18px clamp(18px, 4vw, 56px);
@@ -85,6 +85,12 @@ button:disabled {
   color: #fff;
 }
 
+.home-page .public-nav .public-nav-center button {
+  border-color: transparent;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.88);
+}
+
 .home-page .public-nav nav .nav-accent {
   border-color: var(--color-gold);
   background: var(--color-gold);
@@ -102,12 +108,14 @@ button:disabled {
 .public-nav-center button {
   border: 0;
   background: transparent;
-  padding: 8px 10px;
+  color: var(--color-text);
+  padding: 4px 6px;
+  font-weight: 600;
 }
 
-.home-page .public-nav-center button {
-  background: transparent;
-  border-color: transparent;
+.public-nav-center button:hover,
+.public-nav-center button:focus-visible {
+  color: var(--color-gold);
 }
 
 .public-nav nav,
@@ -121,6 +129,7 @@ button:disabled {
 }
 
 .brand {
+  justify-self: start;
   border: 0;
   background: transparent;
   color: var(--color-text);
