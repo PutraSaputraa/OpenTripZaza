@@ -449,7 +449,7 @@ button:disabled {
   align-items: end;
   justify-content: space-between;
   gap: 16px;
-  padding: 38px clamp(18px, 4vw, 56px) 18px;
+  padding: 38px clamp(24px, 6vw, 112px) 18px;
   scroll-margin-top: 92px;
 }
 
@@ -463,14 +463,14 @@ button:disabled {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 16px;
-  padding: 0 clamp(18px, 4vw, 56px) 56px;
+  padding: 0 clamp(24px, 6vw, 112px) 56px;
 }
 
 .testimonial-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 16px;
-  padding: 0 clamp(18px, 4vw, 56px) 56px;
+  padding: 0 clamp(24px, 6vw, 112px) 56px;
 }
 
 .testimonial-card {
@@ -530,7 +530,7 @@ button:disabled {
   display: grid;
   grid-template-columns: minmax(220px, 0.45fr) minmax(0, 1fr);
   gap: 24px;
-  padding: 0 clamp(18px, 4vw, 56px) 72px;
+  padding: 0 clamp(24px, 6vw, 112px) 72px;
 }
 
 .faq-head h2 {
@@ -584,7 +584,7 @@ button:disabled {
   gap: 18px;
   border-top: 1px solid var(--color-line);
   background: #ffffff;
-  padding: 28px clamp(18px, 4vw, 56px);
+  padding: 28px clamp(24px, 6vw, 112px);
 }
 
 .public-footer h2 {
