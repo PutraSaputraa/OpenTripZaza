@@ -45,7 +45,7 @@ button:disabled {
 .reveal-on-scroll {
   opacity: 0;
   transform: translateY(24px);
-  transition: opacity 520ms ease, transform 520ms ease, box-shadow 220ms ease;
+  transition: opacity 520ms ease, transform 520ms ease, box-shadow 140ms ease;
 }
 
 .reveal-on-scroll.is-visible {
@@ -485,6 +485,7 @@ button:disabled {
 .faq-item:hover {
   transform: translateY(-4px);
   box-shadow: 0 18px 42px rgba(23, 19, 13, 0.12);
+  transition-duration: 140ms;
 }
 
 .testimonial-card:nth-child(2) {
@@ -658,6 +659,7 @@ button:disabled {
 .trip-card:hover {
   transform: translateY(-4px);
   box-shadow: 0 18px 42px rgba(23, 19, 13, 0.12);
+  transition-duration: 140ms;
 }
 
 .trip-grid .trip-card:nth-child(2) {
