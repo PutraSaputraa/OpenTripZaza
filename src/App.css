@@ -51,9 +51,9 @@ button:disabled {
   position: sticky;
   top: 0;
   z-index: 10;
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(160px, 1fr) auto minmax(160px, 1fr);
   align-items: center;
-  justify-content: space-between;
   gap: 16px;
   padding: 18px clamp(18px, 4vw, 56px);
   background: rgba(245, 249, 247, 0.92);
@@ -89,6 +89,25 @@ button:disabled {
   border-color: var(--color-gold);
   background: var(--color-gold);
   color: var(--color-ink);
+}
+
+.public-nav > nav:last-child {
+  justify-content: flex-end;
+}
+
+.public-nav-center {
+  justify-content: center;
+}
+
+.public-nav-center button {
+  border: 0;
+  background: transparent;
+  padding: 8px 10px;
+}
+
+.home-page .public-nav-center button {
+  background: transparent;
+  border-color: transparent;
 }
 
 .public-nav nav,
@@ -2198,16 +2217,23 @@ th {
 @media (max-width: 760px) {
   .public-nav {
     align-items: stretch;
-    flex-direction: column;
+    grid-template-columns: 1fr;
   }
 
-  .public-nav nav {
+  .public-nav nav,
+  .public-nav-center {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    justify-content: stretch;
   }
 
   .public-nav nav button {
     padding: 9px 8px;
+  }
+
+  .public-nav > nav:last-child {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    justify-content: stretch;
   }
 
   .public-nav nav .nav-icon-btn {

@@ -7,9 +7,28 @@ import { formatCurrency, formatDate, tripName } from '../utils/formatters'
 import { Badge, InfoBlock, NotFound } from './shared'
 
 export function PublicNav({ navigate, session, logout }) {
+  const goHome = () => {
+    navigate('/')
+  }
+
+  const scrollToHomeSection = (sectionId) => {
+    const scrollToTarget = () => document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth' })
+    if (window.location.pathname === '/' || window.location.pathname === '/open-trip') {
+      scrollToTarget()
+      return
+    }
+    navigate('/')
+    window.setTimeout(scrollToTarget, 120)
+  }
+
   return (
     <header className="public-nav">
-      <button className="brand" onClick={() => navigate('/')}>{session?.role === 'customer' ? `Welcome, ${session.name}` : 'Zaza Open Trip'}</button>
+      <button className="brand" onClick={goHome}>{session?.role === 'customer' ? `Welcome, ${session.name}` : 'Zaza Open Trip'}</button>
+      <nav className="public-nav-center" aria-label="Navigasi halaman">
+        <button onClick={() => scrollToHomeSection('open-trip-list')}>Trip</button>
+        <button onClick={goHome}>Home</button>
+        <button onClick={() => scrollToHomeSection('testimoni-list')}>Testimoni</button>
+      </nav>
       <nav>
         {session?.role === 'customer' ? (
           <>
@@ -111,7 +130,7 @@ export function CustomerCatalog({ trips, navigate, session, logout }) {
         {privateTrips.length ? privateTrips.map((trip) => <TripCard key={trip.id} trip={trip} navigate={navigate} />) : <p className="empty-state">Belum ada private trip yang tersedia.</p>}
       </section>
 
-      <section className="section-head compact-section-head">
+      <section className="section-head compact-section-head" id="testimoni-list">
         <div>
           <p className="eyebrow">Cerita perjalanan</p>
           <h2>Testimoni</h2>
