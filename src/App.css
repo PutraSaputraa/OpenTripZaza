@@ -364,19 +364,19 @@ button:disabled {
 .trip-visual {
   display: grid;
   width: 100%;
-  aspect-ratio: 16 / 10;
+  aspect-ratio: 16 / 7;
   place-items: center;
   border-bottom: 1px solid var(--color-line);
   background: #fff3bf;
   color: var(--color-text);
-  padding: 20px;
+  padding: 14px;
   text-align: center;
 }
 
 .trip-visual span {
   max-width: 80%;
-  font-size: 20px;
-  font-weight: 700;
+  font-size: 16px;
+  font-weight: 600;
   line-height: 1.2;
 }
 
@@ -390,6 +390,10 @@ button:disabled {
 
 .trip-visual-large span {
   font-size: clamp(28px, 4vw, 46px);
+}
+
+.registration-summary .trip-visual {
+  aspect-ratio: 16 / 6;
 }
 
 .eyebrow {
