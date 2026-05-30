@@ -796,6 +796,39 @@ button:disabled {
   gap: 6px;
 }
 
+.trip-detail-topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.trip-breadcrumb {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+  gap: 7px;
+  color: var(--color-muted);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.trip-breadcrumb button {
+  border: 0;
+  background: transparent;
+  color: var(--color-gold-dark);
+  padding: 0;
+  font-weight: 600;
+}
+
+.trip-breadcrumb span:last-child {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--color-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .trip-type-chip {
   display: inline-flex;
   width: max-content;
@@ -2512,6 +2545,7 @@ th {
   }
 
   .registration-hero,
+  .trip-detail-topline,
   .public-footer,
   .admin-page-head,
   .dashboard-hero,

@@ -305,6 +305,16 @@ function TripGallery({ trip }) {
   )
 }
 
+function TripBreadcrumb({ trip, navigate, checkout }) {
+  return (
+    <div className="trip-breadcrumb">
+      <button onClick={() => navigate('/')} type="button">Home</button>
+      <span>-</span>
+      {checkout ? <button onClick={() => navigate(`/open-trip/${trip.id}`)} type="button">{trip.name}</button> : <span>{trip.name}</span>}
+    </div>
+  )
+}
+
 function ItineraryBlock({ trip }) {
   const days = Array.isArray(trip.itineraryDays) && trip.itineraryDays.length
     ? trip.itineraryDays.map((item, index) => ({
@@ -341,7 +351,8 @@ export function TripDetail({ tripId, trips, navigate, session, logout }) {
       <section className="trip-detail-page">
         <div className="trip-detail-layout">
           <article className="trip-detail-main">
-            <div className="card-badge-stack">
+            <div className="trip-detail-topline">
+              <TripBreadcrumb trip={trip} navigate={navigate} />
               <span className="trip-type-chip">{trip.isPrivateTrip ? 'Private tour' : 'Open trip'}</span>
             </div>
             <h1>{trip.name}</h1>
@@ -386,7 +397,6 @@ export function RegistrationPage({ tripId, trips, submitRegistration, navigate, 
   const estimatedTotal = selectedTrip ? selectedTrip.price * participants : 0
   const isPrivateTrip = Boolean(selectedTrip?.isPrivateTrip)
   const isPrivateBooking = isPrivateTrip || form.isPrivateTour
-  const availableTrips = trips.filter((item) => item.status === 'Tersedia')
 
   if (!trip) return <NotFound navigate={navigate} />
 
@@ -410,11 +420,11 @@ export function RegistrationPage({ tripId, trips, submitRegistration, navigate, 
       <section className="registration-page">
         <div className="registration-hero">
           <div>
-            <p className="eyebrow">Pendaftaran trip</p>
+            <TripBreadcrumb trip={trip} navigate={navigate} checkout />
             <h1>Lengkapi data untuk ikut {trip.name}</h1>
             <p className="muted">Data kamu akan dikirim ke dashboard admin dan masuk sebagai Menunggu Approval sebelum keberangkatan.</p>
           </div>
-          <button className="outline-btn" onClick={() => navigate(`/open-trip/${trip.id}`)}>Kembali ke detail</button>
+          <span className="trip-type-chip">{trip.isPrivateTrip ? 'Private tour' : 'Open trip'}</span>
         </div>
 
         <div className="registration-layout">
@@ -458,15 +468,6 @@ export function RegistrationPage({ tripId, trips, submitRegistration, navigate, 
             </div>
             <div className="registration-fields">
               <label>Jumlah peserta<input type="number" min="1" max={selectedTrip.slots} value={form.participants} onChange={(e) => setForm({ ...form, participants: e.target.value })} /></label>
-              <label>Pilihan trip<select value={form.tripId} onChange={(e) => {
-                const nextTripId = Number(e.target.value)
-                const nextTrip = trips.find((item) => item.id === nextTripId)
-                setForm({ ...form, tripId: nextTripId, participants: 1, isPrivateTour: Boolean(nextTrip?.isPrivateTrip) })
-              }}>{availableTrips.map((item) => <option key={item.id} value={item.id}>{item.name} - {item.isPrivateTrip ? 'Private trip' : 'Open trip'}</option>)}</select></label>
-              <label className="private-tour-option full">
-                <input type="checkbox" disabled={isPrivateTrip} checked={isPrivateBooking} onChange={(e) => setForm({ ...form, isPrivateTour: e.target.checked })} />
-                <span><strong>{isPrivateTrip ? 'Private trip' : 'Private tour'}</strong><small>{isPrivateTrip ? 'Paket ini dibuat khusus untuk 1 rombongan saja.' : 'Trip hanya untuk 1 rombongan kamu setelah disetujui admin.'}</small></span>
-              </label>
               <label className="full">Catatan tambahan<textarea placeholder="Contoh: request pickup, alergi makanan, atau catatan rombongan." value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></label>
             </div>
 
