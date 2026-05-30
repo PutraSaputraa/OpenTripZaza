@@ -72,12 +72,12 @@ function TripCard({ trip, navigate }) {
           <h3>{trip.name}</h3>
           <Badge status={trip.status} />
         </div>
-        <p>{trip.destination}</p>
+        <p className="icon-line"><span className="asset-icon icon-geo" aria-hidden="true" />{trip.destination}</p>
         <dl>
-          <div><dt>Tanggal</dt><dd>{formatDate(trip.date)}</dd></div>
-          <div><dt>Harga</dt><dd>{formatCurrency(trip.price)}</dd></div>
-          <div><dt>Kuota</dt><dd>{trip.quota} peserta</dd></div>
-          <div><dt>Slot</dt><dd>{trip.slots} tersedia</dd></div>
+          <div><dt><span className="asset-icon icon-calendar" aria-hidden="true" />Tanggal</dt><dd>{formatDate(trip.date)}</dd></div>
+          <div><dt><span className="asset-icon icon-currency" aria-hidden="true" />Harga</dt><dd>{formatCurrency(trip.price)}</dd></div>
+          <div><dt><span className="asset-icon icon-people" aria-hidden="true" />Kuota</dt><dd>{trip.quota} peserta</dd></div>
+          <div><dt><span className="asset-icon icon-ticket" aria-hidden="true" />Slot</dt><dd>{trip.slots} tersedia</dd></div>
         </dl>
         <button className="primary-btn" onClick={() => navigate(`/open-trip/${trip.id}`)}>Lihat detail</button>
       </div>
@@ -165,7 +165,7 @@ export function TripDetail({ tripId, trips, navigate, session, logout }) {
 
 export function RegistrationPage({ tripId, trips, submitRegistration, navigate, session, logout }) {
   const trip = trips.find((item) => item.id === tripId)
-  const [form, setForm] = useState({ name: session?.role === 'customer' ? session.name : '', whatsapp: session?.whatsapp || '', email: session?.role === 'customer' ? session.email : '', participants: 1, tripId, notes: '' })
+  const [form, setForm] = useState({ name: session?.role === 'customer' ? session.name : '', whatsapp: session?.whatsapp || '', email: session?.role === 'customer' ? session.email : '', participants: 1, tripId, notes: '', isPrivateTour: false })
   const [error, setError] = useState('')
   const selectedTrip = trips.find((item) => item.id === Number(form.tripId)) || trip
   const participants = Number(form.participants) || 1
@@ -208,9 +208,10 @@ export function RegistrationPage({ tripId, trips, submitRegistration, navigate, 
               <h2>{selectedTrip.name}</h2>
               <p>{selectedTrip.destination}</p>
               <dl className="summary-list">
-                <div><dt>Tanggal</dt><dd>{formatDate(selectedTrip.date)}</dd></div>
-                <div><dt>Harga</dt><dd>{formatCurrency(selectedTrip.price)} / orang</dd></div>
-                <div><dt>Slot</dt><dd>{selectedTrip.slots} peserta tersedia</dd></div>
+                <div><dt><span className="asset-icon icon-calendar" aria-hidden="true" />Tanggal</dt><dd>{formatDate(selectedTrip.date)}</dd></div>
+                <div><dt><span className="asset-icon icon-currency" aria-hidden="true" />Harga</dt><dd>{formatCurrency(selectedTrip.price)} / orang</dd></div>
+                <div><dt><span className="asset-icon icon-ticket" aria-hidden="true" />Slot</dt><dd>{selectedTrip.slots} peserta tersedia</dd></div>
+                <div><dt>Jenis</dt><dd>{form.isPrivateTour ? 'Private tour' : 'Open trip reguler'}</dd></div>
                 <div><dt>Total estimasi</dt><dd>{formatCurrency(estimatedTotal)}</dd></div>
               </dl>
             </div>
@@ -241,6 +242,10 @@ export function RegistrationPage({ tripId, trips, submitRegistration, navigate, 
             <div className="registration-fields">
               <label>Jumlah peserta<input type="number" min="1" max={selectedTrip.slots} value={form.participants} onChange={(e) => setForm({ ...form, participants: e.target.value })} /></label>
               <label>Pilihan open trip<select value={form.tripId} onChange={(e) => setForm({ ...form, tripId: Number(e.target.value), participants: 1 })}>{trips.filter((item) => item.status === 'Tersedia').map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
+              <label className="private-tour-option full">
+                <input type="checkbox" checked={form.isPrivateTour} onChange={(e) => setForm({ ...form, isPrivateTour: e.target.checked })} />
+                <span><strong>Private tour</strong><small>Trip hanya untuk 1 rombongan kamu setelah disetujui admin.</small></span>
+              </label>
               <label className="full">Catatan tambahan<textarea placeholder="Contoh: request pickup, alergi makanan, atau catatan rombongan." value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></label>
             </div>
 
@@ -294,13 +299,14 @@ export function CustomerAccountPage({ registrations, trips, navigate, session, l
                 <div className="account-registration-head">
                   <div>
                     <h2>{tripName(trips, item.tripId)}</h2>
-                    <p>{trip?.destination || 'Destinasi belum tersedia'}</p>
+              <p className="icon-line"><span className="asset-icon icon-geo" aria-hidden="true" />{trip?.destination || 'Destinasi belum tersedia'}</p>
                   </div>
                   <Badge status={item.status} />
                 </div>
                 <dl>
-                  <div><dt>Tanggal</dt><dd>{trip ? formatDate(trip.date) : '-'}</dd></div>
-                  <div><dt>Peserta</dt><dd>{item.participants} orang</dd></div>
+                  <div><dt><span className="asset-icon icon-calendar" aria-hidden="true" />Tanggal</dt><dd>{trip ? formatDate(trip.date) : '-'}</dd></div>
+                  <div><dt>Jenis</dt><dd>{item.isPrivateTour ? 'Private tour' : 'Open trip reguler'}</dd></div>
+                  <div><dt><span className="asset-icon icon-people" aria-hidden="true" />Peserta</dt><dd>{item.participants} orang</dd></div>
                   <div><dt>WhatsApp</dt><dd>{item.whatsapp}</dd></div>
                   <div><dt>Catatan</dt><dd>{item.notes || '-'}</dd></div>
                 </dl>

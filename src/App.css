@@ -176,6 +176,51 @@ button:disabled {
   -webkit-mask-image: url('./assets/sign-out-alt.svg');
 }
 
+.asset-icon {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  flex: 0 0 auto;
+  background: currentColor;
+  mask-position: center;
+  mask-repeat: no-repeat;
+  mask-size: contain;
+  -webkit-mask-position: center;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-size: contain;
+}
+
+.icon-calendar {
+  mask-image: url('./assets/calendar.svg');
+  -webkit-mask-image: url('./assets/calendar.svg');
+}
+
+.icon-currency {
+  mask-image: url('./assets/currency-dollar.svg');
+  -webkit-mask-image: url('./assets/currency-dollar.svg');
+}
+
+.icon-geo {
+  mask-image: url('./assets/geo-alt.svg');
+  -webkit-mask-image: url('./assets/geo-alt.svg');
+}
+
+.icon-people {
+  mask-image: url('./assets/people.svg');
+  -webkit-mask-image: url('./assets/people.svg');
+}
+
+.icon-ticket {
+  mask-image: url('./assets/ticket-perforated.svg');
+  -webkit-mask-image: url('./assets/ticket-perforated.svg');
+}
+
+.icon-line {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .primary-btn {
   border: 0;
   border-radius: 8px;
@@ -452,6 +497,9 @@ button:disabled {
 
 .trip-card dt,
 .metric span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   color: var(--color-muted);
   font-size: 12px;
   font-weight: 500;
@@ -769,6 +817,9 @@ button:disabled {
 }
 
 .summary-list dt {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   color: var(--color-muted);
   font-size: 12px;
   font-weight: 500;
@@ -856,6 +907,40 @@ button:disabled {
 .registration-fields textarea {
   min-height: 120px;
   resize: vertical;
+}
+
+.private-tour-option {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+  border: 1px solid var(--color-line);
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 14px;
+}
+
+.private-tour-option input {
+  width: 18px;
+  height: 18px;
+  margin: 2px 0 0;
+  accent-color: var(--color-gold);
+}
+
+.private-tour-option span {
+  display: grid;
+  gap: 4px;
+}
+
+.private-tour-option strong {
+  color: var(--color-text);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.private-tour-option small {
+  color: var(--color-muted);
+  line-height: 1.45;
 }
 
 .registration-submit {
@@ -970,6 +1055,9 @@ button:disabled {
 }
 
 .account-registration-card dt {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   color: var(--color-muted);
   font-size: 12px;
   font-weight: 500;
@@ -1497,6 +1585,9 @@ button:disabled {
 
 .admin-trip-price span,
 .admin-trip-meta dt {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   color: var(--color-muted);
   font-size: 12px;
   font-weight: 500;
@@ -1585,6 +1676,9 @@ button:disabled {
 
 .schedule-date-row span,
 .schedule-metrics dt {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   color: var(--color-muted);
   font-size: 12px;
   font-weight: 500;

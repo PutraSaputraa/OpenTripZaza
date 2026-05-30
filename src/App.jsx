@@ -128,6 +128,9 @@ function App() {
   }, [registrations])
 
   const updateTripSlots = async (tripId, nextRegistrations = registrations) => {
+    const approvedRegistrations = nextRegistrations
+      .filter((item) => item.tripId === tripId && (item.status === 'Disetujui' || item.status === 'Selesai'))
+    const hasApprovedPrivateTour = approvedRegistrations.some((item) => item.isPrivateTour)
     const approvedCount = nextRegistrations
       .filter((item) => item.tripId === tripId && (item.status === 'Disetujui' || item.status === 'Selesai'))
       .reduce((total, item) => total + Number(item.participants), 0)
@@ -135,7 +138,7 @@ function App() {
     const trip = trips.find((item) => item.id === tripId)
     if (!trip) return
 
-    const slots = Math.max(trip.quota - approvedCount, 0)
+    const slots = hasApprovedPrivateTour ? 0 : Math.max(trip.quota - approvedCount, 0)
     const status = trip.status === 'Selesai' ? 'Selesai' : slots === 0 ? 'Penuh' : 'Tersedia'
     await updateDoc(doc(db, collections.trips, String(tripId)), { slots, status })
   }
@@ -143,6 +146,9 @@ function App() {
   const submitRegistration = async (form) => {
     const trip = trips.find((item) => item.id === Number(form.tripId))
     if (!trip || trip.slots < Number(form.participants) || trip.status !== 'Tersedia') return false
+    const approvedRegistrations = registrations.filter((item) => item.tripId === Number(form.tripId) && (item.status === 'Disetujui' || item.status === 'Selesai'))
+    const privateTourTaken = approvedRegistrations.some((item) => item.isPrivateTour)
+    if (privateTourTaken || (form.isPrivateTour && approvedRegistrations.length)) return false
     const id = Date.now()
     const nextItem = {
       id,
@@ -152,6 +158,7 @@ function App() {
       participants: Number(form.participants),
       tripId: Number(form.tripId),
       notes: form.notes || '-',
+      isPrivateTour: Boolean(form.isPrivateTour),
       status: 'Menunggu Approval',
     }
     await setDoc(doc(db, collections.registrations, String(id)), nextItem)

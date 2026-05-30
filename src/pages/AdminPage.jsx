@@ -104,19 +104,19 @@ export function AdminTrips(props) {
                 <div className="admin-trip-card-head">
                   <div>
                     <h3>{trip.name}</h3>
-                    <p>{trip.destination}</p>
+                    <p className="icon-line"><span className="asset-icon icon-geo" aria-hidden="true" />{trip.destination}</p>
                   </div>
                   <Badge status={trip.status} />
                 </div>
                 <div className="admin-trip-price">
-                  <span>Harga</span>
+                  <span><span className="asset-icon icon-currency" aria-hidden="true" />Harga</span>
                   <strong>{formatCurrency(trip.price)}</strong>
                 </div>
                 <dl className="admin-trip-meta">
-                  <div><dt>Tanggal</dt><dd>{formatDate(trip.date)}</dd></div>
-                  <div><dt>Kuota</dt><dd>{trip.quota} peserta</dd></div>
-                  <div><dt>Slot</dt><dd>{trip.slots} tersedia</dd></div>
-                  <div><dt>Pekerja</dt><dd>{workerCount} orang</dd></div>
+                  <div><dt><span className="asset-icon icon-calendar" aria-hidden="true" />Tanggal</dt><dd>{formatDate(trip.date)}</dd></div>
+                  <div><dt><span className="asset-icon icon-people" aria-hidden="true" />Kuota</dt><dd>{trip.quota} peserta</dd></div>
+                  <div><dt><span className="asset-icon icon-ticket" aria-hidden="true" />Slot</dt><dd>{trip.slots} tersedia</dd></div>
+                  <div><dt><span className="asset-icon icon-people" aria-hidden="true" />Pekerja</dt><dd>{workerCount} orang</dd></div>
                 </dl>
                 <div className="admin-trip-actions">
                   <button className="outline-btn" onClick={() => props.navigate(`/admin/open-trip/edit/${trip.id}`)}>Edit</button>
@@ -274,18 +274,18 @@ export function AdminSchedule(props) {
                 <div className="schedule-card-head">
                   <div>
                     <h3>{trip.name}</h3>
-                    <p>{trip.destination}</p>
+                    <p className="icon-line"><span className="asset-icon icon-geo" aria-hidden="true" />{trip.destination}</p>
                   </div>
                   <Badge status={trip.status} />
                 </div>
                 <div className="schedule-date-row">
-                  <span>Tanggal</span>
+                  <span><span className="asset-icon icon-calendar" aria-hidden="true" />Tanggal</span>
                   <strong>{formatDate(trip.date)}</strong>
                 </div>
                 <dl className="schedule-metrics">
-                  <div><dt>Peserta</dt><dd>{approvedCount}/{trip.quota}</dd></div>
+                  <div><dt><span className="asset-icon icon-people" aria-hidden="true" />Peserta</dt><dd>{approvedCount}/{trip.quota}</dd></div>
                   <div><dt>Menunggu</dt><dd>{waitingCount}</dd></div>
-                  <div><dt>Pekerja</dt><dd>{assignedJobs}/{workerTarget}</dd></div>
+                  <div><dt><span className="asset-icon icon-people" aria-hidden="true" />Pekerja</dt><dd>{assignedJobs}/{workerTarget}</dd></div>
                 </dl>
                 <div className="schedule-card-footer">
                   <div className="participant-list">{participants.length ? participants.slice(0, 3).map((item) => <span key={item.id}>{item.name} ({item.participants})</span>) : <span>Belum ada peserta disetujui</span>}</div>
@@ -372,6 +372,7 @@ function RegistrationStatusColumn({ title, items, setRegistrationStatus }) {
               <dl>
                 <div><dt>Email</dt><dd>{item.email}</dd></div>
                 <div><dt>WhatsApp</dt><dd>{item.whatsapp}</dd></div>
+                <div><dt>Jenis</dt><dd>{item.isPrivateTour ? 'Private tour' : 'Open trip reguler'}</dd></div>
                 <div><dt>Peserta</dt><dd>{item.participants} orang</dd></div>
                 <div><dt>Catatan</dt><dd>{item.notes || '-'}</dd></div>
               </dl>
