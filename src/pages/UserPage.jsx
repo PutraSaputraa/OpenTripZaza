@@ -84,6 +84,38 @@ const faqs = [
   ['Di mana melihat status pendaftaran?', 'Setelah login sebagai customer, buka halaman akun untuk melihat trip yang kamu daftar dan status terbarunya.'],
 ]
 
+function TestimonialCarousel() {
+  const [activeIndex, setActiveIndex] = useState(0)
+  const total = testimonials.length
+  const visibleTestimonials = [
+    { item: testimonials[(activeIndex - 1 + total) % total], position: 'prev' },
+    { item: testimonials[activeIndex], position: 'active' },
+    { item: testimonials[(activeIndex + 1) % total], position: 'next' },
+  ]
+
+  const goToPrevious = () => setActiveIndex((current) => (current - 1 + total) % total)
+  const goToNext = () => setActiveIndex((current) => (current + 1) % total)
+
+  return (
+    <section className="testimonial-carousel reveal-on-scroll" aria-label="Carousel testimoni">
+      <button className="carousel-control carousel-control-prev" onClick={goToPrevious} aria-label="Testimoni sebelumnya">&lsaquo;</button>
+      <div className="testimonial-carousel-track">
+        {visibleTestimonials.map(({ item, position }) => (
+          <article className={`testimonial-card testimonial-slide testimonial-slide-${position}`} key={`${position}-${item.name}`}>
+            <img src={item.image} alt={`Testimoni ${item.name}`} />
+            <div>
+              <p>{item.quote}</p>
+              <h3>{item.name}</h3>
+              <span>{item.trip}</span>
+            </div>
+          </article>
+        ))}
+      </div>
+      <button className="carousel-control carousel-control-next" onClick={goToNext} aria-label="Testimoni berikutnya">&rsaquo;</button>
+    </section>
+  )
+}
+
 export function CustomerCatalog({ trips, navigate, session, logout }) {
   const openTrips = trips.filter((trip) => !trip.isPrivateTrip)
   const privateTrips = trips.filter((trip) => trip.isPrivateTrip)
@@ -152,18 +184,7 @@ export function CustomerCatalog({ trips, navigate, session, logout }) {
         </div>
       </section>
 
-      <section className="testimonial-grid">
-        {testimonials.map((item) => (
-          <article className="testimonial-card reveal-on-scroll" key={item.name}>
-            <img src={item.image} alt={`Testimoni ${item.name}`} />
-            <div>
-              <p>{item.quote}</p>
-              <h3>{item.name}</h3>
-              <span>{item.trip}</span>
-            </div>
-          </article>
-        ))}
-      </section>
+      <TestimonialCarousel />
 
       <section className="faq-section">
         <div className="faq-head">
