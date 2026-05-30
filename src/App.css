@@ -427,6 +427,129 @@ button:disabled {
   padding: 0 clamp(18px, 4vw, 56px) 56px;
 }
 
+.testimonial-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  padding: 0 clamp(18px, 4vw, 56px) 56px;
+}
+
+.testimonial-card {
+  overflow: hidden;
+  border: 1px solid var(--color-line);
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: var(--shadow-soft);
+}
+
+.testimonial-card img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  background: var(--color-gold-soft);
+}
+
+.testimonial-card div {
+  display: grid;
+  gap: 8px;
+  padding: 16px;
+}
+
+.testimonial-card p {
+  margin: 0;
+  color: var(--color-text);
+  line-height: 1.55;
+}
+
+.testimonial-card h3 {
+  margin: 8px 0 0;
+  color: var(--color-text);
+  font-size: 17px;
+}
+
+.testimonial-card span {
+  color: var(--color-muted);
+  font-size: 13px;
+}
+
+.faq-section {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.45fr) minmax(0, 1fr);
+  gap: 24px;
+  padding: 0 clamp(18px, 4vw, 56px) 72px;
+}
+
+.faq-head h2 {
+  margin: 0;
+  color: var(--color-text);
+}
+
+.faq-list {
+  display: grid;
+  gap: 10px;
+}
+
+.faq-item {
+  border: 1px solid var(--color-line);
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: var(--shadow-soft);
+}
+
+.faq-item summary {
+  cursor: pointer;
+  padding: 16px 18px;
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+.faq-item p {
+  margin: 0;
+  border-top: 1px solid var(--color-line);
+  color: var(--color-muted);
+  line-height: 1.6;
+  padding: 0 18px 16px;
+}
+
+.public-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  border-top: 1px solid var(--color-line);
+  background: #ffffff;
+  padding: 28px clamp(18px, 4vw, 56px);
+}
+
+.public-footer h2 {
+  margin: 0 0 6px;
+  color: var(--color-text);
+  font-size: 22px;
+}
+
+.public-footer p {
+  margin: 0;
+  color: var(--color-muted);
+}
+
+.footer-contact {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.footer-contact a {
+  border: 1px solid var(--color-line);
+  border-radius: 999px;
+  background: var(--color-gold-soft);
+  color: var(--color-text);
+  padding: 10px 14px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
 .empty-state {
   grid-column: 1 / -1;
   border: 1px dashed #d6b33f;
@@ -2044,6 +2167,7 @@ th {
 
 @media (max-width: 1080px) {
   .trip-grid,
+  .testimonial-grid,
   .job-grid,
   .admin-trip-grid,
   .account-summary-grid,
@@ -2057,6 +2181,7 @@ th {
   .form-shell,
   .registration-layout,
   .auth-shell,
+  .faq-section,
   .admin-card-grid,
   .schedule-detail-grid,
   .registration-status-board,
@@ -2091,6 +2216,7 @@ th {
   }
 
   .trip-grid,
+  .testimonial-grid,
   .job-grid,
   .stat-grid,
   .data-form,
@@ -2121,6 +2247,7 @@ th {
   }
 
   .registration-hero,
+  .public-footer,
   .admin-page-head,
   .dashboard-hero,
   .account-hero,

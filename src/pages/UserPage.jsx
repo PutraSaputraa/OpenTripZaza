@@ -1,5 +1,8 @@
 import { useState } from 'react'
 import cinematicVideo from '../assets/cinematic1.mp4'
+import testimoni1 from '../assets/testimoni1.png'
+import testimoni2 from '../assets/testimoni2.png'
+import testimoni3 from '../assets/testimoni3.png'
 import { formatCurrency, formatDate, tripName } from '../utils/formatters'
 import { Badge, InfoBlock, NotFound } from './shared'
 
@@ -34,6 +37,34 @@ const tripTypeLabel = (trip, registration) => {
   return 'Open trip reguler'
 }
 
+const testimonials = [
+  {
+    name: 'Nadia Putri',
+    trip: 'Labuan Bajo Sailing Trip',
+    image: testimoni1,
+    quote: 'Tripnya rapi, admin responsif, dan itinerary tiap hari jelas. Aku tinggal siapin barang dan menikmati perjalanan.',
+  },
+  {
+    name: 'Raka Aditya',
+    trip: 'Raja Ampat Explorer',
+    image: testimoni2,
+    quote: 'Suka banget karena detail peserta dan jadwalnya transparan. Rasanya lebih tenang dari awal daftar sampai pulang.',
+  },
+  {
+    name: 'Maya Lestari',
+    trip: 'Private Tour Yogyakarta',
+    image: testimoni3,
+    quote: 'Private tournya nyaman untuk keluarga. Bisa lebih fleksibel tanpa campur dengan rombongan lain.',
+  },
+]
+
+const faqs = [
+  ['Bagaimana cara daftar trip?', 'Pilih trip yang kamu mau, buka detailnya, lalu isi form pendaftaran. Status awal akan masuk sebagai menunggu approval admin.'],
+  ['Apa bedanya open trip dan private tour?', 'Open trip digabung dengan peserta lain sesuai kuota, sedangkan private tour hanya untuk satu rombongan kamu setelah disetujui admin.'],
+  ['Apakah pendaftaran langsung disetujui?', 'Belum. Admin akan mengecek data, slot, dan kebutuhan trip sebelum mengubah status menjadi disetujui atau ditolak.'],
+  ['Di mana melihat status pendaftaran?', 'Setelah login sebagai customer, buka halaman akun untuk melihat trip yang kamu daftar dan status terbarunya.'],
+]
+
 export function CustomerCatalog({ trips, navigate, session, logout }) {
   const openTrips = trips.filter((trip) => !trip.isPrivateTrip)
   const privateTrips = trips.filter((trip) => trip.isPrivateTrip)
@@ -60,8 +91,8 @@ export function CustomerCatalog({ trips, navigate, session, logout }) {
 
       <section className="section-head" id="open-trip-list">
         <div>
-          <p className="eyebrow">Katalog customer</p>
-          <h2>Open trip tersedia</h2>
+          <p className="eyebrow">Berpergian kemana saja dengan orang baru</p>
+          <h2>Open trip</h2>
         </div>
       </section>
 
@@ -71,19 +102,67 @@ export function CustomerCatalog({ trips, navigate, session, logout }) {
 
       <section className="section-head compact-section-head">
         <div>
-          <p className="eyebrow">Eksklusif rombongan</p>
-          <h2>Private trip tersedia</h2>
+          <p className="eyebrow">Berpergian dengan orang terdekat</p>
+          <h2>Private trip</h2>
         </div>
       </section>
 
       <section className="trip-grid">
         {privateTrips.length ? privateTrips.map((trip) => <TripCard key={trip.id} trip={trip} navigate={navigate} />) : <p className="empty-state">Belum ada private trip yang tersedia.</p>}
       </section>
+
+      <section className="section-head compact-section-head">
+        <div>
+          <p className="eyebrow">Cerita perjalanan</p>
+          <h2>Testimoni</h2>
+        </div>
+      </section>
+
+      <section className="testimonial-grid">
+        {testimonials.map((item) => (
+          <article className="testimonial-card" key={item.name}>
+            <img src={item.image} alt={`Testimoni ${item.name}`} />
+            <div>
+              <p>{item.quote}</p>
+              <h3>{item.name}</h3>
+              <span>{item.trip}</span>
+            </div>
+          </article>
+        ))}
+      </section>
+
+      <section className="faq-section">
+        <div className="faq-head">
+          <p className="eyebrow">Pertanyaan umum</p>
+          <h2>FAQ</h2>
+        </div>
+        <div className="faq-list">
+          {faqs.map(([question, answer]) => (
+            <details className="faq-item" key={question}>
+              <summary>{question}</summary>
+              <p>{answer}</p>
+            </details>
+          ))}
+        </div>
+      </section>
+
+      <footer className="public-footer">
+        <div>
+          <h2>Zaza Open Trip</h2>
+          <p>Siap bantu rencana perjalanan open trip dan private tour kamu.</p>
+        </div>
+        <div className="footer-contact">
+          <a href="https://www.instagram.com/mauaproject/" target="_blank" rel="noreferrer">Instagram</a>
+          <a href="https://wa.me/62882005881248" target="_blank" rel="noreferrer">0882005881248</a>
+        </div>
+      </footer>
     </main>
   )
 }
 
 function TripCard({ trip, navigate }) {
+  const typeLabel = trip.isPrivateTrip ? 'Private tour' : 'Open trip'
+
   return (
     <article className="trip-card">
       <TripVisual trip={trip} />
@@ -91,8 +170,7 @@ function TripCard({ trip, navigate }) {
         <div className="card-title-row">
           <h3>{trip.name}</h3>
           <div className="card-badge-stack">
-            {trip.isPrivateTrip && <span className="trip-type-chip">Private trip</span>}
-            <Badge status={trip.status} />
+            <span className="trip-type-chip">{typeLabel}</span>
           </div>
         </div>
         <p className="icon-line"><span className="asset-icon icon-geo" aria-hidden="true" />{trip.destination}</p>
@@ -156,8 +234,7 @@ export function TripDetail({ tripId, trips, navigate, session, logout }) {
         <div className="trip-detail-layout">
           <article className="trip-detail-main">
             <div className="card-badge-stack">
-              {trip.isPrivateTrip && <span className="trip-type-chip">Private trip</span>}
-              <Badge status={trip.status} />
+              <span className="trip-type-chip">{trip.isPrivateTrip ? 'Private tour' : 'Open trip'}</span>
             </div>
             <h1>{trip.name}</h1>
             <p className="detail-destination">{trip.destination}</p>
