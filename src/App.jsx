@@ -147,8 +147,9 @@ function App() {
     const trip = trips.find((item) => item.id === Number(form.tripId))
     if (!trip || trip.slots < Number(form.participants) || trip.status !== 'Tersedia') return false
     const approvedRegistrations = registrations.filter((item) => item.tripId === Number(form.tripId) && (item.status === 'Disetujui' || item.status === 'Selesai'))
+    const isPrivateTour = Boolean(form.isPrivateTour || trip.isPrivateTrip)
     const privateTourTaken = approvedRegistrations.some((item) => item.isPrivateTour)
-    if (privateTourTaken || (form.isPrivateTour && approvedRegistrations.length)) return false
+    if (privateTourTaken || (isPrivateTour && approvedRegistrations.length)) return false
     const id = Date.now()
     const nextItem = {
       id,
@@ -158,7 +159,8 @@ function App() {
       participants: Number(form.participants),
       tripId: Number(form.tripId),
       notes: form.notes || '-',
-      isPrivateTour: Boolean(form.isPrivateTour),
+      isPrivateTour,
+      isPrivateTrip: Boolean(trip.isPrivateTrip),
       status: 'Menunggu Approval',
     }
     await setDoc(doc(db, collections.registrations, String(id)), nextItem)

@@ -28,7 +28,16 @@ export function PublicNav({ navigate, session, logout }) {
   )
 }
 
+const tripTypeLabel = (trip, registration) => {
+  if (trip?.isPrivateTrip || registration?.isPrivateTrip) return 'Private trip'
+  if (registration?.isPrivateTour) return 'Private tour'
+  return 'Open trip reguler'
+}
+
 export function CustomerCatalog({ trips, navigate, session, logout }) {
+  const openTrips = trips.filter((trip) => !trip.isPrivateTrip)
+  const privateTrips = trips.filter((trip) => trip.isPrivateTrip)
+
   return (
     <main className="public-page home-page">
       <PublicNav navigate={navigate} session={session} logout={logout} />
@@ -40,7 +49,7 @@ export function CustomerCatalog({ trips, navigate, session, logout }) {
           <h1>Perjalanan kecil yang terasa rapi dari awal berangkat sampai pulang.</h1>
           <p className="hero-copy">Pilih jadwal, cek slot, lalu daftar ke trip yang paling pas. Semua pendaftaran masuk ke tim admin untuk diverifikasi sebelum keberangkatan.</p>
           <div className="hero-actions">
-            <button className="primary-btn" onClick={() => document.getElementById('open-trip-list')?.scrollIntoView({ behavior: 'smooth' })}>Lihat open trip</button>
+            <button className="primary-btn" onClick={() => document.getElementById('open-trip-list')?.scrollIntoView({ behavior: 'smooth' })}>Lihat trip</button>
             {!session?.role && <button className="hero-secondary-btn" onClick={() => navigate('/login')}>Masuk customer</button>}
           </div>
         </div>
@@ -57,7 +66,18 @@ export function CustomerCatalog({ trips, navigate, session, logout }) {
       </section>
 
       <section className="trip-grid">
-        {trips.length ? trips.map((trip) => <TripCard key={trip.id} trip={trip} navigate={navigate} />) : <p className="empty-state">Belum ada open trip yang tersedia.</p>}
+        {openTrips.length ? openTrips.map((trip) => <TripCard key={trip.id} trip={trip} navigate={navigate} />) : <p className="empty-state">Belum ada open trip yang tersedia.</p>}
+      </section>
+
+      <section className="section-head compact-section-head">
+        <div>
+          <p className="eyebrow">Eksklusif rombongan</p>
+          <h2>Private trip tersedia</h2>
+        </div>
+      </section>
+
+      <section className="trip-grid">
+        {privateTrips.length ? privateTrips.map((trip) => <TripCard key={trip.id} trip={trip} navigate={navigate} />) : <p className="empty-state">Belum ada private trip yang tersedia.</p>}
       </section>
     </main>
   )
@@ -70,7 +90,10 @@ function TripCard({ trip, navigate }) {
       <div className="trip-card-body">
         <div className="card-title-row">
           <h3>{trip.name}</h3>
-          <Badge status={trip.status} />
+          <div className="card-badge-stack">
+            {trip.isPrivateTrip && <span className="trip-type-chip">Private trip</span>}
+            <Badge status={trip.status} />
+          </div>
         </div>
         <p className="icon-line"><span className="asset-icon icon-geo" aria-hidden="true" />{trip.destination}</p>
         <dl>
@@ -80,7 +103,7 @@ function TripCard({ trip, navigate }) {
         </dl>
         <div className="trip-card-footer">
           <div className="trip-start-price"><span>Mulai dari</span><strong>{formatCurrency(trip.price)}</strong></div>
-          <button className="text-link-btn" onClick={() => navigate(`/open-trip/${trip.id}`)}>Lihat detail <span aria-hidden="true">→</span></button>
+          <button className="text-link-btn" onClick={() => navigate(`/open-trip/${trip.id}`)}>Lihat detail <span aria-hidden="true">&rarr;</span></button>
         </div>
       </div>
     </article>
@@ -132,7 +155,10 @@ export function TripDetail({ tripId, trips, navigate, session, logout }) {
         <TripVisual trip={trip} large />
         <div className="trip-detail-layout">
           <article className="trip-detail-main">
-            <Badge status={trip.status} />
+            <div className="card-badge-stack">
+              {trip.isPrivateTrip && <span className="trip-type-chip">Private trip</span>}
+              <Badge status={trip.status} />
+            </div>
             <h1>{trip.name}</h1>
             <p className="detail-destination">{trip.destination}</p>
             <TripVisual trip={trip} />
@@ -147,6 +173,7 @@ export function TripDetail({ tripId, trips, navigate, session, logout }) {
               <h2>Detail Tur</h2>
               <dl className="tour-detail-list">
                 <div><dt>Tanggal</dt><dd>{formatDate(trip.date)}</dd></div>
+                <div><dt>Jenis</dt><dd>{trip.isPrivateTrip ? 'Private trip' : 'Open trip'}</dd></div>
                 <div><dt>Kuota</dt><dd>{trip.quota} peserta</dd></div>
                 <div><dt>Slot tersedia</dt><dd>{trip.slots} peserta</dd></div>
               </dl>
@@ -167,11 +194,14 @@ export function TripDetail({ tripId, trips, navigate, session, logout }) {
 
 export function RegistrationPage({ tripId, trips, submitRegistration, navigate, session, logout }) {
   const trip = trips.find((item) => item.id === tripId)
-  const [form, setForm] = useState({ name: session?.role === 'customer' ? session.name : '', whatsapp: session?.whatsapp || '', email: session?.role === 'customer' ? session.email : '', participants: 1, tripId, notes: '', isPrivateTour: false })
+  const [form, setForm] = useState({ name: session?.role === 'customer' ? session.name : '', whatsapp: session?.whatsapp || '', email: session?.role === 'customer' ? session.email : '', participants: 1, tripId, notes: '', isPrivateTour: Boolean(trip?.isPrivateTrip) })
   const [error, setError] = useState('')
   const selectedTrip = trips.find((item) => item.id === Number(form.tripId)) || trip
   const participants = Number(form.participants) || 1
   const estimatedTotal = selectedTrip ? selectedTrip.price * participants : 0
+  const isPrivateTrip = Boolean(selectedTrip?.isPrivateTrip)
+  const isPrivateBooking = isPrivateTrip || form.isPrivateTour
+  const availableTrips = trips.filter((item) => item.status === 'Tersedia')
 
   if (!trip) return <NotFound navigate={navigate} />
 
@@ -185,7 +215,7 @@ export function RegistrationPage({ tripId, trips, submitRegistration, navigate, 
       setError('Jumlah peserta melebihi slot tersedia.')
       return
     }
-    const isSubmitted = await submitRegistration(form)
+    const isSubmitted = await submitRegistration({ ...form, isPrivateTour: isPrivateBooking })
     if (!isSubmitted) setError('Pendaftaran gagal dikirim. Cek slot dan koneksi Firebase.')
   }
 
@@ -213,7 +243,7 @@ export function RegistrationPage({ tripId, trips, submitRegistration, navigate, 
                 <div><dt><span className="asset-icon icon-calendar" aria-hidden="true" />Tanggal</dt><dd>{formatDate(selectedTrip.date)}</dd></div>
                 <div><dt><span className="asset-icon icon-currency" aria-hidden="true" />Harga</dt><dd>{formatCurrency(selectedTrip.price)} / orang</dd></div>
                 <div><dt><span className="asset-icon icon-ticket" aria-hidden="true" />Slot</dt><dd>{selectedTrip.slots} peserta tersedia</dd></div>
-                <div><dt>Jenis</dt><dd>{form.isPrivateTour ? 'Private tour' : 'Open trip reguler'}</dd></div>
+                <div><dt>Jenis</dt><dd>{tripTypeLabel(selectedTrip, { isPrivateTour: isPrivateBooking })}</dd></div>
                 <div><dt>Total estimasi</dt><dd>{formatCurrency(estimatedTotal)}</dd></div>
               </dl>
             </div>
@@ -243,10 +273,14 @@ export function RegistrationPage({ tripId, trips, submitRegistration, navigate, 
             </div>
             <div className="registration-fields">
               <label>Jumlah peserta<input type="number" min="1" max={selectedTrip.slots} value={form.participants} onChange={(e) => setForm({ ...form, participants: e.target.value })} /></label>
-              <label>Pilihan open trip<select value={form.tripId} onChange={(e) => setForm({ ...form, tripId: Number(e.target.value), participants: 1 })}>{trips.filter((item) => item.status === 'Tersedia').map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
+              <label>Pilihan trip<select value={form.tripId} onChange={(e) => {
+                const nextTripId = Number(e.target.value)
+                const nextTrip = trips.find((item) => item.id === nextTripId)
+                setForm({ ...form, tripId: nextTripId, participants: 1, isPrivateTour: Boolean(nextTrip?.isPrivateTrip) })
+              }}>{availableTrips.map((item) => <option key={item.id} value={item.id}>{item.name} - {item.isPrivateTrip ? 'Private trip' : 'Open trip'}</option>)}</select></label>
               <label className="private-tour-option full">
-                <input type="checkbox" checked={form.isPrivateTour} onChange={(e) => setForm({ ...form, isPrivateTour: e.target.checked })} />
-                <span><strong>Private tour</strong><small>Trip hanya untuk 1 rombongan kamu setelah disetujui admin.</small></span>
+                <input type="checkbox" disabled={isPrivateTrip} checked={isPrivateBooking} onChange={(e) => setForm({ ...form, isPrivateTour: e.target.checked })} />
+                <span><strong>{isPrivateTrip ? 'Private trip' : 'Private tour'}</strong><small>{isPrivateTrip ? 'Paket ini dibuat khusus untuk 1 rombongan saja.' : 'Trip hanya untuk 1 rombongan kamu setelah disetujui admin.'}</small></span>
               </label>
               <label className="full">Catatan tambahan<textarea placeholder="Contoh: request pickup, alergi makanan, atau catatan rombongan." value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></label>
             </div>
@@ -307,7 +341,7 @@ export function CustomerAccountPage({ registrations, trips, navigate, session, l
                 </div>
                 <dl>
                   <div><dt><span className="asset-icon icon-calendar" aria-hidden="true" />Tanggal</dt><dd>{trip ? formatDate(trip.date) : '-'}</dd></div>
-                  <div><dt>Jenis</dt><dd>{item.isPrivateTour ? 'Private tour' : 'Open trip reguler'}</dd></div>
+                  <div><dt>Jenis</dt><dd>{tripTypeLabel(trip, item)}</dd></div>
                   <div><dt><span className="asset-icon icon-people" aria-hidden="true" />Peserta</dt><dd>{item.participants} orang</dd></div>
                   <div><dt>WhatsApp</dt><dd>{item.whatsapp}</dd></div>
                   <div><dt>Catatan</dt><dd>{item.notes || '-'}</dd></div>

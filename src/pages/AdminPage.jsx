@@ -27,6 +27,7 @@ const normalizeTripForm = (trip) => {
     quota: 10,
     slots: 10,
     workerCount: 1,
+    isPrivateTrip: false,
     description: '',
     facilities: '',
     status: 'Tersedia',
@@ -34,6 +35,12 @@ const normalizeTripForm = (trip) => {
     durationDays: itineraryDays.length,
     itineraryDays,
   }
+}
+
+const registrationTripType = (item) => {
+  if (item.isPrivateTrip) return 'Private trip'
+  if (item.isPrivateTour) return 'Private tour'
+  return 'Open trip reguler'
 }
 
 function AdminShell({ title, children, navigate, logout, path }) {
@@ -91,7 +98,7 @@ export function AdminTrips(props) {
         <div className="admin-page-head">
           <div>
             <p className="eyebrow">Katalog trip</p>
-            <h2>Atur paket open trip yang tampil untuk customer.</h2>
+            <h2>Atur paket open trip dan private trip yang tampil untuk customer.</h2>
             <p className="muted">Tambah, edit, atau tutup slot trip dari daftar utama ini.</p>
           </div>
           <button className="primary-btn" onClick={() => props.navigate('/admin/open-trip/tambah')}>Tambah open trip</button>
@@ -106,7 +113,10 @@ export function AdminTrips(props) {
                     <h3>{trip.name}</h3>
                     <p className="icon-line"><span className="asset-icon icon-geo" aria-hidden="true" />{trip.destination}</p>
                   </div>
-                  <Badge status={trip.status} />
+                  <div className="card-badge-stack">
+                    {trip.isPrivateTrip && <span className="trip-type-chip">Private trip</span>}
+                    <Badge status={trip.status} />
+                  </div>
                 </div>
                 <div className="admin-trip-price">
                   <span><span className="asset-icon icon-currency" aria-hidden="true" />Harga</span>
@@ -116,6 +126,7 @@ export function AdminTrips(props) {
                   <div><dt><span className="asset-icon icon-calendar" aria-hidden="true" />Tanggal</dt><dd>{formatDate(trip.date)}</dd></div>
                   <div><dt><span className="asset-icon icon-people" aria-hidden="true" />Kuota</dt><dd>{trip.quota} peserta</dd></div>
                   <div><dt><span className="asset-icon icon-ticket" aria-hidden="true" />Slot</dt><dd>{trip.slots} tersedia</dd></div>
+                  <div><dt>Jenis</dt><dd>{trip.isPrivateTrip ? 'Private trip' : 'Open trip'}</dd></div>
                   <div><dt><span className="asset-icon icon-people" aria-hidden="true" />Pekerja</dt><dd>{workerCount} orang</dd></div>
                 </dl>
                 <div className="admin-trip-actions">
@@ -160,6 +171,7 @@ export function TripForm({ tripId, trips, saveTrip, navigate, ...props }) {
       quota: Number(form.quota),
       slots: Number(form.slots),
       workerCount: Math.max(1, Number(form.workerCount) || 1),
+      isPrivateTrip: Boolean(form.isPrivateTrip),
       durationDays: itineraryDays.length,
       itineraryDays,
       itinerary: itineraryDays.map((item) => `Hari ${item.day}: ${item.text}`).join('\n\n'),
@@ -172,19 +184,20 @@ export function TripForm({ tripId, trips, saveTrip, navigate, ...props }) {
         <div className="admin-page-head">
           <div>
             <p className="eyebrow">{selected ? 'Update trip' : 'Trip baru'}</p>
-            <h2>{selected ? 'Perbarui detail open trip.' : 'Lengkapi informasi open trip baru.'}</h2>
+            <h2>{selected ? 'Perbarui detail trip.' : 'Lengkapi informasi trip baru.'}</h2>
             <p className="muted">Informasi ini akan muncul di katalog customer dan dipakai untuk monitoring internal.</p>
           </div>
           <button className="outline-btn" onClick={() => navigate('/admin/open-trip')}>Kembali</button>
         </div>
         <form className="data-form admin-form admin-form-card" onSubmit={onSubmit}>
-          <label>Nama open trip<input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></label>
+          <label>Nama trip<input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></label>
           <label>Destinasi<input required value={form.destination} onChange={(e) => setForm({ ...form, destination: e.target.value })} /></label>
           <label>Tanggal keberangkatan<input required type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} /></label>
           <label>Harga<input required type="number" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} /></label>
           <label>Kuota peserta<input required type="number" value={form.quota} onChange={(e) => setForm({ ...form, quota: e.target.value })} /></label>
           <label>Slot tersedia<input required type="number" value={form.slots} onChange={(e) => setForm({ ...form, slots: e.target.value })} /></label>
           <label>Kebutuhan pekerja<input required type="number" min="1" value={form.workerCount} onChange={(e) => setForm({ ...form, workerCount: e.target.value })} /></label>
+          <label>Jenis trip<select value={form.isPrivateTrip ? 'private' : 'open'} onChange={(e) => setForm({ ...form, isPrivateTrip: e.target.value === 'private' })}><option value="open">Open trip</option><option value="private">Private trip</option></select></label>
           <label>Status<select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>{tripStatuses.map((status) => <option key={status}>{status}</option>)}</select></label>
           <label className="full">Deskripsi<textarea required value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></label>
           <label className="full">Fasilitas<textarea required value={form.facilities} onChange={(e) => setForm({ ...form, facilities: e.target.value })} /></label>
@@ -276,7 +289,10 @@ export function AdminSchedule(props) {
                     <h3>{trip.name}</h3>
                     <p className="icon-line"><span className="asset-icon icon-geo" aria-hidden="true" />{trip.destination}</p>
                   </div>
-                  <Badge status={trip.status} />
+                  <div className="card-badge-stack">
+                    {trip.isPrivateTrip && <span className="trip-type-chip">Private trip</span>}
+                    <Badge status={trip.status} />
+                  </div>
                 </div>
                 <div className="schedule-date-row">
                   <span><span className="asset-icon icon-calendar" aria-hidden="true" />Tanggal</span>
@@ -316,7 +332,7 @@ function AdminScheduleDetail({ trip, registrations, jobs, setRegistrationStatus,
           <div>
             <p className="eyebrow">Detail trip</p>
             <h2>{trip.name}</h2>
-            <p className="muted">{trip.destination} - {formatDate(trip.date)}</p>
+            <p className="muted">{trip.destination} - {formatDate(trip.date)} - {trip.isPrivateTrip ? 'Private trip' : 'Open trip'}</p>
           </div>
           <button className="outline-btn" onClick={() => navigate('/admin/jadwal')}>Kembali ke jadwal</button>
         </div>
@@ -372,7 +388,7 @@ function RegistrationStatusColumn({ title, items, setRegistrationStatus }) {
               <dl>
                 <div><dt>Email</dt><dd>{item.email}</dd></div>
                 <div><dt>WhatsApp</dt><dd>{item.whatsapp}</dd></div>
-                <div><dt>Jenis</dt><dd>{item.isPrivateTour ? 'Private tour' : 'Open trip reguler'}</dd></div>
+                <div><dt>Jenis</dt><dd>{registrationTripType(item)}</dd></div>
                 <div><dt>Peserta</dt><dd>{item.participants} orang</dd></div>
                 <div><dt>Catatan</dt><dd>{item.notes || '-'}</dd></div>
               </dl>
