@@ -58,13 +58,13 @@ const tripTypeLabel = (trip, registration) => {
 
 const testimonials = [
   {
-    name: 'Nadia Putri',
+    name: 'Rakabumink',
     trip: 'Labuan Bajo Sailing Trip',
     image: testimoni1,
     quote: 'Tripnya rapi, admin responsif, dan itinerary tiap hari jelas. Aku tinggal siapin barang dan menikmati perjalanan.',
   },
   {
-    name: 'Raka Aditya',
+    name: 'Anisa Azizah',
     trip: 'Raja Ampat Explorer',
     image: testimoni2,
     quote: 'Suka banget karena detail peserta dan jadwalnya transparan. Rasanya lebih tenang dari awal daftar sampai pulang.',
