@@ -46,9 +46,9 @@ const normalizeTripForm = (trip) => {
 }
 
 const registrationTripType = (item) => {
-  if (item.isPrivateTrip) return 'Private trip'
-  if (item.isPrivateTour) return 'Private tour'
-  return 'Open trip reguler'
+  if (item.isPrivateTrip) return 'Private cave tour'
+  if (item.isPrivateTour) return 'Private cave tour'
+  return 'Open trip goa'
 }
 
 function AdminShell({ title, children, navigate, logout, path }) {
@@ -56,7 +56,7 @@ function AdminShell({ title, children, navigate, logout, path }) {
     <main className="app-shell">
       <Sidebar title="Admin" links={[
         ['/admin/dashboard', 'Dashboard'],
-        ['/admin/open-trip', 'Open Trip'],
+        ['/admin/open-trip', 'Cave Trip'],
         ['/admin/jadwal', 'Jadwal'],
         ['/admin/pekerja', 'Akun Pekerja'],
       ]} navigate={navigate} logout={logout} path={path} />
@@ -71,7 +71,7 @@ function AdminShell({ title, children, navigate, logout, path }) {
 export function AdminDashboard(props) {
   const { trips, registrations, jobs } = props
   const stats = [
-    ['Total open trip', trips.length],
+    ['Total cave trip', trips.length],
     ['Total pendaftar', registrations.length],
     ['Menunggu approval', registrations.filter((item) => item.status === 'Menunggu Approval').length],
     ['Disetujui', registrations.filter((item) => item.status === 'Disetujui').length],
@@ -85,11 +85,11 @@ export function AdminDashboard(props) {
         <div className="dashboard-hero">
           <div>
             <p className="eyebrow">Ringkasan operasional</p>
-            <h2>Kelola open trip, pendaftaran, dan pekerjaan tim dari menu admin.</h2>
+            <h2>Kelola open trip goa, pendaftaran, dan pekerjaan tim dari menu admin.</h2>
             <p className="muted">Gunakan dashboard ini sebagai pintu masuk cepat. Detail lengkap tetap ada di halaman masing-masing menu.</p>
           </div>
           <div className="dashboard-actions">
-            <button className="primary-btn" onClick={() => props.navigate('/admin/open-trip')}>Kelola open trip</button>
+            <button className="primary-btn" onClick={() => props.navigate('/admin/open-trip')}>Kelola cave trip</button>
             <button className="outline-btn" onClick={() => props.navigate('/admin/jadwal')}>Lihat jadwal</button>
           </div>
         </div>
@@ -101,15 +101,15 @@ export function AdminDashboard(props) {
 
 export function AdminTrips(props) {
   return (
-    <AdminShell title="Manajemen Open Trip" {...props}>
+    <AdminShell title="Manajemen Cave Trip" {...props}>
       <section className="admin-page-stack">
         <div className="admin-page-head">
           <div>
             <p className="eyebrow">Katalog trip</p>
-            <h2>Atur paket open trip dan private trip yang tampil untuk customer.</h2>
-            <p className="muted">Tambah, edit, atau tutup slot trip dari daftar utama ini.</p>
+            <h2>Atur paket open trip goa dan private cave tour yang tampil untuk customer.</h2>
+            <p className="muted">Tambah, edit, atau tutup slot cave trip dari daftar utama ini.</p>
           </div>
-          <button className="primary-btn" onClick={() => props.navigate('/admin/open-trip/tambah')}>Tambah open trip</button>
+          <button className="primary-btn" onClick={() => props.navigate('/admin/open-trip/tambah')}>Tambah cave trip</button>
         </div>
         <div className="admin-trip-grid">
           {props.trips.length ? props.trips.map((trip) => {
@@ -122,7 +122,7 @@ export function AdminTrips(props) {
                     <p className="icon-line"><span className="asset-icon icon-geo" aria-hidden="true" />{trip.destination}</p>
                   </div>
                   <div className="card-badge-stack">
-                    {trip.isPrivateTrip && <span className="trip-type-chip">Private trip</span>}
+                    {trip.isPrivateTrip && <span className="trip-type-chip">Private cave tour</span>}
                     <Badge status={trip.status} />
                   </div>
                 </div>
@@ -134,7 +134,7 @@ export function AdminTrips(props) {
                   <div><dt><span className="asset-icon icon-calendar" aria-hidden="true" />Tanggal</dt><dd>{formatDate(trip.date)}</dd></div>
                   <div><dt><span className="asset-icon icon-people" aria-hidden="true" />Kuota</dt><dd>{trip.quota} peserta</dd></div>
                   <div><dt><span className="asset-icon icon-ticket" aria-hidden="true" />Slot</dt><dd>{trip.slots} tersedia</dd></div>
-                  <div><dt>Jenis</dt><dd>{trip.isPrivateTrip ? 'Private trip' : 'Open trip'}</dd></div>
+                  <div><dt>Jenis</dt><dd>{trip.isPrivateTrip ? 'Private cave tour' : 'Open trip goa'}</dd></div>
                   <div><dt><span className="asset-icon icon-people" aria-hidden="true" />Pekerja</dt><dd>{workerCount} orang</dd></div>
                 </dl>
                 <div className="admin-trip-actions">
@@ -143,7 +143,7 @@ export function AdminTrips(props) {
                 </div>
               </article>
             )
-          }) : <p className="empty-state">Belum ada open trip.</p>}
+          }) : <p className="empty-state">Belum ada cave trip.</p>}
         </div>
       </section>
     </AdminShell>
@@ -192,12 +192,12 @@ export function TripForm({ tripId, trips, saveTrip, navigate, ...props }) {
   }
 
   return (
-    <AdminShell title={selected ? 'Edit Open Trip' : 'Tambah Open Trip'} navigate={navigate} {...props}>
+    <AdminShell title={selected ? 'Edit Cave Trip' : 'Tambah Cave Trip'} navigate={navigate} {...props}>
       <section className="admin-page-stack">
         <div className="admin-page-head">
           <div>
-            <p className="eyebrow">{selected ? 'Update trip' : 'Trip baru'}</p>
-            <h2>{selected ? 'Perbarui detail trip.' : 'Lengkapi informasi trip baru.'}</h2>
+            <p className="eyebrow">{selected ? 'Update cave trip' : 'Cave trip baru'}</p>
+            <h2>{selected ? 'Perbarui detail cave trip.' : 'Lengkapi informasi cave trip baru.'}</h2>
             <p className="muted">Informasi ini akan muncul di katalog customer dan dipakai untuk monitoring internal.</p>
           </div>
           <button className="outline-btn" onClick={() => navigate('/admin/open-trip')}>Kembali</button>
@@ -210,7 +210,7 @@ export function TripForm({ tripId, trips, saveTrip, navigate, ...props }) {
           <label>Kuota peserta<input required type="number" value={form.quota} onChange={(e) => setForm({ ...form, quota: e.target.value })} /></label>
           <label>Slot tersedia<input required type="number" value={form.slots} onChange={(e) => setForm({ ...form, slots: e.target.value })} /></label>
           <label>Kebutuhan pekerja<input required type="number" min="1" value={form.workerCount} onChange={(e) => setForm({ ...form, workerCount: e.target.value })} /></label>
-          <label>Jenis trip<select value={form.isPrivateTrip ? 'private' : 'open'} onChange={(e) => setForm({ ...form, isPrivateTrip: e.target.value === 'private' })}><option value="open">Open trip</option><option value="private">Private trip</option></select></label>
+          <label>Jenis trip<select value={form.isPrivateTrip ? 'private' : 'open'} onChange={(e) => setForm({ ...form, isPrivateTrip: e.target.value === 'private' })}><option value="open">Open trip goa</option><option value="private">Private cave tour</option></select></label>
           <label>Status<select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>{tripStatuses.map((status) => <option key={status}>{status}</option>)}</select></label>
           <label className="full">Link gambar trip<textarea placeholder={'https://static.uc.ac.id/htb/2019/01/maxresdefault.jpg\nhttps://contoh.com/gambar-kedua.jpg'} value={form.imageUrlsText} onChange={(e) => setForm({ ...form, imageUrlsText: e.target.value })} /></label>
           <label className="full">Deskripsi<textarea required value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></label>
@@ -232,7 +232,7 @@ export function TripForm({ tripId, trips, saveTrip, navigate, ...props }) {
               ))}
             </div>
           </div>
-          <button className="primary-btn full" type="submit">Simpan open trip</button>
+          <button className="primary-btn full" type="submit">Simpan cave trip</button>
         </form>
       </section>
     </AdminShell>
@@ -261,7 +261,7 @@ function RegistrationTable({ registrations, trips, setRegistrationStatus, compac
   return (
     <div className="table-wrap">
       <table>
-        <thead><tr><th>Customer</th><th>WhatsApp</th><th>Email</th><th>Peserta</th><th>Open trip</th><th>Catatan</th><th>Status</th></tr></thead>
+        <thead><tr><th>Customer</th><th>WhatsApp</th><th>Email</th><th>Peserta</th><th>Cave trip</th><th>Catatan</th><th>Status</th></tr></thead>
         <tbody>{rows.map((item) => (
           <tr key={item.id}>
             <td>{item.name}</td><td>{item.whatsapp}</td><td>{item.email}</td><td>{item.participants}</td><td>{tripName(trips, item.tripId)}</td><td>{item.notes}</td>
@@ -304,7 +304,7 @@ export function AdminSchedule(props) {
                     <p className="icon-line"><span className="asset-icon icon-geo" aria-hidden="true" />{trip.destination}</p>
                   </div>
                   <div className="card-badge-stack">
-                    {trip.isPrivateTrip && <span className="trip-type-chip">Private trip</span>}
+                    {trip.isPrivateTrip && <span className="trip-type-chip">Private cave tour</span>}
                     <Badge status={trip.status} />
                   </div>
                 </div>
@@ -346,7 +346,7 @@ function AdminScheduleDetail({ trip, registrations, jobs, setRegistrationStatus,
           <div>
             <p className="eyebrow">Detail trip</p>
             <h2>{trip.name}</h2>
-            <p className="muted">{trip.destination} - {formatDate(trip.date)} - {trip.isPrivateTrip ? 'Private trip' : 'Open trip'}</p>
+            <p className="muted">{trip.destination} - {formatDate(trip.date)} - {trip.isPrivateTrip ? 'Private cave tour' : 'Open trip goa'}</p>
           </div>
           <button className="outline-btn" onClick={() => navigate('/admin/jadwal')}>Kembali ke jadwal</button>
         </div>
@@ -486,7 +486,7 @@ export function JobTable({ jobs, trips, compact }) {
   return (
     <div className="table-wrap">
       <table>
-        <thead><tr><th>Open trip</th><th>Destinasi</th><th>Tanggal</th><th>Slot</th><th>Tugas</th><th>Status job</th><th>Pekerja</th></tr></thead>
+        <thead><tr><th>Cave trip</th><th>Destinasi</th><th>Tanggal</th><th>Slot</th><th>Tugas</th><th>Status job</th><th>Pekerja</th></tr></thead>
         <tbody>{rows.map((job) => {
           const trip = trips.find((item) => item.id === job.tripId)
           return <tr key={job.id}><td>{trip?.name}</td><td>{trip?.destination}</td><td>{formatDate(trip?.date)}</td><td>{job.slot || 1} dari {job.totalWorkers || trip?.workerCount || 1}</td><td>{job.task}</td><td><Badge status={job.status} /></td><td>{job.worker || '-'}</td></tr>

@@ -44,7 +44,7 @@ export function PublicNav({ navigate, session, logout }) {
 
   return (
     <header className={`public-nav ${isOverHero ? 'nav-on-hero' : ''}`}>
-      <button className="brand" onClick={goHome}>{session?.role === 'customer' ? `Welcome, ${session.name}` : 'Zaza Open Trip'}</button>
+      <button className="brand" onClick={goHome}>{session?.role === 'customer' ? `Welcome, ${session.name}` : 'Zaza Cave Trip'}</button>
       <nav className="public-nav-center" aria-label="Navigasi halaman">
         <button onClick={() => scrollToHomeSection('open-trip-list')}>Trip</button>
         <button onClick={goHome}>Home</button>
@@ -72,37 +72,37 @@ export function PublicNav({ navigate, session, logout }) {
 }
 
 const tripTypeLabel = (trip, registration) => {
-  if (trip?.isPrivateTrip || registration?.isPrivateTrip) return 'Private trip'
-  if (registration?.isPrivateTour) return 'Private tour'
-  return 'Open trip reguler'
+  if (trip?.isPrivateTrip || registration?.isPrivateTrip) return 'Private cave tour'
+  if (registration?.isPrivateTour) return 'Private cave tour'
+  return 'Open trip goa'
 }
 
 const testimonials = [
   {
     name: 'Rakabumink',
-    trip: 'Labuan Bajo Sailing Trip',
+    trip: 'Goa Pindul Cave Tubing',
     image: testimoni1,
-    quote: 'Tripnya rapi, admin responsif, dan itinerary tiap hari jelas. Aku tinggal siapin barang dan menikmati perjalanan.',
+    quote: 'Trip goanya rapi, admin responsif, dan briefing keselamatannya jelas. Tinggal datang, pakai perlengkapan, lalu eksplor.',
   },
   {
     name: 'Anisa Azizah',
-    trip: 'Raja Ampat Explorer',
+    trip: 'Goa Jomblang Vertical Cave',
     image: testimoni2,
-    quote: 'Suka banget karena detail peserta dan jadwalnya transparan. Rasanya lebih tenang dari awal daftar sampai pulang.',
+    quote: 'Suka banget karena detail peserta dan jadwalnya transparan. Rasanya lebih tenang untuk ikut trip goa yang medannya khusus.',
   },
   {
     name: 'Maya Lestari',
-    trip: 'Private Tour Yogyakarta',
+    trip: 'Private Cave Tour Pacitan',
     image: testimoni3,
-    quote: 'Private tournya nyaman untuk keluarga. Bisa lebih fleksibel tanpa campur dengan rombongan lain.',
+    quote: 'Private cave tournya nyaman untuk keluarga. Bisa lebih fleksibel tanpa campur rombongan lain, tapi tetap dipandu aman.',
   },
 ]
 
 const faqs = [
-  ['Bagaimana cara daftar trip?', 'Pilih trip yang kamu mau, buka detailnya, lalu isi form pendaftaran. Status awal akan masuk sebagai menunggu approval admin.'],
-  ['Apa bedanya open trip dan private tour?', 'Open trip digabung dengan peserta lain sesuai kuota, sedangkan private tour hanya untuk satu rombongan kamu setelah disetujui admin.'],
-  ['Apakah pendaftaran langsung disetujui?', 'Belum. Admin akan mengecek data, slot, dan kebutuhan trip sebelum mengubah status menjadi disetujui atau ditolak.'],
-  ['Di mana melihat status pendaftaran?', 'Setelah login sebagai customer, buka halaman akun untuk melihat trip yang kamu daftar dan status terbarunya.'],
+  ['Bagaimana cara daftar cave trip?', 'Pilih goa yang kamu mau, buka detailnya, lalu isi form pendaftaran. Status awal akan masuk sebagai menunggu approval admin.'],
+  ['Apa bedanya open trip dan private cave tour?', 'Open trip digabung dengan peserta lain sesuai kuota, sedangkan private cave tour hanya untuk satu rombongan kamu setelah disetujui admin.'],
+  ['Apakah pendaftaran langsung disetujui?', 'Belum. Admin akan mengecek data, slot, dan kebutuhan trip goa sebelum mengubah status menjadi disetujui atau ditolak.'],
+  ['Di mana melihat status pendaftaran?', 'Setelah login sebagai customer, buka halaman akun untuk melihat cave trip yang kamu daftar dan status terbarunya.'],
 ]
 
 function TestimonialCarousel() {
@@ -163,39 +163,39 @@ export function CustomerCatalog({ trips, navigate, session, logout }) {
         <video className="hero-video" src={cinematicVideo} autoPlay muted loop playsInline aria-hidden="true" />
         <div className="hero-shade" />
         <div className="hero-content">
-          <p className="eyebrow">Zaza Open Trip</p>
-          <h1>Perjalanan kecil yang terasa rapi dari awal berangkat sampai pulang.</h1>
-          <p className="hero-copy">Pilih jadwal, cek slot, lalu daftar ke trip yang paling pas. Semua pendaftaran masuk ke tim admin untuk diverifikasi sebelum keberangkatan.</p>
+          <p className="eyebrow">Zaza Cave Trip</p>
+          <h1>Open trip goa dengan suasana gelap, aman, dan tertata.</h1>
+          <p className="hero-copy">Pilih destinasi goa, cek slot, lalu daftar ke trip yang paling pas. Semua pendaftaran diverifikasi admin supaya perjalanan eksplorasi tetap rapi sebelum masuk jalur.</p>
           <div className="hero-actions">
-            <button className="primary-btn" onClick={() => document.getElementById('open-trip-list')?.scrollIntoView({ behavior: 'smooth' })}>Lihat trip</button>
+            <button className="primary-btn" onClick={() => document.getElementById('open-trip-list')?.scrollIntoView({ behavior: 'smooth' })}>Lihat cave trip</button>
             {!session?.role && <button className="hero-secondary-btn" onClick={() => navigate('/login')}>Masuk customer</button>}
           </div>
         </div>
-        <button className="scroll-down-btn" onClick={() => document.getElementById('open-trip-list')?.scrollIntoView({ behavior: 'smooth' })} aria-label="Lihat katalog open trip">
+        <button className="scroll-down-btn" onClick={() => document.getElementById('open-trip-list')?.scrollIntoView({ behavior: 'smooth' })} aria-label="Lihat katalog open trip goa">
           <span />
         </button>
       </section>
 
       <section className="section-head" id="open-trip-list">
         <div>
-          <p className="eyebrow">Berpergian kemana saja dengan orang baru</p>
-          <h2>Open trip</h2>
+          <p className="eyebrow">Eksplor goa dengan peserta baru</p>
+          <h2>Open trip goa</h2>
         </div>
       </section>
 
       <section className="trip-grid">
-        {openTrips.length ? openTrips.map((trip) => <TripCard key={trip.id} trip={trip} navigate={navigate} />) : <p className="empty-state">Belum ada open trip yang tersedia.</p>}
+        {openTrips.length ? openTrips.map((trip) => <TripCard key={trip.id} trip={trip} navigate={navigate} />) : <p className="empty-state">Belum ada open trip goa yang tersedia.</p>}
       </section>
 
       <section className="section-head compact-section-head">
         <div>
-          <p className="eyebrow">Berpergian dengan orang terdekat</p>
-          <h2>Private trip</h2>
+          <p className="eyebrow">Masuk goa bersama rombongan sendiri</p>
+          <h2>Private cave tour</h2>
         </div>
       </section>
 
       <section className="trip-grid">
-        {privateTrips.length ? privateTrips.map((trip) => <TripCard key={trip.id} trip={trip} navigate={navigate} />) : <p className="empty-state">Belum ada private trip yang tersedia.</p>}
+        {privateTrips.length ? privateTrips.map((trip) => <TripCard key={trip.id} trip={trip} navigate={navigate} />) : <p className="empty-state">Belum ada private cave tour yang tersedia.</p>}
       </section>
 
       <section className="section-head compact-section-head" id="testimoni-list">
@@ -224,8 +224,8 @@ export function CustomerCatalog({ trips, navigate, session, logout }) {
 
       <footer className="public-footer reveal-on-scroll">
         <div>
-          <h2>Zaza Open Trip</h2>
-          <p>Siap bantu rencana perjalanan open trip dan private tour kamu.</p>
+          <h2>Zaza Cave Trip</h2>
+          <p>Siap bantu rencana open trip goa dan private cave tour kamu.</p>
         </div>
         <div className="footer-contact">
           <a href="https://www.instagram.com/mauaproject/" target="_blank" rel="noreferrer">Instagram</a>
@@ -237,7 +237,7 @@ export function CustomerCatalog({ trips, navigate, session, logout }) {
 }
 
 function TripCard({ trip, navigate }) {
-  const typeLabel = trip.isPrivateTrip ? 'Private tour' : 'Open trip'
+  const typeLabel = trip.isPrivateTrip ? 'Private cave tour' : 'Open trip goa'
 
   return (
     <article className="trip-card reveal-on-scroll">
@@ -273,9 +273,9 @@ function TripVisual({ trip, large }) {
   const [firstImage] = getTripImages(trip)
 
   return (
-    <div className={large ? 'trip-visual trip-visual-large' : 'trip-visual'} role="img" aria-label={trip?.name || 'Open trip'}>
+    <div className={large ? 'trip-visual trip-visual-large' : 'trip-visual'} role="img" aria-label={trip?.name || 'Open trip goa'}>
       {firstImage && <img src={firstImage} alt="" loading="lazy" />}
-      <span>{trip?.name || 'Open Trip'}</span>
+      <span>{trip?.name || 'Open Trip Goa'}</span>
     </div>
   )
 }
@@ -353,7 +353,7 @@ export function TripDetail({ tripId, trips, navigate, session, logout }) {
           <article className="trip-detail-main">
             <div className="trip-detail-topline">
               <TripBreadcrumb trip={trip} navigate={navigate} />
-              <span className="trip-type-chip">{trip.isPrivateTrip ? 'Private tour' : 'Open trip'}</span>
+              <span className="trip-type-chip">{trip.isPrivateTrip ? 'Private cave tour' : 'Open trip goa'}</span>
             </div>
             <h1>{trip.name}</h1>
             <p className="detail-destination">{trip.destination}</p>
@@ -369,7 +369,7 @@ export function TripDetail({ tripId, trips, navigate, session, logout }) {
               <h2>Detail Tur</h2>
               <dl className="tour-detail-list">
                 <div><dt>Tanggal</dt><dd>{formatDate(trip.date)}</dd></div>
-                <div><dt>Jenis</dt><dd>{trip.isPrivateTrip ? 'Private trip' : 'Open trip'}</dd></div>
+                <div><dt>Jenis</dt><dd>{trip.isPrivateTrip ? 'Private cave tour' : 'Open trip goa'}</dd></div>
                 <div><dt>Kuota</dt><dd>{trip.quota} peserta</dd></div>
                 <div><dt>Slot tersedia</dt><dd>{trip.slots} peserta</dd></div>
               </dl>
@@ -424,7 +424,7 @@ export function RegistrationPage({ tripId, trips, submitRegistration, navigate, 
             <h1>Lengkapi data untuk ikut {trip.name}</h1>
             <p className="muted">Data kamu akan dikirim ke dashboard admin dan masuk sebagai Menunggu Approval sebelum keberangkatan.</p>
           </div>
-          <span className="trip-type-chip">{trip.isPrivateTrip ? 'Private tour' : 'Open trip'}</span>
+          <span className="trip-type-chip">{trip.isPrivateTrip ? 'Private cave tour' : 'Open trip goa'}</span>
         </div>
 
         <div className="registration-layout">
@@ -463,7 +463,7 @@ export function RegistrationPage({ tripId, trips, submitRegistration, navigate, 
               <span>2</span>
               <div>
                 <h2>Detail trip</h2>
-                <p>Pilih trip dan jumlah peserta yang akan didaftarkan.</p>
+                <p>Pilih cave trip dan jumlah peserta yang akan didaftarkan.</p>
               </div>
             </div>
             <div className="registration-fields">
@@ -501,9 +501,9 @@ export function CustomerAccountPage({ registrations, trips, navigate, session, l
           <div>
             <p className="eyebrow">Akun customer</p>
             <h1>Halo, {session.name}</h1>
-            <p className="muted">Pantau semua pendaftaran open trip kamu dari sini, termasuk status approval dari admin.</p>
+            <p className="muted">Pantau semua pendaftaran open trip goa kamu dari sini, termasuk status approval dari admin.</p>
           </div>
-          <button className="outline-btn" onClick={() => navigate('/open-trip')}>Lihat open trip</button>
+          <button className="outline-btn" onClick={() => navigate('/open-trip')}>Lihat cave trip</button>
         </div>
 
         <section className="account-summary-grid">
@@ -532,12 +532,12 @@ export function CustomerAccountPage({ registrations, trips, navigate, session, l
                   <div><dt>WhatsApp</dt><dd>{item.whatsapp}</dd></div>
                   <div><dt>Catatan</dt><dd>{item.notes || '-'}</dd></div>
                 </dl>
-                <button className="outline-btn" onClick={() => navigate(`/open-trip/${item.tripId}`)}>Lihat detail trip</button>
+                <button className="outline-btn" onClick={() => navigate(`/open-trip/${item.tripId}`)}>Lihat detail cave trip</button>
               </article>
             )
           }) : (
             <div className="empty-state">
-              Belum ada pendaftaran. Pilih open trip dulu untuk mulai mendaftar.
+              Belum ada pendaftaran. Pilih cave trip dulu untuk mulai mendaftar.
             </div>
           )}
         </section>
@@ -565,7 +565,7 @@ export function CustomerLoginPage({ loginCustomer, navigate }) {
         <div className="auth-panel-head">
           <p className="eyebrow">Login customer</p>
           <h1>Masuk Customer</h1>
-          <p className="muted">Gunakan akun yang sudah terdaftar untuk lanjut memilih dan mendaftar trip.</p>
+          <p className="muted">Gunakan akun yang sudah terdaftar untuk lanjut memilih dan mendaftar cave trip.</p>
         </div>
         <form className="auth-form" onSubmit={onSubmit}>
           {error && <p className="form-error">{error}</p>}
@@ -607,7 +607,7 @@ export function CustomerSignupPage({ signupCustomer, navigate }) {
         <div className="auth-panel-head">
           <p className="eyebrow">Signup customer</p>
           <h1>Buat Akun</h1>
-          <p className="muted">Simpan data kontak sekali, lalu gunakan lagi saat mendaftar open trip berikutnya.</p>
+          <p className="muted">Simpan data kontak sekali, lalu gunakan lagi saat mendaftar open trip goa berikutnya.</p>
         </div>
         <form className="auth-form auth-form-grid" onSubmit={onSubmit}>
           {error && <p className="form-error">{error}</p>}
@@ -629,11 +629,11 @@ function AuthShell({ children, navigate }) {
     <main className="login-page">
       <section className="auth-shell">
         <aside className="auth-brand-panel">
-          <button className="brand" onClick={() => navigate('/')}>Zaza Open Trip</button>
+          <button className="brand" onClick={() => navigate('/')}>Zaza Cave Trip</button>
           <div>
             <p className="eyebrow">Customer area</p>
-            <h2>Mulai perjalanan dari data yang rapi.</h2>
-            <p>Masuk atau buat akun untuk menyimpan kontak pendaftaran dan melanjutkan proses trip dengan lebih nyaman.</p>
+            <h2>Mulai eksplor goa dari data yang rapi.</h2>
+            <p>Masuk atau buat akun untuk menyimpan kontak pendaftaran dan melanjutkan proses cave trip dengan lebih nyaman.</p>
           </div>
         </aside>
         {children}

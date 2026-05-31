@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import loadingVideo from '../assets/videoloading.mp4'
 import { accounts } from '../config/constants'
 
 export function LoginPage({ role, login, navigate }) {
@@ -14,16 +15,16 @@ export function LoginPage({ role, login, navigate }) {
   const isAdmin = role === 'admin'
   const title = isAdmin ? 'Dashboard Admin' : 'Dashboard Pekerja'
   const eyebrow = isAdmin ? 'Login admin' : 'Login pekerja'
-  const panelTitle = isAdmin ? 'Kelola operasional trip dari satu tempat.' : 'Pantau dan ambil job trip dengan lebih rapi.'
+  const panelTitle = isAdmin ? 'Kelola operasional open trip goa dari satu tempat.' : 'Pantau dan ambil job trip goa dengan lebih rapi.'
   const panelCopy = isAdmin
-    ? 'Masuk untuk mengatur open trip, approval pendaftaran, jadwal, dan akun pekerja.'
-    : 'Masuk untuk melihat job tersedia, mengambil tugas, dan memperbarui status pekerjaan.'
+    ? 'Masuk untuk mengatur paket goa, approval pendaftaran, jadwal, dan akun pekerja.'
+    : 'Masuk untuk melihat job cave trip, mengambil tugas, dan memperbarui status pekerjaan.'
 
   return (
     <main className="login-page">
       <section className="auth-shell">
         <aside className="auth-brand-panel">
-          <button className="brand" onClick={() => navigate('/')}>Zaza Open Trip</button>
+          <button className="brand" onClick={() => navigate('/')}>Zaza Cave Trip</button>
           <div>
             <p className="eyebrow">{isAdmin ? 'Admin area' : 'Pekerja area'}</p>
             <h2>{panelTitle}</h2>
@@ -51,10 +52,12 @@ export function LoginPage({ role, login, navigate }) {
 
 export function LoadingPage() {
   return (
-    <main className="login-page">
-      <section className="login-card">
-        <h1>Memuat data</h1>
-        <p className="muted">Menghubungkan aplikasi ke Firebase...</p>
+    <main className="loading-page">
+      <video className="loading-video" src={loadingVideo} autoPlay muted loop playsInline aria-hidden="true" />
+      <section className="loading-panel" aria-live="polite">
+        <p className="eyebrow">Zaza Cave Trip</p>
+        <h1>Menyiapkan jalur goa</h1>
+        <p>Menghubungkan data trip dan slot keberangkatan...</p>
       </section>
     </main>
   )
@@ -64,7 +67,7 @@ export function Sidebar({ title, links, navigate, logout, path }) {
   return (
     <aside className="sidebar">
       <div className="sidebar-brand">
-        <button className="brand inverse" onClick={() => navigate('/')}>Zaza Trip</button>
+        <button className="brand inverse" onClick={() => navigate('/')}>Zaza Cave</button>
         <span>{title}</span>
       </div>
       <nav className="sidebar-nav">
