@@ -50,14 +50,11 @@ export function LoginPage({ role, login, navigate }) {
   )
 }
 
-export function LoadingPage({ isLoadingData, onIntroFinished }) {
+export function LoadingPage({ onIntroFinished }) {
   return (
     <main className="loading-page">
-      <section className="loading-panel" aria-live="polite">
+      <section className="loading-panel" aria-label="Loading">
         <video className="loading-video" src={loadingVideo} autoPlay muted playsInline onEnded={onIntroFinished} onError={onIntroFinished} aria-label="Video loading Zaza Cave Trip" />
-        <p className="eyebrow">Zaza Cave Trip</p>
-        <h1>Menyiapkan jalur goa</h1>
-        <p>{isLoadingData ? 'Menghubungkan data trip dan slot keberangkatan...' : 'Sebentar lagi masuk ke katalog cave trip...'}</p>
       </section>
     </main>
   )

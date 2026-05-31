@@ -288,7 +288,7 @@ function App() {
     <>
       {toast && <div className="toast">{toast}</div>}
       {isLoadingData || !isIntroFinished ? (
-        <LoadingPage isLoadingData={isLoadingData} onIntroFinished={() => setIsIntroFinished(true)} />
+        <LoadingPage onIntroFinished={() => setIsIntroFinished(true)} />
       ) : (
         <RouteRenderer {...props} />
       )}
