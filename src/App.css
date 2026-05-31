@@ -2711,7 +2711,7 @@ th {
 .admin-dashboard,
 .job-grid,
 .schedule-list {
-  color: var(--color-text);
+  color: #241a08;
 }
 
 .app-shell .asset-icon,
@@ -2727,14 +2727,14 @@ th {
 .schedule-card p,
 .job-card p,
 .detail-panel p {
-  color: var(--color-muted);
+  color: #6f5b2c;
 }
 
 .app-shell .outline-btn,
 .app-shell .table-actions button,
 .app-shell .status-select,
 .app-shell .status-control select {
-  color: var(--color-text);
+  color: #241a08;
 }
 
 .app-shell .primary-btn,
@@ -2752,6 +2752,138 @@ th {
 .sidebar-nav button.active,
 .sidebar-nav button:disabled.active {
   color: #ffffff;
+}
+
+.app-shell {
+  background: #f7f1e2;
+}
+
+.workspace h1,
+.app-shell h2,
+.app-shell h3,
+.app-shell h4,
+.admin-page-head h2,
+.dashboard-hero h2,
+.admin-trip-card h3,
+.schedule-card h3,
+.job-card h3,
+.detail-panel h2,
+.metric strong,
+.admin-trip-price strong,
+.admin-trip-meta dd,
+.schedule-date-row strong,
+.schedule-metrics dd,
+.registration-status-card h4,
+.registration-status-head h3,
+.registration-card-main dd,
+.data-form label,
+.status-control,
+.app-shell td {
+  color: #241a08;
+}
+
+.app-shell .muted,
+.app-shell .eyebrow,
+.app-shell p,
+.app-shell dt,
+.app-shell .metric span,
+.app-shell .admin-trip-price span,
+.app-shell .admin-trip-meta dt,
+.app-shell .schedule-date-row span,
+.app-shell .schedule-metrics dt,
+.app-shell .registration-card-main dt,
+.app-shell .registration-card-status {
+  color: #6f5b2c;
+}
+
+.app-shell .admin-page-head,
+.app-shell .dashboard-hero,
+.app-shell .admin-table-card,
+.app-shell .admin-trip-card,
+.app-shell .schedule-card,
+.app-shell .job-card,
+.app-shell .data-panel,
+.app-shell .detail-panel,
+.app-shell .metric,
+.app-shell .registration-status-column,
+.app-shell .registration-status-card,
+.app-shell .admin-trip-price,
+.app-shell .admin-trip-meta div,
+.app-shell .schedule-date-row,
+.app-shell .schedule-metrics div {
+  background: #fffaf0;
+  border-color: rgba(184, 132, 43, 0.3);
+  color: #241a08;
+  box-shadow: 0 14px 34px rgba(36, 26, 8, 0.08);
+}
+
+.app-shell .data-form,
+.app-shell .data-form.compact {
+  background: #fffaf0;
+  border-color: rgba(184, 132, 43, 0.3);
+}
+
+.app-shell .data-form input,
+.app-shell .data-form select,
+.app-shell .data-form textarea,
+.app-shell .status-select,
+.app-shell .status-control select {
+  color-scheme: light;
+  background: #ffffff;
+  color: #241a08;
+  border-color: rgba(184, 132, 43, 0.4);
+}
+
+.app-shell .data-form input::placeholder,
+.app-shell .data-form textarea::placeholder {
+  color: #8d7a4a;
+}
+
+.app-shell table {
+  background: #fffaf0;
+  color: #241a08;
+}
+
+.app-shell th {
+  background: #f1dfb4;
+  color: #241a08;
+}
+
+.app-shell td {
+  border-color: rgba(184, 132, 43, 0.24);
+}
+
+.app-shell .outline-btn,
+.app-shell .table-actions button {
+  background: #ffffff;
+  color: #241a08;
+  border-color: rgba(184, 132, 43, 0.38);
+}
+
+.app-shell .outline-btn:hover,
+.app-shell .table-actions button:hover {
+  background: #f4e5bf;
+}
+
+.app-shell .badge-tersedia,
+.app-shell .badge-disetujui,
+.app-shell .badge-menunggu-approval,
+.app-shell .badge-diambil,
+.app-shell .badge-sedang-berjalan,
+.app-shell .trip-type-chip,
+.app-shell .job-slot-label,
+.app-shell .participant-list span,
+.app-shell .registration-status-head span {
+  background: #f4e5bf;
+  border-color: rgba(184, 132, 43, 0.34);
+  color: #6b4710;
+}
+
+.app-shell .empty-state,
+.app-shell .empty-column {
+  background: #fffaf0;
+  border-color: rgba(184, 132, 43, 0.38);
+  color: #6f5b2c;
 }
 
 @media (max-width: 1080px) {
