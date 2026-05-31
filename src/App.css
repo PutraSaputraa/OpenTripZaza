@@ -1759,7 +1759,7 @@ button:disabled {
 .auth-brand-panel p:not(.eyebrow) {
   max-width: 430px;
   margin-top: 16px;
-  color: rgba(23, 19, 13, 0.74);
+  color: linear-gradient(135deg, #f2d58a, #c08a2e);
   font-size: 17px;
   line-height: 1.65;
 }
