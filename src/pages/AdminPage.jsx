@@ -3,27 +3,22 @@ import { accounts, registrationStatuses, tripStatuses } from '../config/constant
 import { formatCurrency, formatDate, tripName } from '../utils/formatters'
 import { Badge, DataPanel, Metric, Sidebar } from './shared'
 
-const createItineraryDays = (count, existingDays = []) => {
-  const totalDays = Math.max(1, Number(count) || 1)
-  return Array.from({ length: totalDays }, (_, index) => {
-    const current = existingDays[index]
-    return {
-      day: index + 1,
-      text: typeof current === 'string' ? current : current?.text || '',
-    }
-  })
-}
-
 const parseImageUrls = (value) => String(value || '')
   .split(/\r?\n|,/)
   .map((item) => item.trim())
   .filter(Boolean)
 
-const normalizeTripForm = (trip) => {
-  const itineraryDays = Array.isArray(trip?.itineraryDays) && trip.itineraryDays.length
-    ? createItineraryDays(trip.itineraryDays.length, trip.itineraryDays)
-    : createItineraryDays(1, trip?.itinerary ? [{ text: trip.itinerary }] : [])
+const getActivityText = (trip) => {
+  if (trip?.activity) return trip.activity
+  if (trip?.itinerary) return trip.itinerary
+  if (!Array.isArray(trip?.itineraryDays)) return ''
+  return trip.itineraryDays
+    .map((item) => (typeof item === 'string' ? item : item?.text))
+    .filter(Boolean)
+    .join('\n')
+}
 
+const normalizeTripForm = (trip) => {
   return {
     name: '',
     destination: '',
@@ -39,9 +34,8 @@ const normalizeTripForm = (trip) => {
     facilities: '',
     status: 'Tersedia',
     ...trip,
+    activity: getActivityText(trip),
     imageUrlsText: parseImageUrls(Array.isArray(trip?.imageUrls) && trip.imageUrls.length ? trip.imageUrls.join('\n') : trip?.imageUrl).join('\n'),
-    durationDays: itineraryDays.length,
-    itineraryDays,
   }
 }
 
@@ -158,26 +152,17 @@ export function TripForm({ tripId, trips, saveTrip, navigate, ...props }) {
     workerCount: selected?.workerCount || selectedJobCount || 1,
   })
 
-  const updateDurationDays = (value) => {
-    const durationDays = Math.max(1, Number(value) || 1)
-    setForm({ ...form, durationDays, itineraryDays: createItineraryDays(durationDays, form.itineraryDays) })
-  }
-
-  const updateItineraryDay = (index, text) => {
-    const itineraryDays = form.itineraryDays.map((item, itemIndex) => (
-      itemIndex === index ? { ...item, text } : item
-    ))
-    setForm({ ...form, itineraryDays })
-  }
-
   const onSubmit = async (event) => {
     event.preventDefault()
-    const itineraryDays = createItineraryDays(form.durationDays, form.itineraryDays)
     const imageUrls = parseImageUrls(form.imageUrlsText || form.imageUrl)
     const tripForm = { ...form }
     delete tripForm.imageUrlsText
+    delete tripForm.durationDays
+    delete tripForm.itineraryDays
+    delete tripForm.itinerary
     await saveTrip({
       ...tripForm,
+      activity: form.activity.trim(),
       price: Number(form.price),
       quota: Number(form.quota),
       slots: Number(form.slots),
@@ -185,9 +170,6 @@ export function TripForm({ tripId, trips, saveTrip, navigate, ...props }) {
       isPrivateTrip: Boolean(form.isPrivateTrip),
       imageUrl: imageUrls[0] || '',
       imageUrls,
-      durationDays: itineraryDays.length,
-      itineraryDays,
-      itinerary: itineraryDays.map((item) => `Hari ${item.day}: ${item.text}`).join('\n\n'),
     })
   }
 
@@ -214,24 +196,8 @@ export function TripForm({ tripId, trips, saveTrip, navigate, ...props }) {
           <label>Status<select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>{tripStatuses.map((status) => <option key={status}>{status}</option>)}</select></label>
           <label className="full">Link gambar trip<textarea placeholder={'https://static.uc.ac.id/htb/2019/01/maxresdefault.jpg\nhttps://contoh.com/gambar-kedua.jpg'} value={form.imageUrlsText} onChange={(e) => setForm({ ...form, imageUrlsText: e.target.value })} /></label>
           <label className="full">Deskripsi<textarea required value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></label>
+          <label className="full">Activity<textarea required placeholder="Contoh: briefing keselamatan, eksplor lorong goa, cave tubing, sesi foto, dan kembali ke meeting point." value={form.activity} onChange={(e) => setForm({ ...form, activity: e.target.value })} /></label>
           <label className="full">Fasilitas<textarea required value={form.facilities} onChange={(e) => setForm({ ...form, facilities: e.target.value })} /></label>
-          <div className="itinerary-builder full">
-            <div className="itinerary-builder-head">
-              <div>
-                <h3>Itinerary per hari</h3>
-                <p className="muted">Tentukan durasi trip, lalu isi detail kegiatan untuk tiap hari.</p>
-              </div>
-              <label>Jumlah hari<input required type="number" min="1" value={form.durationDays} onChange={(e) => updateDurationDays(e.target.value)} /></label>
-            </div>
-            <div className="itinerary-day-list">
-              {form.itineraryDays.map((item, index) => (
-                <label key={item.day}>
-                  Hari {item.day}
-                  <textarea required placeholder={`Kegiatan hari ${item.day}`} value={item.text} onChange={(e) => updateItineraryDay(index, e.target.value)} />
-                </label>
-              ))}
-            </div>
-          </div>
           <button className="primary-btn full" type="submit">Simpan cave trip</button>
         </form>
       </section>

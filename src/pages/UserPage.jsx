@@ -315,29 +315,18 @@ function TripBreadcrumb({ trip, navigate, checkout }) {
   )
 }
 
-function ItineraryBlock({ trip }) {
-  const days = Array.isArray(trip.itineraryDays) && trip.itineraryDays.length
-    ? trip.itineraryDays.map((item, index) => ({
-      day: item.day || index + 1,
-      text: typeof item === 'string' ? item : item.text,
-    })).filter((item) => item.text)
-    : []
+const getActivityText = (trip) => {
+  if (trip?.activity) return trip.activity
+  if (trip?.itinerary) return trip.itinerary
+  if (!Array.isArray(trip?.itineraryDays)) return ''
+  return trip.itineraryDays
+    .map((item) => (typeof item === 'string' ? item : item?.text))
+    .filter(Boolean)
+    .join('\n')
+}
 
-  if (!days.length) return <InfoBlock title="Itinerary" text={trip.itinerary} />
-
-  return (
-    <section className="info-block itinerary-block">
-      <h3>Itinerary</h3>
-      <div className="itinerary-timeline">
-        {days.map((item) => (
-          <article key={item.day} className="itinerary-day">
-            <span>Hari {item.day}</span>
-            <p>{item.text}</p>
-          </article>
-        ))}
-      </div>
-    </section>
-  )
+function ActivityBlock({ trip }) {
+  return <InfoBlock title="Activity" text={getActivityText(trip) || 'Activity belum tersedia.'} />
 }
 
 export function TripDetail({ tripId, trips, navigate, session, logout }) {
@@ -360,7 +349,7 @@ export function TripDetail({ tripId, trips, navigate, session, logout }) {
             <TripGallery trip={trip} />
             <InfoBlock title="Deskripsi" text={trip.description} />
             <InfoBlock title="Destinasi" text={trip.destination} />
-            <ItineraryBlock trip={trip} />
+            <ActivityBlock trip={trip} />
             <InfoBlock title="Fasilitas" text={trip.facilities} />
           </article>
 
