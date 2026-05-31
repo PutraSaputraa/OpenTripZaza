@@ -6,7 +6,7 @@ import { db } from './firebase'
 import { AdminDashboard, AdminSchedule, AdminTrips, AdminWorkers, TripForm } from './pages/AdminPage'
 import { CustomerAccountPage, CustomerCatalog, CustomerLoginPage, CustomerSignupPage, RegistrationPage, TripDetail } from './pages/UserPage'
 import { MyJobs, WorkerDashboard, WorkerJobDetail, WorkerJobs } from './pages/WorkerPage'
-import { LoadingPage, LoginPage, NotFound } from './pages/shared'
+import { LoginPage, NotFound } from './pages/shared'
 
 const collections = {
   trips: 'trips',
@@ -27,8 +27,6 @@ function App() {
   const [jobs, setJobs] = useState([])
   const [customerAccounts, setCustomerAccounts] = useState([])
   const [workerAccounts, setWorkerAccounts] = useState([])
-  const [isLoadingData, setIsLoadingData] = useState(true)
-  const [isIntroFinished, setIsIntroFinished] = useState(false)
   const [toast, setToast] = useState('')
 
   const navigate = (target) => {
@@ -52,8 +50,7 @@ function App() {
     const unsubscribers = [
       onSnapshot(query(collection(db, collections.trips), orderBy('id')), (snapshot) => {
         setTrips(sortById(withNumericId(snapshot)))
-        setIsLoadingData(false)
-      }, () => setIsLoadingData(false)),
+      }),
       onSnapshot(query(collection(db, collections.registrations), orderBy('id', 'desc')), (snapshot) => setRegistrations(withNumericId(snapshot))),
       onSnapshot(query(collection(db, collections.jobs), orderBy('id')), (snapshot) => setJobs(sortById(withNumericId(snapshot)))),
       onSnapshot(collection(db, collections.customers), (snapshot) => setCustomerAccounts(snapshot.docs.map((item) => item.data()))),
@@ -287,11 +284,7 @@ function App() {
   return (
     <>
       {toast && <div className="toast">{toast}</div>}
-      {isLoadingData || !isIntroFinished ? (
-        <LoadingPage onIntroFinished={() => setIsIntroFinished(true)} />
-      ) : (
-        <RouteRenderer {...props} />
-      )}
+      <RouteRenderer {...props} />
     </>
   )
 }
