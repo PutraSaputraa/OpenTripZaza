@@ -7,16 +7,16 @@ textarea {
 }
 
 :root {
-  --color-ink: #06040a;
-  --color-charcoal: #10091c;
-  --color-panel: #171024;
-  --color-surface: #0b0712;
-  --color-line: rgba(126, 20, 255, 0.28);
-  --color-muted: #b8adca;
-  --color-text: #f6f0ff;
-  --color-gold: #8f4bff;
-  --color-gold-dark: #47bfff;
-  --color-gold-soft: #24143f;
+  --color-ink: #050403;
+  --color-charcoal: #12100c;
+  --color-panel: #1b1710;
+  --color-surface: #080704;
+  --color-line: rgba(218, 175, 92, 0.3);
+  --color-muted: #c8b991;
+  --color-text: #fff7e4;
+  --color-gold: #e2b85f;
+  --color-gold-dark: #b8842b;
+  --color-gold-soft: #2b2111;
   --shadow-soft: 0 18px 42px rgba(0, 0, 0, 0.34);
 }
 
@@ -56,8 +56,8 @@ textarea {
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(circle at 50% 52%, rgba(71, 191, 255, 0.14), transparent 34%),
-    linear-gradient(180deg, rgba(6, 4, 10, 0.42), rgba(6, 4, 10, 0.9));
+    radial-gradient(circle at 50% 52%, rgba(226, 184, 95, 0.18), transparent 34%),
+    linear-gradient(180deg, rgba(5, 4, 3, 0.42), rgba(5, 4, 3, 0.9));
   content: '';
 }
 
@@ -65,9 +65,9 @@ textarea {
   position: relative;
   z-index: 1;
   width: min(100%, 520px);
-  border: 1px solid rgba(143, 75, 255, 0.34);
+  border: 1px solid rgba(226, 184, 95, 0.4);
   border-radius: 8px;
-  background: rgba(11, 7, 18, 0.76);
+  background: rgba(8, 7, 4, 0.78);
   box-shadow: 0 26px 80px rgba(0, 0, 0, 0.46);
   padding: clamp(24px, 4vw, 42px);
   text-align: center;
@@ -83,7 +83,7 @@ textarea {
 
 .loading-panel p:not(.eyebrow) {
   margin-top: 14px;
-  color: rgba(246, 240, 255, 0.78);
+  color: rgba(255, 247, 228, 0.78);
   line-height: 1.6;
 }
 
@@ -110,8 +110,8 @@ button:disabled {
 .public-page {
   min-height: 100vh;
   background:
-    radial-gradient(circle at 18% 18%, rgba(71, 191, 255, 0.08), transparent 28%),
-    radial-gradient(circle at 84% 8%, rgba(126, 20, 255, 0.13), transparent 30%),
+    radial-gradient(circle at 18% 18%, rgba(226, 184, 95, 0.08), transparent 28%),
+    radial-gradient(circle at 84% 8%, rgba(184, 132, 43, 0.12), transparent 30%),
     var(--color-surface);
 }
 
@@ -124,7 +124,7 @@ button:disabled {
   align-items: center;
   gap: 16px;
   padding: 18px clamp(18px, 4vw, 56px);
-  background: rgba(11, 7, 18, 0.9);
+  background: rgba(8, 7, 4, 0.9);
   border-bottom: 1px solid var(--color-line);
   backdrop-filter: blur(14px);
 }
@@ -133,7 +133,7 @@ button:disabled {
   position: fixed;
   right: 0;
   left: 0;
-  background: rgba(11, 7, 18, 0.82);
+  background: rgba(8, 7, 4, 0.82);
   border-bottom: 1px solid rgba(255, 255, 255, 0.16);
   transition: background-color 180ms ease, border-color 180ms ease, backdrop-filter 180ms ease;
 }
@@ -387,8 +387,8 @@ button:disabled {
 
 .hero-shade {
   background:
-    radial-gradient(circle at 56% 45%, rgba(71, 191, 255, 0.12), transparent 26%),
-    linear-gradient(180deg, rgba(6, 4, 10, 0.28), rgba(6, 4, 10, 0.82));
+    radial-gradient(circle at 56% 45%, rgba(226, 184, 95, 0.13), transparent 26%),
+    linear-gradient(180deg, rgba(5, 4, 3, 0.28), rgba(5, 4, 3, 0.84));
 }
 
 .hero-content {
@@ -2524,7 +2524,7 @@ th {
 .registration-status-card,
 .itinerary-builder,
 .admin-trip-meta div {
-  background: linear-gradient(180deg, rgba(23, 16, 36, 0.96), rgba(15, 10, 24, 0.96));
+  background: linear-gradient(180deg, rgba(27, 23, 16, 0.96), rgba(14, 12, 8, 0.96));
   border-color: var(--color-line);
   color: var(--color-text);
 }
@@ -2552,8 +2552,8 @@ th {
 .auth-brand-panel,
 .sidebar {
   background:
-    linear-gradient(180deg, rgba(71, 191, 255, 0.14), rgba(126, 20, 255, 0.13) 42%, rgba(6, 4, 10, 0) 72%),
-    #080510;
+    linear-gradient(180deg, rgba(226, 184, 95, 0.16), rgba(184, 132, 43, 0.12) 42%, rgba(5, 4, 3, 0) 72%),
+    #080704;
 }
 
 .auth-brand-panel p:not(.eyebrow),
@@ -2614,9 +2614,9 @@ td {
 .public-nav nav .nav-accent,
 .home-page .public-nav nav .nav-accent,
 .sidebar .logout-btn {
-  background: linear-gradient(135deg, #8f4bff, #47bfff);
-  color: #06040a;
-  box-shadow: 0 14px 30px rgba(71, 191, 255, 0.18);
+  background: linear-gradient(135deg, #f2d58a, #c08a2e);
+  color: #050403;
+  box-shadow: 0 14px 30px rgba(226, 184, 95, 0.2);
 }
 
 .outline-btn,
@@ -2625,7 +2625,7 @@ td {
 .logout-btn,
 .carousel-control,
 .footer-contact a {
-  background: rgba(23, 16, 36, 0.82);
+  background: rgba(27, 23, 16, 0.84);
   color: var(--color-text);
   border-color: var(--color-line);
 }
@@ -2635,7 +2635,7 @@ td {
 .carousel-control:hover,
 .carousel-control:focus-visible,
 .footer-contact a:hover {
-  background: rgba(71, 191, 255, 0.14);
+  background: rgba(226, 184, 95, 0.16);
   color: #ffffff;
 }
 
@@ -2650,9 +2650,9 @@ td {
 .job-slot-label,
 .registration-status-head span,
 .customer-name {
-  background: rgba(143, 75, 255, 0.18);
-  border-color: rgba(71, 191, 255, 0.3);
-  color: #c9f0ff;
+  background: rgba(226, 184, 95, 0.18);
+  border-color: rgba(226, 184, 95, 0.34);
+  color: #f7d98c;
 }
 
 .badge-penuh,
@@ -2663,14 +2663,14 @@ td {
 }
 
 .badge-selesai {
-  background: rgba(71, 191, 255, 0.14);
-  color: #bcecff;
+  background: rgba(226, 184, 95, 0.14);
+  color: #f7d98c;
 }
 
 .trip-visual {
   background:
-    linear-gradient(145deg, rgba(71, 191, 255, 0.2), rgba(126, 20, 255, 0.2)),
-    #10091c;
+    linear-gradient(145deg, rgba(226, 184, 95, 0.2), rgba(184, 132, 43, 0.16)),
+    #12100c;
 }
 
 .data-form input,
@@ -2681,8 +2681,8 @@ td {
 .status-control select,
 .registration-fields input,
 .registration-fields textarea {
-  border-color: rgba(71, 191, 255, 0.28);
-  background: rgba(6, 4, 10, 0.7);
+  border-color: rgba(226, 184, 95, 0.3);
+  background: rgba(5, 4, 3, 0.72);
   color: var(--color-text);
 }
 
@@ -2695,23 +2695,23 @@ td {
 .registration-fields input:focus,
 .registration-fields textarea:focus {
   border-color: var(--color-gold-dark);
-  box-shadow: 0 0 0 3px rgba(71, 191, 255, 0.18);
+  box-shadow: 0 0 0 3px rgba(226, 184, 95, 0.18);
   outline: 0;
 }
 
 table {
-  background: rgba(23, 16, 36, 0.9);
+  background: rgba(27, 23, 16, 0.9);
 }
 
 th {
-  background: rgba(143, 75, 255, 0.2);
-  color: #e9ddff;
+  background: rgba(226, 184, 95, 0.18);
+  color: #ffe9ad;
 }
 
 .empty-state,
 .empty-column {
-  border-color: rgba(71, 191, 255, 0.34);
-  background: rgba(23, 16, 36, 0.76);
+  border-color: rgba(226, 184, 95, 0.36);
+  background: rgba(27, 23, 16, 0.76);
 }
 
 @media (max-width: 1080px) {
