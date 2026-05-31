@@ -59,12 +59,11 @@ textarea {
   display: grid;
   width: min(42vw, 220px);
   min-width: 132px;
-  border: 1px solid rgba(226, 184, 95, 0.4);
+  border: 0;
   border-radius: 8px;
-  background: rgba(8, 7, 4, 0.72);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-  padding: 7px;
-  backdrop-filter: blur(16px);
+  background: transparent;
+  box-shadow: none;
+  padding: 0;
 }
 
 .loading-video {
