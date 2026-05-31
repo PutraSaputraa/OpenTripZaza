@@ -28,6 +28,7 @@ function App() {
   const [customerAccounts, setCustomerAccounts] = useState([])
   const [workerAccounts, setWorkerAccounts] = useState([])
   const [isLoadingData, setIsLoadingData] = useState(true)
+  const [isIntroFinished, setIsIntroFinished] = useState(false)
   const [toast, setToast] = useState('')
 
   const navigate = (target) => {
@@ -286,7 +287,11 @@ function App() {
   return (
     <>
       {toast && <div className="toast">{toast}</div>}
-      {isLoadingData ? <LoadingPage /> : <RouteRenderer {...props} />}
+      {isLoadingData || !isIntroFinished ? (
+        <LoadingPage isLoadingData={isLoadingData} onIntroFinished={() => setIsIntroFinished(true)} />
+      ) : (
+        <RouteRenderer {...props} />
+      )}
     </>
   )
 }
