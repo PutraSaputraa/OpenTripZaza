@@ -24,7 +24,7 @@ export function LoginPage({ role, login, navigate }) {
     <main className="login-page">
       <section className="auth-shell">
         <aside className="auth-brand-panel">
-          <button className="brand" onClick={() => navigate('/')}>Zaza Cave Trip</button>
+          <button className="brand" onClick={() => navigate('/')}>Open Cave Trip</button>
           <div>
             <p className="eyebrow">{isAdmin ? 'Admin area' : 'Pekerja area'}</p>
             <h2>{panelTitle}</h2>
@@ -54,7 +54,7 @@ export function LoadingPage({ onIntroFinished }) {
   return (
     <main className="loading-page">
       <section className="loading-panel" aria-label="Loading">
-        <video className="loading-video" src={loadingVideo} autoPlay muted playsInline onEnded={onIntroFinished} onError={onIntroFinished} aria-label="Video loading Zaza Cave Trip" />
+        <video className="loading-video" src={loadingVideo} autoPlay muted playsInline onEnded={onIntroFinished} onError={onIntroFinished} aria-label="Video loading Open Cave Trip" />
       </section>
     </main>
   )
@@ -64,7 +64,7 @@ export function Sidebar({ title, links, navigate, logout, path }) {
   return (
     <aside className="sidebar">
       <div className="sidebar-brand">
-        <button className="brand inverse" onClick={() => navigate('/')}>Zaza Cave</button>
+        <button className="brand inverse" onClick={() => navigate('/')}>Open Cave Trip</button>
         <span>{title}</span>
       </div>
       <nav className="sidebar-nav">

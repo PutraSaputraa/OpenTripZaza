@@ -44,7 +44,7 @@ export function PublicNav({ navigate, session, logout }) {
 
   return (
     <header className={`public-nav ${isOverHero ? 'nav-on-hero' : ''}`}>
-      <button className="brand" onClick={goHome}>{session?.role === 'customer' ? `Welcome, ${session.name}` : 'Zaza Cave Trip'}</button>
+      <button className="brand" onClick={goHome}>{session?.role === 'customer' ? `Welcome, ${session.name}` : 'Open Cave Trip'}</button>
       <nav className="public-nav-center" aria-label="Navigasi halaman">
         <button onClick={() => scrollToHomeSection('open-trip-list')}>Trip</button>
         <button onClick={goHome}>Home</button>
@@ -163,7 +163,7 @@ export function CustomerCatalog({ trips, navigate, session, logout }) {
         <video className="hero-video" src={cinematicVideo} autoPlay muted loop playsInline aria-hidden="true" />
         <div className="hero-shade" />
         <div className="hero-content">
-          <p className="eyebrow">Zaza Cave Trip</p>
+          <p className="eyebrow">Open Cave Trip</p>
           <h1>Open trip goa dengan suasana gelap, aman, dan tertata.</h1>
           <p className="hero-copy">Pilih destinasi goa, cek slot, lalu daftar ke trip yang paling pas. Semua pendaftaran diverifikasi admin supaya perjalanan eksplorasi tetap rapi sebelum masuk jalur.</p>
           <div className="hero-actions">
@@ -224,7 +224,7 @@ export function CustomerCatalog({ trips, navigate, session, logout }) {
 
       <footer className="public-footer reveal-on-scroll">
         <div>
-          <h2>Zaza Cave Trip</h2>
+          <h2>Open Cave Trip</h2>
           <p>Siap bantu rencana open trip goa dan private cave tour kamu.</p>
         </div>
         <div className="footer-contact">
@@ -618,7 +618,7 @@ function AuthShell({ children, navigate }) {
     <main className="login-page">
       <section className="auth-shell">
         <aside className="auth-brand-panel">
-          <button className="brand" onClick={() => navigate('/')}>Zaza Cave Trip</button>
+          <button className="brand" onClick={() => navigate('/')}>Open Cave Trip</button>
           <div>
             <p className="eyebrow">Customer area</p>
             <h2>Mulai eksplor goa dari data yang rapi.</h2>
