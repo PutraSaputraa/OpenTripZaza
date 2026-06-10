@@ -4487,3 +4487,72 @@ body {
   background: transparent;
   color: var(--color-ink);
 }
+
+/* Checkout summary image should be rectangular */
+.registration-summary .trip-visual {
+  width: calc(100% - 28px);
+  aspect-ratio: 16 / 10;
+  margin: 14px auto 0;
+  border-radius: 22px;
+}
+
+.participant-form-list {
+  display: grid;
+  gap: 16px;
+}
+
+.participant-form-card {
+  display: grid;
+  gap: 14px;
+  border: 1px solid var(--color-line);
+  border-radius: 24px;
+  background: #ffffff;
+  padding: 18px;
+}
+
+.compact-form-section-head {
+  grid-template-columns: 34px minmax(0, 1fr);
+}
+
+.compact-form-section-head span {
+  width: 34px;
+  height: 34px;
+}
+
+.participant-detail-list {
+  display: grid;
+  gap: 8px;
+}
+
+.participant-detail-list div {
+  display: grid;
+  gap: 3px;
+  border: 1px solid var(--color-line);
+  border-radius: 16px;
+  background: #ffffff;
+  padding: 12px;
+}
+
+.participant-detail-list strong {
+  color: var(--color-ink);
+}
+
+.participant-detail-list span {
+  color: var(--color-muted);
+}
+
+.auth-form select,
+.auth-form textarea {
+  width: 100%;
+  border: 1px solid var(--color-line);
+  border-radius: 20px;
+  background: #ffffff;
+  color: var(--color-ink);
+  padding: 12px 13px;
+  outline: 0;
+}
+
+.auth-form textarea {
+  min-height: 96px;
+  resize: vertical;
+}

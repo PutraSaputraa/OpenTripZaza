@@ -227,10 +227,10 @@ function RegistrationTable({ registrations, trips, setRegistrationStatus, compac
   return (
     <div className="table-wrap">
       <table>
-        <thead><tr><th>Customer</th><th>WhatsApp</th><th>Email</th><th>Peserta</th><th>Cave trip</th><th>Catatan</th><th>Status</th></tr></thead>
+        <thead><tr><th>Customer</th><th>Kontak</th><th>Peserta</th><th>Cave trip</th><th>Tanggal</th><th>Data utama</th><th>Catatan</th><th>Status</th></tr></thead>
         <tbody>{rows.map((item) => (
           <tr key={item.id}>
-            <td>{item.name}</td><td>{item.whatsapp}</td><td>{item.email}</td><td>{item.participants}</td><td>{tripName(trips, item.tripId)}</td><td>{item.notes}</td>
+            <td>{item.name}</td><td>{item.whatsapp}<br />{item.email}</td><td>{item.participants}</td><td>{tripName(trips, item.tripId)}</td><td>{formatDate(item.requestedDate || trips.find((trip) => trip.id === item.tripId)?.date)}</td><td>{item.address || '-'}<br />{item.age ? `${item.age} tahun` : '-'} - {item.gender || '-'}<br />{item.healthNotes || '-'}</td><td>{item.notes}</td>
             <td><select className="status-select" value={item.status} onChange={(e) => setRegistrationStatus(item.id, e.target.value)}>{registrationStatuses.map((status) => <option key={status}>{status}</option>)}</select></td>
           </tr>
         ))}</tbody>
@@ -240,9 +240,15 @@ function RegistrationTable({ registrations, trips, setRegistrationStatus, compac
 }
 
 export function AdminSchedule(props) {
-  const { trips, registrations, jobs, scheduleTripId } = props
+  const { trips, registrations, jobs, scheduleTripId, scheduleRegistrationId } = props
   const selectedTrip = trips.find((trip) => trip.id === scheduleTripId)
+  const selectedRegistration = registrations.find((item) => item.id === scheduleRegistrationId)
   if (scheduleTripId && selectedTrip) return <AdminScheduleDetail trip={selectedTrip} {...props} />
+  if (scheduleRegistrationId && selectedRegistration) return <AdminPrivateScheduleDetail registration={selectedRegistration} {...props} />
+  const openTrips = trips.filter((trip) => !trip.isPrivateTrip)
+  const privateSchedules = registrations
+    .map((item) => ({ registration: item, trip: trips.find((trip) => trip.id === item.tripId) }))
+    .filter(({ registration, trip }) => trip && (trip.isPrivateTrip || registration.isPrivateTour))
 
   return (
     <AdminShell title="Monitoring Jadwal" {...props}>
@@ -255,7 +261,7 @@ export function AdminSchedule(props) {
           </div>
         </div>
         <div className="schedule-list admin-card-grid">
-          {trips.map((trip) => {
+          {openTrips.map((trip) => {
             const participants = registrations.filter((item) => item.tripId === trip.id && (item.status === 'Disetujui' || item.status === 'Selesai'))
             const waitingCount = registrations.filter((item) => item.tripId === trip.id && item.status === 'Menunggu Approval').length
             const tripJobs = jobs.filter((job) => job.tripId === trip.id)
@@ -290,7 +296,98 @@ export function AdminSchedule(props) {
               </article>
             )
           })}
+          {privateSchedules.map(({ registration, trip }) => {
+            const tripJobs = jobs.filter((job) => job.tripId === trip.id)
+            const assignedJobs = tripJobs.filter((job) => job.worker).length
+            const workerTarget = tripJobs.length || trip.workerCount || 1
+            const participantDetails = Array.isArray(registration.participantDetails) ? registration.participantDetails : []
+            return (
+              <article className="schedule-card" key={`private-${registration.id}`}>
+                <div className="schedule-card-head">
+                  <div>
+                    <h3>{trip.name}</h3>
+                    <p className="icon-line"><span className="asset-icon icon-geo" aria-hidden="true" />{trip.destination}</p>
+                  </div>
+                  <div className="card-badge-stack">
+                    <span className="trip-type-chip">Private booking</span>
+                    <Badge status={registration.status} />
+                  </div>
+                </div>
+                <div className="schedule-date-row">
+                  <span><span className="asset-icon icon-calendar" aria-hidden="true" />Tanggal request</span>
+                  <strong>{formatDate(registration.requestedDate || trip.date)}</strong>
+                </div>
+                <dl className="schedule-metrics">
+                  <div><dt><span className="asset-icon icon-people" aria-hidden="true" />Peserta</dt><dd>{registration.participants}</dd></div>
+                  <div><dt>Pemesan</dt><dd>{registration.name}</dd></div>
+                  <div><dt><span className="asset-icon icon-people" aria-hidden="true" />Pekerja</dt><dd>{assignedJobs}/{workerTarget}</dd></div>
+                </dl>
+                <div className="schedule-card-footer">
+                  <div className="participant-list">{participantDetails.length ? participantDetails.slice(0, 3).map((item, index) => <span key={`${registration.id}-${index}`}>{item.name}</span>) : <span>{registration.name} ({registration.participants})</span>}</div>
+                  <button className="outline-btn" onClick={() => props.navigate(`/admin/jadwal/private/${registration.id}`)}>Detail jadwal</button>
+                </div>
+              </article>
+            )
+          })}
         </div>
+      </section>
+    </AdminShell>
+  )
+}
+
+function AdminPrivateScheduleDetail({ registration, trips, jobs, setRegistrationStatus, navigate, ...props }) {
+  const trip = trips.find((item) => item.id === registration.tripId)
+  const tripJobs = jobs.filter((job) => job.tripId === registration.tripId)
+  const assignedJobs = tripJobs.filter((job) => job.worker)
+  const participantDetails = Array.isArray(registration.participantDetails) && registration.participantDetails.length
+    ? registration.participantDetails
+    : [{ name: registration.name, address: registration.address, age: registration.age, gender: registration.gender, healthNotes: registration.healthNotes }]
+
+  return (
+    <AdminShell title="Detail Jadwal Private" navigate={navigate} {...props}>
+      <section className="admin-page-stack">
+        <div className="admin-page-head">
+          <div>
+            <p className="eyebrow">Private booking</p>
+            <h2>{trip?.name || 'Private cave tour'}</h2>
+            <p className="muted">{trip?.destination || '-'} - {formatDate(registration.requestedDate || trip?.date)} - {registration.name}</p>
+          </div>
+          <button className="outline-btn" onClick={() => navigate('/admin/jadwal')}>Kembali ke jadwal</button>
+        </div>
+
+        <section className="stat-grid dashboard-stats">
+          <Metric label="Jumlah peserta" value={registration.participants} />
+          <Metric label="Status" value={registration.status} />
+          <Metric label="Pekerja terisi" value={`${assignedJobs.length}/${tripJobs.length || trip?.workerCount || 1}`} />
+          <Metric label="Tanggal request" value={formatDate(registration.requestedDate || trip?.date)} />
+        </section>
+
+        <section className="schedule-detail-grid">
+          <DataPanel title="Data Peserta">
+            <div className="registration-status-list">
+              {participantDetails.map((participant, index) => (
+                <article className="registration-status-card" key={`${registration.id}-${index}`}>
+                  <div className="registration-card-main">
+                    <h4>{participant.name || `Peserta ${index + 1}`}</h4>
+                    <dl>
+                      <div><dt>Domisili</dt><dd>{participant.address || '-'}</dd></div>
+                      <div><dt>Usia</dt><dd>{participant.age ? `${participant.age} tahun` : '-'}</dd></div>
+                      <div><dt>Jenis kelamin</dt><dd>{participant.gender || '-'}</dd></div>
+                      <div><dt>Kondisi kesehatan</dt><dd>{participant.healthNotes || '-'}</dd></div>
+                    </dl>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </DataPanel>
+
+          <DataPanel title="Status Booking">
+            <label className="registration-card-status">Status<select className="status-select" value={registration.status} onChange={(e) => setRegistrationStatus(registration.id, e.target.value)}>
+              {registrationStatuses.map((status) => <option key={status}>{status}</option>)}
+            </select></label>
+            <p className="muted">{registration.notes || '-'}</p>
+          </DataPanel>
+        </section>
       </section>
     </AdminShell>
   )
@@ -370,6 +467,11 @@ function RegistrationStatusColumn({ title, items, setRegistrationStatus }) {
                 <div><dt>WhatsApp</dt><dd>{item.whatsapp}</dd></div>
                 <div><dt>Jenis</dt><dd>{registrationTripType(item)}</dd></div>
                 <div><dt>Peserta</dt><dd>{item.participants} orang</dd></div>
+                <div><dt>Tanggal</dt><dd>{formatDate(item.requestedDate)}</dd></div>
+                <div><dt>Domisili</dt><dd>{item.address || '-'}</dd></div>
+                <div><dt>Usia</dt><dd>{item.age ? `${item.age} tahun` : '-'}</dd></div>
+                <div><dt>Jenis kelamin</dt><dd>{item.gender || '-'}</dd></div>
+                <div><dt>Kondisi kesehatan</dt><dd>{item.healthNotes || '-'}</dd></div>
                 <div><dt>Catatan</dt><dd>{item.notes || '-'}</dd></div>
               </dl>
             </div>

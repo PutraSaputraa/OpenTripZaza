@@ -77,7 +77,16 @@ function App() {
   const loginCustomer = (form) => {
     const account = customerAccounts.find((item) => item.email === form.email && item.password === form.password)
     if (!account) return false
-    const nextSession = { role: 'customer', name: account.name, email: account.email, whatsapp: account.whatsapp || '' }
+    const nextSession = {
+      role: 'customer',
+      name: account.name,
+      email: account.email,
+      whatsapp: account.whatsapp || '',
+      address: account.address || '',
+      age: account.age || '',
+      gender: account.gender || '',
+      healthNotes: account.healthNotes || '',
+    }
     setSession(nextSession)
     navigate('/open-trip')
     return true
@@ -86,9 +95,19 @@ function App() {
   const signupCustomer = async (form) => {
     const exists = customerAccounts.some((item) => item.email === form.email)
     if (exists) return false
-    const nextAccount = { name: form.name, whatsapp: form.whatsapp, email: form.email, password: form.password, role: 'customer' }
+    const nextAccount = {
+      name: form.name,
+      whatsapp: form.whatsapp,
+      email: form.email,
+      password: form.password,
+      role: 'customer',
+      address: form.address || '',
+      age: form.age || '',
+      gender: form.gender || '',
+      healthNotes: form.healthNotes || '',
+    }
     await setDoc(doc(db, collections.customers, form.email), nextAccount)
-    setSession({ role: 'customer', name: form.name, email: form.email, whatsapp: form.whatsapp })
+    setSession({ role: 'customer', name: form.name, email: form.email, whatsapp: form.whatsapp, address: form.address || '', age: form.age || '', gender: form.gender || '', healthNotes: form.healthNotes || '' })
     navigate('/open-trip')
     showToast('Akun customer berhasil dibuat.')
     return true
@@ -135,6 +154,10 @@ function App() {
 
     const trip = trips.find((item) => item.id === tripId)
     if (!trip) return
+    if (trip.isPrivateTrip) {
+      await updateDoc(doc(db, collections.trips, String(tripId)), { slots: trip.quota, status: trip.status === 'Selesai' ? 'Selesai' : 'Tersedia' })
+      return
+    }
 
     const slots = hasApprovedPrivateTour ? 0 : Math.max(trip.quota - approvedCount, 0)
     const status = trip.status === 'Selesai' ? 'Selesai' : slots === 0 ? 'Penuh' : 'Tersedia'
@@ -147,21 +170,52 @@ function App() {
     const approvedRegistrations = registrations.filter((item) => item.tripId === Number(form.tripId) && (item.status === 'Disetujui' || item.status === 'Selesai'))
     const isPrivateTour = Boolean(form.isPrivateTour || trip.isPrivateTrip)
     const privateTourTaken = approvedRegistrations.some((item) => item.isPrivateTour)
-    if (privateTourTaken || (isPrivateTour && approvedRegistrations.length)) return false
+    if (!trip.isPrivateTrip && (privateTourTaken || (isPrivateTour && approvedRegistrations.length))) return false
+    const participantDetails = Array.isArray(form.participantDetails) && form.participantDetails.length
+      ? form.participantDetails
+      : [{ name: form.name, address: form.address || '', age: form.age || '', gender: form.gender || '', healthNotes: form.healthNotes || '' }]
+    const primaryParticipant = participantDetails[0] || {}
     const id = Date.now()
     const nextItem = {
       id,
       name: form.name,
       whatsapp: form.whatsapp,
       email: form.email,
-      participants: Number(form.participants),
+      participants: isPrivateTour ? Number(form.participants) : 1,
       tripId: Number(form.tripId),
       notes: form.notes || '-',
       isPrivateTour,
       isPrivateTrip: Boolean(trip.isPrivateTrip),
+      requestedDate: isPrivateTour ? form.requestedDate || '' : '',
+      address: primaryParticipant.address || '',
+      age: primaryParticipant.age || '',
+      gender: primaryParticipant.gender || '',
+      healthNotes: primaryParticipant.healthNotes || '',
+      participantDetails,
       status: 'Menunggu Approval',
     }
-    await setDoc(doc(db, collections.registrations, String(id)), nextItem)
+    await Promise.all([
+      setDoc(doc(db, collections.registrations, String(id)), nextItem),
+      setDoc(doc(db, collections.customers, form.email), {
+        name: form.name,
+        whatsapp: form.whatsapp,
+        email: form.email,
+        role: 'customer',
+        address: primaryParticipant.address || '',
+        age: primaryParticipant.age || '',
+        gender: primaryParticipant.gender || '',
+        healthNotes: primaryParticipant.healthNotes || '',
+      }, { merge: true }),
+    ])
+    setSession((current) => current?.email === form.email ? {
+      ...current,
+      name: form.name,
+      whatsapp: form.whatsapp,
+      address: primaryParticipant.address || '',
+      age: primaryParticipant.age || '',
+      gender: primaryParticipant.gender || '',
+      healthNotes: primaryParticipant.healthNotes || '',
+    } : current)
     showToast('Pendaftaran berhasil dikirim. Status awal: Menunggu Approval.')
     navigate('/open-trip')
     return true
@@ -315,6 +369,7 @@ function RouteRenderer(props) {
   if (parts[0] === 'admin' && parts[1] === 'open-trip' && parts[2] === 'edit') return <TripForm tripId={Number(parts[3])} {...props} />
   if (path === '/admin/pendaftaran') return <AdminSchedule {...props} />
   if (path === '/admin/jadwal') return <AdminSchedule {...props} />
+  if (parts[0] === 'admin' && parts[1] === 'jadwal' && parts[2] === 'private' && Number(parts[3])) return <AdminSchedule scheduleRegistrationId={Number(parts[3])} {...props} />
   if (parts[0] === 'admin' && parts[1] === 'jadwal' && Number(parts[2])) return <AdminSchedule scheduleTripId={Number(parts[2])} {...props} />
   if (path === '/admin/pekerja') return <AdminWorkers {...props} />
   if (path === '/pekerja/login') return <LoginPage role="pekerja" {...props} />

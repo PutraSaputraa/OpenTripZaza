@@ -464,6 +464,27 @@ function ActivityBlock({ trip }) {
   return <InfoBlock title="Activity" text={getActivityText(trip) || 'Activity belum tersedia.'} />
 }
 
+const emptyParticipant = {
+  name: '',
+  address: '',
+  age: '',
+  gender: '',
+  healthNotes: '',
+}
+
+const buildParticipant = (source = {}) => ({
+  name: source.name || '',
+  address: source.address || '',
+  age: source.age || '',
+  gender: source.gender || '',
+  healthNotes: source.healthNotes || '',
+})
+
+const resizeParticipants = (items, count, profile) => {
+  const targetCount = Math.max(1, Number(count) || 1)
+  return Array.from({ length: targetCount }, (_, index) => items[index] || (index === 0 ? buildParticipant(profile) : { ...emptyParticipant }))
+}
+
 export function TripDetail({ tripId, trips, navigate, session, logout }) {
   const trip = trips.find((item) => item.id === tripId)
   if (!trip) return <NotFound navigate={navigate} />
@@ -512,9 +533,20 @@ export function TripDetail({ tripId, trips, navigate, session, logout }) {
   )
 }
 
-export function RegistrationPage({ tripId, trips, submitRegistration, navigate, session, logout }) {
+export function RegistrationPage({ tripId, trips, submitRegistration, navigate, session, logout, customerAccounts }) {
   const trip = trips.find((item) => item.id === tripId)
-  const [form, setForm] = useState({ name: session?.role === 'customer' ? session.name : '', whatsapp: session?.whatsapp || '', email: session?.role === 'customer' ? session.email : '', participants: 1, tripId, notes: '', isPrivateTour: Boolean(trip?.isPrivateTrip) })
+  const customerProfile = customerAccounts.find((item) => item.email === session?.email) || session || {}
+  const [form, setForm] = useState({
+    name: session?.role === 'customer' ? session.name : '',
+    whatsapp: session?.whatsapp || customerProfile.whatsapp || '',
+    email: session?.role === 'customer' ? session.email : '',
+    participants: trip?.isPrivateTrip ? 2 : 1,
+    requestedDate: '',
+    tripId,
+    notes: '',
+    isPrivateTour: Boolean(trip?.isPrivateTrip),
+    participantDetails: [buildParticipant({ ...customerProfile, name: session?.name || customerProfile.name })],
+  })
   const [error, setError] = useState('')
   const selectedTrip = trips.find((item) => item.id === Number(form.tripId)) || trip
   const participants = Number(form.participants) || 1
@@ -526,16 +558,35 @@ export function RegistrationPage({ tripId, trips, submitRegistration, navigate, 
 
   const onSubmit = async (event) => {
     event.preventDefault()
-    if (!form.name || !form.whatsapp || !form.email || Number(form.participants) < 1) {
-      setError('Lengkapi nama, WhatsApp, email, dan jumlah peserta.')
+    const participantDetails = resizeParticipants(form.participantDetails, participants, { name: form.name })
+    const hasIncompleteParticipant = participantDetails.some((item) => !item.name || !item.address || !item.age || !item.gender)
+    if (!form.name || !form.whatsapp || !form.email || hasIncompleteParticipant) {
+      setError('Lengkapi data pemesan dan data setiap peserta.')
+      return
+    }
+    if (isPrivateBooking && !form.requestedDate) {
+      setError('Pilih tanggal private cave tour yang kamu inginkan.')
       return
     }
     if (Number(form.participants) > selectedTrip.slots) {
       setError('Jumlah peserta melebihi slot tersedia.')
       return
     }
-    const isSubmitted = await submitRegistration({ ...form, isPrivateTour: isPrivateBooking })
+    const isSubmitted = await submitRegistration({ ...form, participantDetails, participants: isPrivateBooking ? participants : 1, isPrivateTour: isPrivateBooking })
     if (!isSubmitted) setError('Pendaftaran gagal dikirim. Cek slot dan koneksi Firebase.')
+  }
+
+  const updateParticipant = (index, field, value) => {
+    const nextParticipants = resizeParticipants(form.participantDetails, participants, { name: form.name })
+    nextParticipants[index] = { ...nextParticipants[index], [field]: value }
+    const nextForm = { ...form, participantDetails: nextParticipants }
+    if (index === 0 && field === 'name') nextForm.name = value
+    setForm(nextForm)
+  }
+
+  const updateParticipantCount = (value) => {
+    const nextCount = Math.max(1, Number(value) || 1)
+    setForm({ ...form, participants: nextCount, participantDetails: resizeParticipants(form.participantDetails, nextCount, { name: form.name }) })
   }
 
   return (
@@ -559,7 +610,7 @@ export function RegistrationPage({ tripId, trips, submitRegistration, navigate, 
               <h2>{selectedTrip.name}</h2>
               <p>{selectedTrip.destination}</p>
               <dl className="summary-list">
-                <div><dt><span className="asset-icon icon-calendar" aria-hidden="true" />Tanggal</dt><dd>{formatDate(selectedTrip.date)}</dd></div>
+                <div><dt><span className="asset-icon icon-calendar" aria-hidden="true" />Tanggal</dt><dd>{isPrivateBooking ? form.requestedDate ? formatDate(form.requestedDate) : 'Pilih tanggal' : formatDate(selectedTrip.date)}</dd></div>
                 <div><dt><span className="asset-icon icon-currency" aria-hidden="true" />Harga</dt><dd>{formatCurrency(selectedTrip.price)} / orang</dd></div>
                 <div><dt><span className="asset-icon icon-ticket" aria-hidden="true" />Slot</dt><dd>{selectedTrip.slots} peserta tersedia</dd></div>
                 <div><dt>Jenis</dt><dd>{tripTypeLabel(selectedTrip, { isPrivateTour: isPrivateBooking })}</dd></div>
@@ -586,13 +637,39 @@ export function RegistrationPage({ tripId, trips, submitRegistration, navigate, 
             <div className="form-section-head">
               <span>2</span>
               <div>
-                <h2>Detail trip</h2>
-                <p>Pilih cave trip dan jumlah peserta yang akan didaftarkan.</p>
+                <h2>Detail peserta</h2>
+                <p>{isPrivateBooking ? 'Tentukan tanggal, jumlah peserta, lalu lengkapi data setiap peserta.' : 'Satu akun hanya dapat mendaftarkan satu peserta untuk open trip.'}</p>
               </div>
             </div>
             <div className="registration-fields">
-              <label>Jumlah peserta<input type="number" min="1" max={selectedTrip.slots} value={form.participants} onChange={(e) => setForm({ ...form, participants: e.target.value })} /></label>
+              {isPrivateBooking && (
+                <>
+                  <label>Jumlah peserta<input type="number" min="1" max={selectedTrip.slots} value={form.participants} onChange={(e) => updateParticipantCount(e.target.value)} /></label>
+                  <label>Tanggal private tour<input type="date" value={form.requestedDate} onChange={(e) => setForm({ ...form, requestedDate: e.target.value })} /></label>
+                </>
+              )}
               <label className="full">Catatan tambahan<textarea placeholder="Contoh: request pickup, alergi makanan, atau catatan rombongan." value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></label>
+            </div>
+
+            <div className="participant-form-list">
+              {resizeParticipants(form.participantDetails, participants, { name: form.name }).map((participant, index) => (
+                <section className="participant-form-card" key={index}>
+                  <div className="form-section-head compact-form-section-head">
+                    <span>{index + 1}</span>
+                    <div>
+                      <h2>{isPrivateBooking ? `Peserta ${index + 1}` : 'Data peserta'}</h2>
+                      <p>Data ini membantu admin mengecek kesiapan peserta sebelum trip.</p>
+                    </div>
+                  </div>
+                  <div className="registration-fields">
+                    <label>Nama peserta<input value={participant.name} onChange={(e) => updateParticipant(index, 'name', e.target.value)} /></label>
+                    <label>Usia peserta<input type="number" min="1" value={participant.age} onChange={(e) => updateParticipant(index, 'age', e.target.value)} /></label>
+                    <label>Jenis kelamin<select value={participant.gender} onChange={(e) => updateParticipant(index, 'gender', e.target.value)}><option value="">Pilih jenis kelamin</option><option value="Laki-laki">Laki-laki</option><option value="Perempuan">Perempuan</option></select></label>
+                    <label>Alamat domisili<input value={participant.address} onChange={(e) => updateParticipant(index, 'address', e.target.value)} /></label>
+                    <label className="full">Riwayat penyakit atau kondisi kesehatan penting<textarea placeholder="Isi '-' jika tidak ada." value={participant.healthNotes} onChange={(e) => updateParticipant(index, 'healthNotes', e.target.value)} /></label>
+                  </div>
+                </section>
+              ))}
             </div>
 
             <div className="registration-submit">
@@ -650,12 +727,26 @@ export function CustomerAccountPage({ registrations, trips, navigate, session, l
                   <Badge status={item.status} />
                 </div>
                 <dl>
-                  <div><dt><span className="asset-icon icon-calendar" aria-hidden="true" />Tanggal</dt><dd>{trip ? formatDate(trip.date) : '-'}</dd></div>
+                  <div><dt><span className="asset-icon icon-calendar" aria-hidden="true" />Tanggal</dt><dd>{item.requestedDate ? formatDate(item.requestedDate) : trip ? formatDate(trip.date) : '-'}</dd></div>
                   <div><dt>Jenis</dt><dd>{tripTypeLabel(trip, item)}</dd></div>
                   <div><dt><span className="asset-icon icon-people" aria-hidden="true" />Peserta</dt><dd>{item.participants} orang</dd></div>
                   <div><dt>WhatsApp</dt><dd>{item.whatsapp}</dd></div>
+                  <div><dt>Domisili</dt><dd>{item.address || '-'}</dd></div>
+                  <div><dt>Usia</dt><dd>{item.age ? `${item.age} tahun` : '-'}</dd></div>
+                  <div><dt>Jenis kelamin</dt><dd>{item.gender || '-'}</dd></div>
+                  <div><dt>Kondisi kesehatan</dt><dd>{item.healthNotes || '-'}</dd></div>
                   <div><dt>Catatan</dt><dd>{item.notes || '-'}</dd></div>
                 </dl>
+                {Array.isArray(item.participantDetails) && item.participantDetails.length > 1 && (
+                  <div className="participant-detail-list">
+                    {item.participantDetails.map((participant, index) => (
+                      <div key={`${item.id}-${index}`}>
+                        <strong>Peserta {index + 1}: {participant.name}</strong>
+                        <span>{participant.gender || '-'} - {participant.age || '-'} tahun - {participant.address || '-'}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
                 <button className="outline-btn" onClick={() => navigate(`/open-trip/${item.tripId}`)}>Lihat detail cave trip</button>
               </article>
             )
@@ -704,7 +795,7 @@ export function CustomerLoginPage({ loginCustomer, navigate }) {
 }
 
 export function CustomerSignupPage({ signupCustomer, navigate }) {
-  const [form, setForm] = useState({ name: '', whatsapp: '', email: '', password: '', confirmPassword: '' })
+  const [form, setForm] = useState({ name: '', whatsapp: '', email: '', address: '', age: '', gender: '', healthNotes: '', password: '', confirmPassword: '' })
   const [error, setError] = useState('')
 
   const onSubmit = async (event) => {
@@ -738,6 +829,10 @@ export function CustomerSignupPage({ signupCustomer, navigate }) {
           <label>Nama lengkap<input placeholder="Nama sesuai identitas" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></label>
           <label>Nomor WhatsApp<input placeholder="08xxxxxxxxxx" value={form.whatsapp} onChange={(e) => setForm({ ...form, whatsapp: e.target.value })} /></label>
           <label className="full">Email<input type="email" placeholder="nama@email.com" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></label>
+          <label>Alamat domisili<input placeholder="Kota domisili" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} /></label>
+          <label>Usia peserta<input type="number" min="1" placeholder="Usia" value={form.age} onChange={(e) => setForm({ ...form, age: e.target.value })} /></label>
+          <label>Jenis kelamin<select value={form.gender} onChange={(e) => setForm({ ...form, gender: e.target.value })}><option value="">Pilih jenis kelamin</option><option value="Laki-laki">Laki-laki</option><option value="Perempuan">Perempuan</option></select></label>
+          <label className="full">Riwayat penyakit atau kondisi kesehatan penting<textarea placeholder="Isi '-' jika tidak ada." value={form.healthNotes} onChange={(e) => setForm({ ...form, healthNotes: e.target.value })} /></label>
           <label>Password<input type="password" placeholder="Minimal 6 karakter" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} /></label>
           <label>Konfirmasi password<input type="password" placeholder="Ulangi password" value={form.confirmPassword} onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })} /></label>
           <button className="primary-btn full" type="submit">Buat akun</button>
