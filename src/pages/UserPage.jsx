@@ -134,7 +134,7 @@ function SearchTripForm({ navigate, initialValue = '' }) {
       <label>
         <input
           aria-label="Cari destinasi cave trip"
-          placeholder="Cari"
+          placeholder="Cari Destinasi"
           value={search}
           onChange={(event) => setSearch(event.target.value)}
         />
