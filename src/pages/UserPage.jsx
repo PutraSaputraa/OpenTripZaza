@@ -149,6 +149,7 @@ function SearchTripForm({ navigate, initialValue = '' }) {
 function DestinationCarousel({ trips, navigate }) {
   const featuredTrips = trips.slice(0, 8)
   const [activeIndex, setActiveIndex] = useState(0)
+  const [slideDirection, setSlideDirection] = useState('next')
 
   if (!featuredTrips.length) {
     return <p className="empty-state">Belum ada destinasi cave trip yang tersedia.</p>
@@ -157,17 +158,30 @@ function DestinationCarousel({ trips, navigate }) {
   const total = featuredTrips.length
   const getLoopItem = (offset) => featuredTrips[(activeIndex + offset + total) % total]
   const visibleItems = [-2, -1, 0, 1, 2].map((offset) => ({ trip: getLoopItem(offset), offset }))
-  const goToPrevious = () => setActiveIndex((current) => (current - 1 + total) % total)
-  const goToNext = () => setActiveIndex((current) => (current + 1) % total)
+  const goToPrevious = () => {
+    setSlideDirection('prev')
+    setActiveIndex((current) => (current - 1 + total) % total)
+  }
+  const goToNext = () => {
+    setSlideDirection('next')
+    setActiveIndex((current) => (current + 1) % total)
+  }
 
   return (
     <section className="destination-carousel" aria-label="Carousel destinasi wisata">
-      <div className="destination-carousel-stage">
+      <div className={`destination-carousel-stage is-moving-${slideDirection}`} key={activeIndex}>
         {visibleItems.map(({ trip, offset }) => (
           <button
             className={`destination-slide destination-slide-${offset === 0 ? 'active' : offset < 0 ? `prev-${Math.abs(offset)}` : `next-${offset}`}`}
-            key={`${trip.id}-${offset}`}
-            onClick={() => (offset === 0 ? navigate(`/open-trip/${trip.id}`) : setActiveIndex((current) => (current + offset + total) % total))}
+            key={offset}
+            onClick={() => {
+              if (offset === 0) {
+                navigate(`/open-trip/${trip.id}`)
+                return
+              }
+              setSlideDirection(offset > 0 ? 'next' : 'prev')
+              setActiveIndex((current) => (current + offset + total) % total)
+            }}
             type="button"
           >
             <TripVisual trip={trip} />
