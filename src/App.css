@@ -4394,3 +4394,46 @@ body {
   background: rgba(252, 251, 250, 0.94);
   backdrop-filter: blur(14px);
 }
+
+.home-page .search-hero {
+  min-height: 100vh;
+  min-height: 100svh;
+  align-content: center;
+  gap: clamp(28px, 4vh, 44px);
+  padding-top: clamp(96px, 12vh, 132px);
+  padding-bottom: clamp(28px, 5vh, 54px);
+}
+
+.home-page .destination-carousel {
+  min-height: clamp(360px, 50vh, 520px);
+  padding-bottom: clamp(18px, 3vh, 30px);
+}
+
+.home-page .destination-carousel-stage {
+  height: clamp(300px, 42vh, 430px);
+}
+
+.home-page .destination-slide {
+  height: clamp(260px, 38vh, 386px);
+}
+
+@media (max-width: 760px) {
+  .home-page .search-hero {
+    min-height: 100svh;
+    align-content: start;
+    padding-top: 128px;
+    padding-bottom: 32px;
+  }
+
+  .home-page .destination-carousel {
+    min-height: 390px;
+  }
+
+  .home-page .destination-carousel-stage {
+    height: 304px;
+  }
+
+  .home-page .destination-slide {
+    height: 272px;
+  }
+}
