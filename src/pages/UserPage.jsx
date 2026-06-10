@@ -130,35 +130,70 @@ function SearchTripForm({ navigate, initialValue = '' }) {
 
   return (
     <form className="hero-search-form" onSubmit={onSubmit} role="search">
-      <input
-        aria-label="Cari destinasi cave trip"
-        placeholder="Cari destinasi cave trip"
-        value={search}
-        onChange={(event) => setSearch(event.target.value)}
-      />
-      <button className="primary-btn" type="submit">Search</button>
+      <span className="search-icon" aria-hidden="true" />
+      <label>
+        <span>Mau kemana?</span>
+        <input
+          aria-label="Cari destinasi cave trip"
+          placeholder="Goa Pindul - Jomblang - Pacitan"
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+        />
+      </label>
+      <button className="search-submit" type="submit" aria-label="Cari destinasi">
+        <span aria-hidden="true">→</span>
+      </button>
     </form>
   )
 }
 
 function DestinationCarousel({ trips, navigate }) {
   const featuredTrips = trips.slice(0, 8)
+  const [activeIndex, setActiveIndex] = useState(0)
 
   if (!featuredTrips.length) {
     return <p className="empty-state">Belum ada destinasi cave trip yang tersedia.</p>
   }
 
+  const total = featuredTrips.length
+  const getLoopItem = (offset) => featuredTrips[(activeIndex + offset + total) % total]
+  const visibleItems = [-2, -1, 0, 1, 2].map((offset) => ({ trip: getLoopItem(offset), offset }))
+  const goToPrevious = () => setActiveIndex((current) => (current - 1 + total) % total)
+  const goToNext = () => setActiveIndex((current) => (current + 1) % total)
+
   return (
     <section className="destination-carousel" aria-label="Carousel destinasi wisata">
-      {featuredTrips.map((trip) => (
-        <button className="destination-slide" key={trip.id} onClick={() => navigate(`/open-trip/${trip.id}`)} type="button">
-          <TripVisual trip={trip} />
-          <span className="trip-type-chip">{trip.isPrivateTrip ? 'Private cave tour' : 'Open trip goa'}</span>
-          <strong>{trip.name}</strong>
-          <small>{trip.destination}</small>
-          <span className="destination-price">{formatCurrency(trip.price)}</span>
-        </button>
-      ))}
+      <div className="destination-carousel-stage">
+        {visibleItems.map(({ trip, offset }) => (
+          <button
+            className={`destination-slide destination-slide-${offset === 0 ? 'active' : offset < 0 ? `prev-${Math.abs(offset)}` : `next-${offset}`}`}
+            key={`${trip.id}-${offset}`}
+            onClick={() => (offset === 0 ? navigate(`/open-trip/${trip.id}`) : setActiveIndex((current) => (current + offset + total) % total))}
+            type="button"
+          >
+            <TripVisual trip={trip} />
+            <span className="trip-type-chip">{trip.isPrivateTrip ? 'Private cave tour' : 'Open trip goa'}</span>
+            <strong>{trip.name}</strong>
+            <small>{trip.destination}</small>
+            <span className="destination-price">{formatCurrency(trip.price)}</span>
+          </button>
+        ))}
+      </div>
+      <div className="destination-carousel-controls" aria-label="Kontrol carousel destinasi">
+        <button onClick={goToPrevious} type="button" aria-label="Destinasi sebelumnya">‹</button>
+        <div className="destination-dots">
+          {featuredTrips.map((trip, index) => (
+            <button
+              className={index === activeIndex ? 'is-active' : ''}
+              key={trip.id}
+              onClick={() => setActiveIndex(index)}
+              type="button"
+              aria-label={`Tampilkan destinasi ${index + 1}`}
+            />
+          ))}
+        </div>
+        <button onClick={goToNext} type="button" aria-label="Destinasi berikutnya">›</button>
+      </div>
     </section>
   )
 }
