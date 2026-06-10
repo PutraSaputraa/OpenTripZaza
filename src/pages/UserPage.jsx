@@ -7,15 +7,14 @@ import { formatCurrency, formatDate, tripName } from '../utils/formatters'
 import { Badge, InfoBlock, NotFound } from './shared'
 
 export function PublicNav({ navigate, session, logout }) {
-  const [isOverHero, setIsOverHero] = useState(false)
+  const [isOverHero, setIsOverHero] = useState(() => window.location.pathname === '/' || window.location.pathname === '/open-trip')
 
   useEffect(() => {
     const isHomePage = window.location.pathname === '/' || window.location.pathname === '/open-trip'
     if (!isHomePage) return undefined
 
     const updateNavState = () => {
-      const hero = document.querySelector('.hero-band')
-      setIsOverHero(Boolean(hero && hero.getBoundingClientRect().bottom > 88))
+      setIsOverHero(window.scrollY <= 8)
     }
 
     const frame = window.requestAnimationFrame(updateNavState)

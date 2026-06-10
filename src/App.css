@@ -4342,3 +4342,31 @@ body {
   position: relative;
   z-index: 1;
 }
+
+/* Pure video hero and transparent-at-top navbar */
+.search-hero {
+  background: #000000;
+}
+
+.search-hero-shade,
+.destination-carousel::after {
+  display: none;
+}
+
+.home-page .public-nav.nav-on-hero {
+  border-color: transparent;
+  background: transparent;
+  backdrop-filter: none;
+}
+
+.home-page .public-nav.nav-on-hero .brand,
+.home-page .public-nav.nav-on-hero .public-nav-center button {
+  color: #ffffff;
+  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.38);
+}
+
+.home-page .public-nav.nav-on-hero nav:last-child button:not(.nav-accent) {
+  border-color: rgba(255, 255, 255, 0.76);
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+}
