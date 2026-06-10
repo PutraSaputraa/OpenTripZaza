@@ -132,7 +132,6 @@ function SearchTripForm({ navigate, initialValue = '' }) {
     <form className="hero-search-form" onSubmit={onSubmit} role="search">
       <span className="search-icon" aria-hidden="true" />
       <label>
-        <span>Mau kemana?</span>
         <input
           aria-label="Cari destinasi cave trip"
           placeholder="Goa Pindul - Jomblang - Pacitan"
@@ -255,7 +254,7 @@ export function CustomerCatalog({ trips, navigate, session, logout }) {
       <PublicNav navigate={navigate} session={session} logout={logout} />
       <section className="search-hero">
         <div className="hero-content">
-          <h1>Find Your Cave Trip</h1>
+          <h1>Temukan perjalanan goa mu</h1>
           <SearchTripForm navigate={navigate} />
         </div>
         <DestinationCarousel trips={featuredTrips} navigate={navigate} />

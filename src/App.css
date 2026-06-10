@@ -3855,11 +3855,16 @@ body {
   border-radius: 22px;
   background: var(--color-ink);
   color: #ffffff;
-  padding: 30px;
+  padding: 34px 38px;
   text-align: left;
   box-shadow: 0 26px 54px rgba(35, 48, 58, 0.24);
   transform: translateX(-50%) scale(0.82);
-  transition: transform 280ms ease, opacity 280ms ease, filter 280ms ease;
+  transition:
+    transform 520ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 520ms ease,
+    filter 520ms ease,
+    box-shadow 520ms ease;
+  will-change: transform, opacity, filter;
 }
 
 .destination-slide .trip-visual {
@@ -3894,6 +3899,7 @@ body {
   z-index: 5;
   opacity: 1;
   transform: translateX(-50%) scale(1);
+  box-shadow: 0 30px 70px rgba(35, 48, 58, 0.28);
 }
 
 .destination-slide-prev-1 {
@@ -3939,6 +3945,8 @@ body {
 }
 
 .destination-slide small {
+  max-width: min(70%, 520px);
+  padding-bottom: 4px;
   margin-top: 8px;
   color: rgba(255, 255, 255, 0.86);
   font-size: 16px;
@@ -3946,12 +3954,13 @@ body {
 
 .destination-price {
   position: absolute;
-  top: 24px;
-  right: 24px;
+  right: 38px;
+  bottom: 34px;
   z-index: 1;
   color: #ffffff;
-  font-size: clamp(20px, 2.2vw, 28px);
-  font-weight: 800;
+  font-size: clamp(20px, 2.1vw, 28px);
+  font-weight: 650;
+  letter-spacing: -0.02em;
 }
 
 .destination-carousel-controls {
@@ -4102,7 +4111,7 @@ body {
     top: 22px;
     width: min(84vw, 420px);
     height: 272px;
-    padding: 20px;
+    padding: 22px;
   }
 
   .destination-slide-prev-1 {
@@ -4128,10 +4137,123 @@ body {
   }
 
   .destination-price {
+    right: 22px;
+    bottom: 22px;
     font-size: 18px;
   }
 
   .destination-page {
     padding-top: 174px;
+  }
+}
+
+/* Landing cleanup preferences */
+.public-page,
+.search-hero {
+  background: var(--color-cream);
+}
+
+.public-nav,
+.home-page .public-nav,
+.home-page .public-nav.nav-on-hero {
+  top: 0;
+  width: 100%;
+  max-width: none;
+  border-width: 0 0 1px;
+  border-color: var(--color-line);
+  border-radius: 0;
+  background: rgba(252, 251, 250, 0.94);
+  box-shadow: none;
+  padding: 18px clamp(22px, 5vw, 84px);
+}
+
+.home-page .public-nav {
+  left: 0;
+  transform: none;
+}
+
+.public-nav nav button,
+.home-page .public-nav nav button {
+  min-height: 44px;
+  border-radius: 8px;
+  padding: 9px 18px;
+  font-size: 16px;
+}
+
+.public-nav .public-nav-center button,
+.home-page .public-nav .public-nav-center button {
+  border-radius: 0;
+  font-size: 16px;
+}
+
+.public-nav nav .nav-accent,
+.home-page .public-nav nav .nav-accent {
+  border-radius: 8px;
+}
+
+.search-hero {
+  padding-top: clamp(112px, 11vw, 138px);
+}
+
+.search-hero h1 {
+  font-size: clamp(32px, 4.4vw, 52px);
+  line-height: 1.08;
+}
+
+.hero-search-form {
+  grid-template-columns: 40px minmax(0, 1fr) 40px;
+  width: min(calc(100vw - 36px), 640px);
+  min-height: 56px;
+  margin-top: 18px;
+  padding: 6px 10px;
+  box-shadow: 0 14px 30px rgba(20, 20, 19, 0.06);
+}
+
+.hero-search-form label {
+  display: block;
+}
+
+.hero-search-form input {
+  height: 42px;
+  font-size: 15px;
+}
+
+.search-icon,
+.search-submit {
+  width: 34px;
+  height: 34px;
+}
+
+.search-icon::before {
+  width: 13px;
+  height: 13px;
+}
+
+.search-icon::after {
+  width: 8px;
+  transform: translate(8px, 8px) rotate(45deg);
+}
+
+.search-submit {
+  font-size: 18px;
+}
+
+@media (max-width: 760px) {
+  .public-nav,
+  .home-page .public-nav,
+  .home-page .public-nav.nav-on-hero {
+    top: 0;
+    width: 100%;
+    border-radius: 0;
+    padding: 12px 14px;
+  }
+
+  .search-hero {
+    padding-top: 170px;
+  }
+
+  .hero-search-form {
+    grid-template-columns: 36px minmax(0, 1fr) 36px;
+    min-height: 54px;
   }
 }
