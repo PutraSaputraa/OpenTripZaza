@@ -3080,3 +3080,586 @@ th {
     max-width: none;
   }
 }
+
+/* Golden cream refresh based on src/design/DESIGN.md */
+:root {
+  --color-ink: #141413;
+  --color-charcoal: #262627;
+  --color-panel: #ffffff;
+  --color-surface: #f3f0ee;
+  --color-line: rgba(174, 126, 36, 0.24);
+  --color-muted: #696969;
+  --color-text: #141413;
+  --color-gold: #f2c75c;
+  --color-gold-dark: #a66f14;
+  --color-gold-soft: #fff5d6;
+  --color-cream: #f3f0ee;
+  --color-lifted: #fcfbfa;
+  --shadow-soft: 0 24px 48px rgba(20, 20, 19, 0.08);
+  --shadow-pill: 0 4px 24px rgba(20, 20, 19, 0.06);
+}
+
+body {
+  background: var(--color-cream);
+  color: var(--color-ink);
+}
+
+.toast {
+  border-radius: 20px;
+  background: var(--color-ink);
+  color: var(--color-cream);
+}
+
+.public-page {
+  background:
+    radial-gradient(circle at 10% 7%, rgba(242, 199, 92, 0.18), transparent 24%),
+    radial-gradient(circle at 90% 10%, rgba(247, 158, 27, 0.13), transparent 26%),
+    var(--color-cream);
+  color: var(--color-ink);
+}
+
+.public-nav,
+.home-page .public-nav,
+.home-page .public-nav.nav-on-hero {
+  position: sticky;
+  top: 18px;
+  left: auto;
+  right: auto;
+  width: min(calc(100% - 32px), 1180px);
+  margin: 0 auto;
+  border: 1px solid rgba(174, 126, 36, 0.18);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: var(--shadow-pill);
+  backdrop-filter: blur(16px);
+}
+
+.home-page .public-nav {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.brand,
+.home-page .brand,
+.home-page .customer-name,
+.public-nav-center button,
+.home-page .public-nav .public-nav-center button {
+  color: var(--color-ink);
+}
+
+.brand {
+  letter-spacing: -0.02em;
+}
+
+.public-nav nav button,
+.home-page .public-nav nav button,
+.outline-btn,
+.table-actions button,
+.logout-btn,
+.hero-secondary-btn {
+  min-height: 42px;
+  border: 1.5px solid var(--color-ink);
+  border-radius: 999px;
+  background: #ffffff;
+  color: var(--color-ink);
+  padding: 9px 18px;
+  box-shadow: none;
+}
+
+.public-nav .public-nav-center button,
+.home-page .public-nav .public-nav-center button {
+  min-height: auto;
+  border: 0;
+  background: transparent;
+  padding: 6px 8px;
+  font-weight: 500;
+}
+
+.public-nav-center button:hover,
+.public-nav-center button:focus-visible,
+.text-link-btn,
+.auth-switch button,
+.trip-breadcrumb button {
+  color: var(--color-gold-dark);
+}
+
+.primary-btn,
+.public-nav nav .nav-accent,
+.home-page .public-nav nav .nav-accent,
+.sidebar .logout-btn {
+  border: 1.5px solid var(--color-ink);
+  border-radius: 20px;
+  background: var(--color-ink);
+  color: var(--color-cream);
+  padding: 12px 22px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  box-shadow: none;
+}
+
+.primary-btn:hover,
+.public-nav nav .nav-accent:hover,
+.home-page .public-nav nav .nav-accent:hover {
+  background: #000000;
+  color: #ffffff;
+}
+
+.hero-band {
+  min-height: min(860px, 92vh);
+  margin: 0 clamp(14px, 3vw, 48px);
+  border-radius: 0 0 40px 40px;
+  padding: 148px clamp(24px, 6vw, 86px) clamp(72px, 10vw, 112px);
+  color: #ffffff;
+}
+
+.hero-shade {
+  background:
+    radial-gradient(circle at 32% 38%, rgba(242, 199, 92, 0.24), transparent 27%),
+    linear-gradient(180deg, rgba(20, 20, 19, 0.1), rgba(20, 20, 19, 0.76));
+}
+
+.hero-content {
+  width: min(100%, 780px);
+}
+
+.hero-content .eyebrow,
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--color-gold-dark);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.hero-content .eyebrow {
+  color: #fff1b8;
+}
+
+.eyebrow::before {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--color-gold);
+  content: '';
+}
+
+.hero-band h1,
+.trip-detail-main h1,
+.registration-hero h1,
+.account-hero h1,
+.auth-panel h1,
+.auth-brand-panel h2,
+.workspace h1 {
+  letter-spacing: -0.02em;
+}
+
+.hero-band h1 {
+  max-width: 900px;
+  font-size: clamp(40px, 6vw, 72px);
+  line-height: 1;
+}
+
+.hero-copy {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.scroll-down-btn {
+  border-color: rgba(255, 255, 255, 0.58);
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.section-head {
+  padding: clamp(56px, 8vw, 104px) clamp(24px, 6vw, 112px) 22px;
+}
+
+.section-head h2,
+.faq-head h2,
+.public-footer h2,
+.data-panel h2 {
+  color: var(--color-ink);
+  letter-spacing: -0.02em;
+}
+
+.section-head h2,
+.faq-head h2 {
+  font-size: clamp(32px, 4vw, 48px);
+  line-height: 1.05;
+}
+
+.trip-grid {
+  gap: clamp(18px, 2.4vw, 28px);
+}
+
+.trip-card,
+.testimonial-card,
+.faq-item,
+.detail-side-card,
+.registration-summary,
+.registration-form,
+.account-hero,
+.account-registration-card,
+.metric,
+.data-panel,
+.login-card,
+.auth-shell {
+  border-color: var(--color-line);
+  border-radius: 40px;
+  background: var(--color-lifted);
+  color: var(--color-ink);
+  box-shadow: var(--shadow-soft);
+}
+
+.trip-card,
+.testimonial-card {
+  overflow: hidden;
+}
+
+.trip-visual {
+  aspect-ratio: 1;
+  border: 0;
+  border-radius: 50%;
+  background:
+    linear-gradient(145deg, rgba(242, 199, 92, 0.56), rgba(255, 255, 255, 0.84)),
+    var(--color-gold-soft);
+  color: var(--color-ink);
+}
+
+.trip-card .trip-visual {
+  width: calc(100% - 32px);
+  margin: 16px auto 0;
+}
+
+.trip-visual:has(img)::after {
+  background: linear-gradient(180deg, rgba(20, 20, 19, 0.02), rgba(20, 20, 19, 0.34));
+}
+
+.trip-visual-large,
+.trip-detail-main > .trip-visual {
+  border-radius: 40px;
+}
+
+.trip-card-body,
+.job-card,
+.schedule-card,
+.data-panel,
+.detail-panel,
+.login-card {
+  padding: 22px;
+}
+
+.trip-card h3,
+.job-card h3,
+.schedule-card h3,
+.info-block h3,
+.testimonial-card h3,
+.summary-body h2,
+.detail-side-card h2,
+.form-section-head h2,
+.account-registration-card h2 {
+  color: var(--color-ink);
+  letter-spacing: -0.02em;
+}
+
+.trip-card p,
+.job-card p,
+.schedule-card p,
+.muted,
+.info-block p,
+.testimonial-card span,
+.detail-destination,
+.summary-body p,
+.form-section-head p,
+.account-registration-card p,
+.public-footer p {
+  color: var(--color-muted);
+}
+
+.trip-card dl,
+.trip-card-footer,
+.summary-list,
+.registration-submit,
+.faq-item p,
+.info-block {
+  border-color: var(--color-line);
+}
+
+.trip-card dd,
+.trip-start-price strong,
+.summary-list dd,
+.checkout-price strong,
+.account-registration-card dd,
+.tour-detail-list dt {
+  color: var(--color-ink);
+}
+
+.trip-card dt,
+.trip-start-price span,
+.summary-list dt,
+.checkout-card span,
+.tour-detail-list dd,
+.registration-submit span,
+.account-registration-card dt {
+  color: var(--color-muted);
+}
+
+.trip-type-chip,
+.badge-tersedia,
+.badge-disetujui,
+.badge-menunggu-approval,
+.badge-diambil,
+.badge-sedang-berjalan,
+.participant-list span,
+.itinerary-day span,
+.job-slot-label,
+.registration-status-head span,
+.customer-name {
+  border-color: rgba(166, 111, 20, 0.22);
+  background: var(--color-gold-soft);
+  color: #6d480f;
+}
+
+.testimonial-carousel {
+  gap: 20px;
+}
+
+.testimonial-card {
+  border-radius: 999px 999px 40px 40px;
+  background: #ffffff;
+}
+
+.testimonial-card img {
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: var(--color-gold-soft);
+}
+
+.testimonial-card div {
+  padding: 22px 24px 28px;
+}
+
+.testimonial-card p,
+.faq-item summary {
+  color: var(--color-ink);
+}
+
+.carousel-control,
+.nav-icon-btn {
+  border-radius: 50%;
+  background: #ffffff;
+  color: var(--color-ink);
+}
+
+.faq-section {
+  padding-top: clamp(36px, 6vw, 72px);
+}
+
+.faq-item {
+  border-radius: 28px;
+  background: #ffffff;
+}
+
+.public-footer {
+  margin-top: 32px;
+  border: 0;
+  border-radius: 40px 40px 0 0;
+  background: var(--color-ink);
+  color: #ffffff;
+  padding: clamp(42px, 7vw, 72px) clamp(24px, 6vw, 112px);
+}
+
+.public-footer h2,
+.public-footer p {
+  color: #ffffff;
+}
+
+.footer-contact a {
+  border-color: rgba(255, 255, 255, 0.34);
+  border-radius: 999px;
+  background: transparent;
+  color: #ffffff;
+}
+
+.trip-detail-layout,
+.registration-page,
+.account-page {
+  padding-top: 58px;
+}
+
+.trip-gallery-main,
+.trip-detail-main .info-block,
+.private-tour-option,
+.account-registration-card dl div,
+.registration-fields input,
+.registration-fields select,
+.registration-fields textarea,
+.auth-form input,
+.data-form input,
+.data-form select,
+.data-form textarea,
+.status-select,
+.status-control select {
+  border-color: var(--color-line);
+  border-radius: 20px;
+  background: #ffffff;
+  color: var(--color-ink);
+}
+
+.trip-gallery-main img {
+  aspect-ratio: 16 / 8;
+}
+
+.trip-gallery-thumbs button {
+  border-radius: 20px;
+}
+
+.detail-side-card {
+  border-radius: 32px;
+}
+
+.registration-summary {
+  border-radius: 40px;
+}
+
+.registration-summary .trip-visual {
+  width: calc(100% - 28px);
+  margin: 14px auto 0;
+}
+
+.form-section-head span {
+  background: var(--color-gold);
+  color: var(--color-ink);
+}
+
+.registration-fields label,
+.auth-form label,
+.data-form label,
+.status-control {
+  color: var(--color-ink);
+}
+
+.registration-fields input:focus,
+.registration-fields select:focus,
+.registration-fields textarea:focus,
+.auth-form input:focus,
+.data-form input:focus,
+.data-form select:focus,
+.data-form textarea:focus,
+.status-select:focus,
+.status-control select:focus {
+  border-color: var(--color-gold-dark);
+  box-shadow: 0 0 0 4px rgba(242, 199, 92, 0.26);
+}
+
+.login-page {
+  background:
+    radial-gradient(circle at 18% 16%, rgba(242, 199, 92, 0.24), transparent 30%),
+    var(--color-cream);
+}
+
+.auth-shell {
+  border-radius: 40px;
+}
+
+.auth-brand-panel {
+  background:
+    linear-gradient(160deg, rgba(242, 199, 92, 0.94), rgba(255, 255, 255, 0.86)),
+    var(--color-gold);
+  color: var(--color-ink);
+}
+
+.auth-brand-panel h2,
+.auth-brand-panel p:not(.eyebrow),
+.auth-brand-panel .brand,
+.auth-panel h1,
+.auth-form label {
+  color: var(--color-ink);
+}
+
+.auth-panel .muted,
+.auth-switch {
+  color: var(--color-muted);
+}
+
+.app-shell {
+  background: var(--color-cream);
+}
+
+.app-shell .admin-page-head,
+.app-shell .dashboard-hero,
+.app-shell .admin-table-card,
+.app-shell .admin-trip-card,
+.app-shell .schedule-card,
+.app-shell .job-card,
+.app-shell .data-panel,
+.app-shell .detail-panel,
+.app-shell .metric,
+.app-shell .registration-status-column,
+.app-shell .registration-status-card,
+.app-shell .admin-trip-price,
+.app-shell .admin-trip-meta div,
+.app-shell .schedule-date-row,
+.app-shell .schedule-metrics div,
+.app-shell .data-form,
+.app-shell .data-form.compact {
+  border-color: var(--color-line);
+  border-radius: 28px;
+  background: var(--color-lifted);
+  color: var(--color-ink);
+  box-shadow: var(--shadow-soft);
+}
+
+.sidebar {
+  background: var(--color-ink);
+}
+
+@media (max-width: 760px) {
+  .public-nav,
+  .home-page .public-nav,
+  .home-page .public-nav.nav-on-hero {
+    top: 10px;
+    width: min(calc(100% - 20px), 480px);
+    grid-template-columns: 1fr;
+    border-radius: 32px;
+    padding: 14px;
+  }
+
+  .public-nav nav,
+  .public-nav-center {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .public-nav > nav:last-child {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .brand {
+    justify-self: center;
+  }
+
+  .hero-band {
+    min-height: 88vh;
+    margin: 0 10px;
+    border-radius: 0 0 32px 32px;
+    padding: 184px 22px 72px;
+  }
+
+  .trip-card,
+  .testimonial-card,
+  .faq-item,
+  .detail-side-card,
+  .registration-summary,
+  .registration-form,
+  .account-hero,
+  .account-registration-card,
+  .auth-shell {
+    border-radius: 28px;
+  }
+
+  .auth-shell {
+    border-radius: 0;
+  }
+}
