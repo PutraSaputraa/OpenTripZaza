@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import cinematicVideo from '../assets/cinematic1.mp4'
 import testimoni1 from '../assets/testimoni1.png'
 import testimoni2 from '../assets/testimoni2.png'
 import testimoni3 from '../assets/testimoni3.png'
@@ -267,6 +268,8 @@ export function CustomerCatalog({ trips, navigate, session, logout }) {
     <main className="public-page home-page">
       <PublicNav navigate={navigate} session={session} logout={logout} />
       <section className="search-hero">
+        <video className="search-hero-video" src={cinematicVideo} autoPlay muted loop playsInline aria-hidden="true" />
+        <div className="search-hero-shade" />
         <div className="hero-content">
           <SearchTripForm navigate={navigate} />
         </div>
