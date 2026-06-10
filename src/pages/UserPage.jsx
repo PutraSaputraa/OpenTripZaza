@@ -348,7 +348,7 @@ function TripCard({ trip, navigate }) {
         <p className="icon-line"><span className="asset-icon icon-geo" aria-hidden="true" />{trip.destination}</p>
         <dl>
           <div><dt><span className="asset-icon icon-calendar" aria-hidden="true" />Tanggal</dt><dd>{formatDate(trip.date)}</dd></div>
-          <div><dt><span className="asset-icon icon-ticket" aria-hidden="true" />Slot</dt><dd>{trip.slots} tersedia</dd></div>
+          {!trip.isPrivateTrip && <div><dt><span className="asset-icon icon-ticket" aria-hidden="true" />Slot</dt><dd>{trip.slots} tersedia</dd></div>}
         </dl>
         <div className="trip-card-footer">
           <div className="trip-start-price"><span>Mulai dari</span><strong>{formatCurrency(trip.price)}</strong></div>
@@ -515,8 +515,8 @@ export function TripDetail({ tripId, trips, navigate, session, logout }) {
               <dl className="tour-detail-list">
                 <div><dt>Tanggal</dt><dd>{formatDate(trip.date)}</dd></div>
                 <div><dt>Jenis</dt><dd>{trip.isPrivateTrip ? 'Private cave tour' : 'Open trip goa'}</dd></div>
-                <div><dt>Kuota</dt><dd>{trip.quota} peserta</dd></div>
-                <div><dt>Slot tersedia</dt><dd>{trip.slots} peserta</dd></div>
+                {!trip.isPrivateTrip && <div><dt>Kuota</dt><dd>{trip.quota} peserta</dd></div>}
+                {!trip.isPrivateTrip && <div><dt>Slot tersedia</dt><dd>{trip.slots} peserta</dd></div>}
               </dl>
             </section>
             <section className="detail-side-card checkout-card">
@@ -568,7 +568,7 @@ export function RegistrationPage({ tripId, trips, submitRegistration, navigate, 
       setError('Pilih tanggal private cave tour yang kamu inginkan.')
       return
     }
-    if (Number(form.participants) > selectedTrip.slots) {
+    if (!isPrivateBooking && Number(form.participants) > selectedTrip.slots) {
       setError('Jumlah peserta melebihi slot tersedia.')
       return
     }
@@ -612,7 +612,7 @@ export function RegistrationPage({ tripId, trips, submitRegistration, navigate, 
               <dl className="summary-list">
                 <div><dt><span className="asset-icon icon-calendar" aria-hidden="true" />Tanggal</dt><dd>{isPrivateBooking ? form.requestedDate ? formatDate(form.requestedDate) : 'Pilih tanggal' : formatDate(selectedTrip.date)}</dd></div>
                 <div><dt><span className="asset-icon icon-currency" aria-hidden="true" />Harga</dt><dd>{formatCurrency(selectedTrip.price)} / orang</dd></div>
-                <div><dt><span className="asset-icon icon-ticket" aria-hidden="true" />Slot</dt><dd>{selectedTrip.slots} peserta tersedia</dd></div>
+                {!isPrivateBooking && <div><dt><span className="asset-icon icon-ticket" aria-hidden="true" />Slot</dt><dd>{selectedTrip.slots} peserta tersedia</dd></div>}
                 <div><dt>Jenis</dt><dd>{tripTypeLabel(selectedTrip, { isPrivateTour: isPrivateBooking })}</dd></div>
                 <div><dt>Total estimasi</dt><dd>{formatCurrency(estimatedTotal)}</dd></div>
               </dl>
@@ -644,7 +644,7 @@ export function RegistrationPage({ tripId, trips, submitRegistration, navigate, 
             <div className="registration-fields">
               {isPrivateBooking && (
                 <>
-                  <label>Jumlah peserta<input type="number" min="1" max={selectedTrip.slots} value={form.participants} onChange={(e) => updateParticipantCount(e.target.value)} /></label>
+                  <label>Jumlah peserta<input type="number" min="1" value={form.participants} onChange={(e) => updateParticipantCount(e.target.value)} /></label>
                   <label>Tanggal private tour<input type="date" value={form.requestedDate} onChange={(e) => setForm({ ...form, requestedDate: e.target.value })} /></label>
                 </>
               )}

@@ -166,9 +166,10 @@ function App() {
 
   const submitRegistration = async (form) => {
     const trip = trips.find((item) => item.id === Number(form.tripId))
-    if (!trip || trip.slots < Number(form.participants) || trip.status !== 'Tersedia') return false
+    if (!trip || trip.status !== 'Tersedia') return false
     const approvedRegistrations = registrations.filter((item) => item.tripId === Number(form.tripId) && (item.status === 'Disetujui' || item.status === 'Selesai'))
     const isPrivateTour = Boolean(form.isPrivateTour || trip.isPrivateTrip)
+    if (!isPrivateTour && trip.slots < Number(form.participants)) return false
     const privateTourTaken = approvedRegistrations.some((item) => item.isPrivateTour)
     if (!trip.isPrivateTrip && (privateTourTaken || (isPrivateTour && approvedRegistrations.length))) return false
     const participantDetails = Array.isArray(form.participantDetails) && form.participantDetails.length

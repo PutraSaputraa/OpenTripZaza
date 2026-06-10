@@ -4455,7 +4455,7 @@ body {
 }
 
 .trip-card dl {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
 }
 
 @media (max-width: 760px) {
@@ -4555,4 +4555,24 @@ body {
 .auth-form textarea {
   min-height: 96px;
   resize: vertical;
+}
+
+/* Checkout form section marker: vertical gold line instead of numbered circle */
+.registration-form .form-section-head {
+  grid-template-columns: 6px minmax(0, 1fr);
+  gap: 18px;
+}
+
+.registration-form .form-section-head span {
+  width: 6px;
+  height: 52px;
+  min-height: 100%;
+  border-radius: 999px;
+  background: var(--color-gold);
+  color: transparent;
+  font-size: 0;
+}
+
+.registration-form .compact-form-section-head {
+  grid-template-columns: 6px minmax(0, 1fr);
 }
