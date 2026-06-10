@@ -4464,3 +4464,26 @@ body {
     border-radius: 20px;
   }
 }
+
+/* Solid color hero, matching the landing sections */
+.home-page .search-hero,
+.search-hero {
+  background: var(--color-cream);
+}
+
+.home-page .public-nav.nav-on-hero {
+  border-color: transparent;
+  background: transparent;
+}
+
+.home-page .public-nav.nav-on-hero .brand,
+.home-page .public-nav.nav-on-hero .public-nav-center button {
+  color: var(--color-ink);
+  text-shadow: none;
+}
+
+.home-page .public-nav.nav-on-hero nav:last-child button:not(.nav-accent) {
+  border-color: var(--color-ink);
+  background: transparent;
+  color: var(--color-ink);
+}
