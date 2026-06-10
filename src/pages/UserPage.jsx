@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import cinematicVideo from '../assets/cinematic1.mp4'
 import testimoni1 from '../assets/testimoni1.png'
 import testimoni2 from '../assets/testimoni2.png'
 import testimoni3 from '../assets/testimoni3.png'
@@ -7,7 +6,7 @@ import { formatCurrency, formatDate, tripName } from '../utils/formatters'
 import { Badge, InfoBlock, NotFound } from './shared'
 
 export function PublicNav({ navigate, session, logout }) {
-  const [isOverHero, setIsOverHero] = useState(() => window.location.pathname === '/' || window.location.pathname === '/open-trip')
+  const [isOverHero, setIsOverHero] = useState(false)
 
   useEffect(() => {
     const isHomePage = window.location.pathname === '/' || window.location.pathname === '/open-trip'
@@ -48,6 +47,7 @@ export function PublicNav({ navigate, session, logout }) {
       <nav className="public-nav-center" aria-label="Navigasi halaman">
         <button onClick={() => scrollToHomeSection('open-trip-list')}>Trip</button>
         <button onClick={goHome}>Home</button>
+        <button onClick={() => navigate('/destinasi')}>Destinasi</button>
         <button onClick={() => scrollToHomeSection('testimoni-list')}>Testimoni</button>
       </nav>
       <nav>
@@ -105,6 +105,64 @@ const faqs = [
   ['Di mana melihat status pendaftaran?', 'Setelah login sebagai customer, buka halaman akun untuk melihat cave trip yang kamu daftar dan status terbarunya.'],
 ]
 
+const normalizeSearch = (value) => value.trim().toLowerCase()
+
+const filterTripsBySearch = (trips, search) => {
+  const keyword = normalizeSearch(search)
+  if (!keyword) return trips
+  return trips.filter((trip) => {
+    const haystack = [trip.name, trip.destination, trip.description, trip.facilities]
+      .filter(Boolean)
+      .join(' ')
+      .toLowerCase()
+    return haystack.includes(keyword)
+  })
+}
+
+function SearchTripForm({ navigate, initialValue = '' }) {
+  const [search, setSearch] = useState(initialValue)
+
+  const onSubmit = (event) => {
+    event.preventDefault()
+    const keyword = search.trim()
+    navigate(keyword ? `/destinasi?search=${encodeURIComponent(keyword)}` : '/destinasi')
+  }
+
+  return (
+    <form className="hero-search-form" onSubmit={onSubmit} role="search">
+      <input
+        aria-label="Cari destinasi cave trip"
+        placeholder="Cari destinasi cave trip"
+        value={search}
+        onChange={(event) => setSearch(event.target.value)}
+      />
+      <button className="primary-btn" type="submit">Search</button>
+    </form>
+  )
+}
+
+function DestinationCarousel({ trips, navigate }) {
+  const featuredTrips = trips.slice(0, 8)
+
+  if (!featuredTrips.length) {
+    return <p className="empty-state">Belum ada destinasi cave trip yang tersedia.</p>
+  }
+
+  return (
+    <section className="destination-carousel" aria-label="Carousel destinasi wisata">
+      {featuredTrips.map((trip) => (
+        <button className="destination-slide" key={trip.id} onClick={() => navigate(`/open-trip/${trip.id}`)} type="button">
+          <TripVisual trip={trip} />
+          <span className="trip-type-chip">{trip.isPrivateTrip ? 'Private cave tour' : 'Open trip goa'}</span>
+          <strong>{trip.name}</strong>
+          <small>{trip.destination}</small>
+          <span className="destination-price">{formatCurrency(trip.price)}</span>
+        </button>
+      ))}
+    </section>
+  )
+}
+
 function TestimonialCarousel() {
   const [activeIndex, setActiveIndex] = useState(0)
   const total = testimonials.length
@@ -140,6 +198,7 @@ function TestimonialCarousel() {
 export function CustomerCatalog({ trips, navigate, session, logout }) {
   const openTrips = trips.filter((trip) => !trip.isPrivateTrip)
   const privateTrips = trips.filter((trip) => trip.isPrivateTrip)
+  const featuredTrips = [...openTrips, ...privateTrips]
 
   useEffect(() => {
     const elements = document.querySelectorAll('.reveal-on-scroll')
@@ -159,21 +218,12 @@ export function CustomerCatalog({ trips, navigate, session, logout }) {
   return (
     <main className="public-page home-page">
       <PublicNav navigate={navigate} session={session} logout={logout} />
-      <section className="hero-band">
-        <video className="hero-video" src={cinematicVideo} autoPlay muted loop playsInline aria-hidden="true" />
-        <div className="hero-shade" />
+      <section className="search-hero">
         <div className="hero-content">
-          <p className="eyebrow">Open Cave Trip</p>
-          <h1>Open trip goa dengan suasana gelap, aman, dan tertata.</h1>
-          <p className="hero-copy">Pilih destinasi goa, cek slot, lalu daftar ke trip yang paling pas. Semua pendaftaran diverifikasi admin supaya perjalanan eksplorasi tetap rapi sebelum masuk jalur.</p>
-          <div className="hero-actions">
-            <button className="primary-btn" onClick={() => document.getElementById('open-trip-list')?.scrollIntoView({ behavior: 'smooth' })}>Lihat cave trip</button>
-            {!session?.role && <button className="hero-secondary-btn" onClick={() => navigate('/login')}>Masuk customer</button>}
-          </div>
+          <h1>Find Your Cave Trip</h1>
+          <SearchTripForm navigate={navigate} />
         </div>
-        <button className="scroll-down-btn" onClick={() => document.getElementById('open-trip-list')?.scrollIntoView({ behavior: 'smooth' })} aria-label="Lihat katalog open trip goa">
-          <span />
-        </button>
+        <DestinationCarousel trips={featuredTrips} navigate={navigate} />
       </section>
 
       <section className="section-head" id="open-trip-list">
@@ -275,8 +325,48 @@ function TripVisual({ trip, large }) {
   return (
     <div className={large ? 'trip-visual trip-visual-large' : 'trip-visual'} role="img" aria-label={trip?.name || 'Open trip goa'}>
       {firstImage && <img src={firstImage} alt="" loading="lazy" />}
-      <span>{trip?.name || 'Open Trip Goa'}</span>
+      {!firstImage && <span>{trip?.name || 'Open Trip Goa'}</span>}
     </div>
+  )
+}
+
+export function DestinationPage({ path, trips, navigate, session, logout }) {
+  const searchParams = new URLSearchParams(path.split('?')[1] || '')
+  const initialSearch = searchParams.get('search') || ''
+  const visibleTrips = filterTripsBySearch(trips, initialSearch)
+
+  useEffect(() => {
+    const elements = document.querySelectorAll('.reveal-on-scroll')
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-visible')
+          observer.unobserve(entry.target)
+        }
+      })
+    }, { threshold: 0.16 })
+
+    elements.forEach((element) => observer.observe(element))
+    return () => observer.disconnect()
+  }, [visibleTrips.length])
+
+  return (
+    <main className="public-page">
+      <PublicNav navigate={navigate} session={session} logout={logout} />
+      <section className="destination-page">
+        <div className="destination-page-head">
+          <div>
+            <p className="eyebrow">Semua destinasi</p>
+            <h1>Destinasi cave trip</h1>
+          </div>
+          <SearchTripForm key={initialSearch} navigate={navigate} initialValue={initialSearch} />
+        </div>
+
+        <section className="trip-grid destination-grid">
+          {visibleTrips.length ? visibleTrips.map((trip) => <TripCard key={trip.id} trip={trip} navigate={navigate} />) : <p className="empty-state">Destinasi tidak ditemukan. Coba kata kunci lain.</p>}
+        </section>
+      </section>
+    </main>
   )
 }
 
