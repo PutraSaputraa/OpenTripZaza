@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import testimoni1 from '../assets/testimoni1.png'
 import testimoni2 from '../assets/testimoni2.png'
 import testimoni3 from '../assets/testimoni3.png'
+import { addonOptions } from '../config/constants'
 import { formatCurrency, formatDate, tripName } from '../utils/formatters'
 import { Badge, InfoBlock, NotFound } from './shared'
 
@@ -485,6 +486,16 @@ const resizeParticipants = (items, count, profile) => {
   return Array.from({ length: targetCount }, (_, index) => items[index] || (index === 0 ? buildParticipant(profile) : { ...emptyParticipant }))
 }
 
+const getSelectedAddons = (registration) => {
+  const selectedIds = Array.isArray(registration?.addons) ? registration.addons : []
+  return addonOptions
+    .filter((option) => selectedIds.includes(option.id))
+    .map((option) => ({
+      ...option,
+      detail: option.id === 'transport' ? registration?.transportFrom || '' : '',
+    }))
+}
+
 export function TripDetail({ tripId, trips, navigate, session, logout }) {
   const trip = trips.find((item) => item.id === tripId)
   if (!trip) return <NotFound navigate={navigate} />
@@ -545,6 +556,8 @@ export function RegistrationPage({ tripId, trips, submitRegistration, navigate, 
     tripId,
     notes: '',
     isPrivateTour: Boolean(trip?.isPrivateTrip),
+    addons: [],
+    transportFrom: '',
     participantDetails: [buildParticipant({ ...customerProfile, name: session?.name || customerProfile.name })],
   })
   const [error, setError] = useState('')
@@ -572,6 +585,10 @@ export function RegistrationPage({ tripId, trips, submitRegistration, navigate, 
       setError('Jumlah peserta melebihi slot tersedia.')
       return
     }
+    if (form.addons.includes('transport') && !form.transportFrom.trim()) {
+      setError('Isi titik jemput atau asal transportasi.')
+      return
+    }
     const isSubmitted = await submitRegistration({ ...form, participantDetails, participants: isPrivateBooking ? participants : 1, isPrivateTour: isPrivateBooking })
     if (!isSubmitted) setError('Pendaftaran gagal dikirim. Cek slot dan koneksi Firebase.')
   }
@@ -587,6 +604,16 @@ export function RegistrationPage({ tripId, trips, submitRegistration, navigate, 
   const updateParticipantCount = (value) => {
     const nextCount = Math.max(1, Number(value) || 1)
     setForm({ ...form, participants: nextCount, participantDetails: resizeParticipants(form.participantDetails, nextCount, { name: form.name }) })
+  }
+
+  const toggleAddon = (addonId) => {
+    const hasAddon = form.addons.includes(addonId)
+    const nextAddons = hasAddon ? form.addons.filter((item) => item !== addonId) : [...form.addons, addonId]
+    setForm({
+      ...form,
+      addons: nextAddons,
+      transportFrom: addonId === 'transport' && hasAddon ? '' : form.transportFrom,
+    })
   }
 
   return (
@@ -650,6 +677,30 @@ export function RegistrationPage({ tripId, trips, submitRegistration, navigate, 
               )}
               <label className="full">Catatan tambahan<textarea placeholder="Contoh: request pickup, alergi makanan, atau catatan rombongan." value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></label>
             </div>
+
+            <div className="form-section-head">
+              <span>3</span>
+              <div>
+                <h2>Add-on trip</h2>
+                <p>Pilih kebutuhan tambahan. Jika disetujui admin, kebutuhan ini akan muncul sebagai job untuk pekerja.</p>
+              </div>
+            </div>
+            <section className="addon-option-grid">
+              {addonOptions.map((option) => (
+                <label className="addon-option-card" key={option.id}>
+                  <input type="checkbox" checked={form.addons.includes(option.id)} onChange={() => toggleAddon(option.id)} />
+                  <span>
+                    <strong>{option.label}</strong>
+                    <small>{option.description}</small>
+                  </span>
+                </label>
+              ))}
+            </section>
+            {form.addons.includes('transport') && (
+              <div className="registration-fields">
+                <label className="full">Titik jemput / asal transportasi<input placeholder="Contoh: Stasiun Yogyakarta, Hotel area Malioboro, atau alamat lengkap." value={form.transportFrom} onChange={(e) => setForm({ ...form, transportFrom: e.target.value })} /></label>
+              </div>
+            )}
 
             <div className="participant-form-list">
               {resizeParticipants(form.participantDetails, participants, { name: form.name }).map((participant, index) => (
@@ -737,6 +788,13 @@ export function CustomerAccountPage({ registrations, trips, navigate, session, l
                   <div><dt>Kondisi kesehatan</dt><dd>{item.healthNotes || '-'}</dd></div>
                   <div><dt>Catatan</dt><dd>{item.notes || '-'}</dd></div>
                 </dl>
+                {getSelectedAddons(item).length > 0 && (
+                  <div className="selected-addon-list">
+                    {getSelectedAddons(item).map((addon) => (
+                      <span key={addon.id}>{addon.label}{addon.detail ? ` dari ${addon.detail}` : ''}</span>
+                    ))}
+                  </div>
+                )}
                 {Array.isArray(item.participantDetails) && item.participantDetails.length > 1 && (
                   <div className="participant-detail-list">
                     {item.participantDetails.map((participant, index) => (

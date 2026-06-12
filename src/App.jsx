@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { collection, deleteDoc, doc, onSnapshot, orderBy, query, setDoc, updateDoc } from 'firebase/firestore'
 import './App.css'
-import { accounts } from './config/constants'
+import { accounts, addonOptions } from './config/constants'
 import { db } from './firebase'
 import { AdminDashboard, AdminSchedule, AdminTrips, AdminWorkers, TripForm } from './pages/AdminPage'
 import { CustomerAccountPage, CustomerCatalog, CustomerLoginPage, CustomerSignupPage, DestinationPage, RegistrationPage, TripDetail } from './pages/UserPage'
@@ -18,6 +18,9 @@ const collections = {
 
 const sortById = (items) => [...items].sort((a, b) => Number(a.id) - Number(b.id))
 const withNumericId = (snapshot) => snapshot.docs.map((item) => ({ id: Number(item.data().id || item.id), ...item.data() }))
+const approvedStatuses = ['Disetujui', 'Selesai']
+
+const getJobScope = (job) => job.registrationId ? `registration-${job.registrationId}` : `trip-${job.tripId}`
 
 function App() {
   const [path, setPath] = useState(window.location.pathname)
@@ -176,6 +179,9 @@ function App() {
       ? form.participantDetails
       : [{ name: form.name, address: form.address || '', age: form.age || '', gender: form.gender || '', healthNotes: form.healthNotes || '' }]
     const primaryParticipant = participantDetails[0] || {}
+    const addons = Array.isArray(form.addons)
+      ? form.addons.filter((addonId) => addonOptions.some((option) => option.id === addonId))
+      : []
     const id = Date.now()
     const nextItem = {
       id,
@@ -193,6 +199,8 @@ function App() {
       gender: primaryParticipant.gender || '',
       healthNotes: primaryParticipant.healthNotes || '',
       participantDetails,
+      addons,
+      transportFrom: addons.includes('transport') ? form.transportFrom || '' : '',
       status: 'Menunggu Approval',
     }
     await Promise.all([
@@ -222,49 +230,57 @@ function App() {
     return true
   }
 
-  const setRegistrationStatus = async (id, status) => {
-    const current = registrations.find((item) => item.id === id)
-    const next = registrations.map((item) => (item.id === id ? { ...item, status } : item))
-    await updateDoc(doc(db, collections.registrations, String(id)), { status })
-    if (current) await updateTripSlots(current.tripId, next)
-  }
-
-  const buildJob = (id, tripId, slot, totalWorkers) => ({
+  const buildAddonJob = (id, registration, trip, addon, slot, totalWorkers) => ({
     id,
-    tripId,
+    tripId: Number(registration.tripId),
+    registrationId: Number(registration.id),
+    addonId: addon.id,
+    addonLabel: addon.label,
+    customerName: registration.name,
+    requestedDate: registration.requestedDate || trip?.date || '',
     slot,
     totalWorkers,
-    task: totalWorkers > 1
-      ? `Crew operasional ${slot} dari ${totalWorkers}: briefing peserta, koordinasi operasional, dan laporan perjalanan.`
-      : 'Briefing peserta, koordinasi operasional, dan laporan perjalanan.',
+    task: addon.id === 'transport' && registration.transportFrom
+      ? `${addon.task} Titik jemput: ${registration.transportFrom}.`
+      : addon.task,
     status: 'Tersedia',
     worker: '',
   })
 
-  const syncTripJobs = async (tripId, workerCount) => {
-    const relatedJobs = jobs
-      .filter((job) => job.tripId === tripId)
-      .sort((a, b) => Number(a.id) - Number(b.id))
-    const targetCount = Math.max(1, Number(workerCount) || 1)
+  const syncRegistrationAddonJobs = async (registration, status) => {
+    const selectedAddons = Array.isArray(registration?.addons)
+      ? addonOptions.filter((option) => registration.addons.includes(option.id))
+      : []
+    const relatedJobs = jobs.filter((job) => Number(job.registrationId) === Number(registration.id))
 
-    if (relatedJobs.length < targetCount) {
-      const baseId = Date.now()
-      const missingCount = targetCount - relatedJobs.length
-      await Promise.all(Array.from({ length: missingCount }, (_, index) => {
-        const slot = relatedJobs.length + index + 1
-        const nextJob = buildJob(baseId + index + 1, tripId, slot, targetCount)
-        return setDoc(doc(db, collections.jobs, String(nextJob.id)), nextJob)
-      }))
+    if (!approvedStatuses.includes(status) || !selectedAddons.length) {
+      const removableJobs = relatedJobs.filter((job) => !job.worker && job.status === 'Tersedia')
+      await Promise.all(removableJobs.map((job) => deleteDoc(doc(db, collections.jobs, String(job.id)))))
       return
     }
 
-    if (relatedJobs.length > targetCount) {
-      const removableJobs = relatedJobs
-        .filter((job) => !job.worker && job.status === 'Tersedia')
-        .sort((a, b) => Number(b.id) - Number(a.id))
-        .slice(0, relatedJobs.length - targetCount)
+    const existingAddonIds = new Set(relatedJobs.map((job) => job.addonId))
+    const missingAddons = selectedAddons.filter((addon) => !existingAddonIds.has(addon.id))
+    if (!missingAddons.length) return
 
-      await Promise.all(removableJobs.map((job) => deleteDoc(doc(db, collections.jobs, String(job.id)))))
+    const baseId = Date.now()
+    const trip = trips.find((item) => item.id === Number(registration.tripId))
+    await Promise.all(missingAddons.map((addon, index) => {
+      const slot = relatedJobs.length + index + 1
+      const nextJob = buildAddonJob(baseId + index + 1, registration, trip, addon, slot, relatedJobs.length + missingAddons.length)
+      return setDoc(doc(db, collections.jobs, String(nextJob.id)), nextJob)
+    }))
+  }
+
+  const setRegistrationStatus = async (id, status) => {
+    const current = registrations.find((item) => item.id === id)
+    const next = registrations.map((item) => (item.id === id ? { ...item, status } : item))
+    await updateDoc(doc(db, collections.registrations, String(id)), { status })
+    if (current) {
+      await Promise.all([
+        updateTripSlots(current.tripId, next),
+        syncRegistrationAddonJobs({ ...current, status }, status),
+      ])
     }
   }
 
@@ -272,18 +288,11 @@ function App() {
     const workerCount = Math.max(1, Number(trip.workerCount) || 1)
     if (trip.id) {
       const nextTrip = { ...trip, id: Number(trip.id), workerCount }
-      await Promise.all([
-        setDoc(doc(db, collections.trips, String(trip.id)), nextTrip),
-        syncTripJobs(Number(trip.id), workerCount),
-      ])
+      await setDoc(doc(db, collections.trips, String(trip.id)), nextTrip)
     } else {
       const id = Date.now()
       const nextTrip = { ...trip, id, slots: Number(trip.slots), quota: Number(trip.quota), price: Number(trip.price), workerCount }
-      const nextJobs = Array.from({ length: workerCount }, (_, index) => buildJob(id + index + 1, id, index + 1, workerCount))
-      await Promise.all([
-        setDoc(doc(db, collections.trips, String(id)), nextTrip),
-        ...nextJobs.map((job) => setDoc(doc(db, collections.jobs, String(job.id)), job)),
-      ])
+      await setDoc(doc(db, collections.trips, String(id)), nextTrip)
     }
     navigate('/admin/open-trip')
   }
@@ -300,9 +309,10 @@ function App() {
     const job = jobs.find((item) => item.id === id)
     if (!job || job.status !== 'Tersedia') return
     const workerName = session?.name || accounts.worker.name
-    const alreadyTookTrip = jobs.some((item) => item.tripId === job.tripId && item.worker === workerName)
-    if (alreadyTookTrip) {
-      showToast('Kamu sudah mengambil job untuk trip ini.')
+    const jobScope = getJobScope(job)
+    const alreadyTookScope = jobs.some((item) => getJobScope(item) === jobScope && item.worker === workerName)
+    if (alreadyTookScope) {
+      showToast('Kamu sudah mengambil job untuk booking ini.')
       return
     }
     await updateDoc(doc(db, collections.jobs, String(id)), { status: 'Diambil', worker: workerName })

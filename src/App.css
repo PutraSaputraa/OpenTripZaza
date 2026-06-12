@@ -1472,6 +1472,63 @@ button:disabled {
   line-height: 1.45;
 }
 
+.addon-option-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.addon-option-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+  border: 1px solid var(--color-line);
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 14px;
+  cursor: pointer;
+}
+
+.addon-option-card input {
+  width: 18px;
+  height: 18px;
+  margin: 2px 0 0;
+  accent-color: var(--color-gold);
+}
+
+.addon-option-card span {
+  display: grid;
+  gap: 4px;
+}
+
+.addon-option-card strong {
+  color: var(--color-text);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.addon-option-card small {
+  color: var(--color-muted);
+  line-height: 1.45;
+}
+
+.selected-addon-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.selected-addon-list span {
+  border: 1px solid var(--color-line);
+  border-radius: 999px;
+  background: var(--color-gold-soft);
+  color: var(--color-text);
+  padding: 7px 10px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
 .registration-submit {
   display: flex;
   align-items: center;
@@ -2951,6 +3008,7 @@ th {
   .stat-grid,
   .data-form,
   .registration-fields,
+  .addon-option-grid,
   .admin-trip-grid,
   .account-summary-grid,
   .account-registration-list,
@@ -3492,6 +3550,7 @@ body {
 .trip-gallery-main,
 .trip-detail-main .info-block,
 .private-tour-option,
+.addon-option-card,
 .account-registration-card dl div,
 .registration-fields input,
 .registration-fields select,

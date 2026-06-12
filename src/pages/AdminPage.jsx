@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { accounts, registrationStatuses, tripStatuses } from '../config/constants'
+import { accounts, addonOptions, registrationStatuses, tripStatuses } from '../config/constants'
 import { formatCurrency, formatDate, tripName } from '../utils/formatters'
 import { Badge, DataPanel, Metric, Sidebar } from './shared'
 
@@ -43,6 +43,13 @@ const registrationTripType = (item) => {
   if (item.isPrivateTrip) return 'Private cave tour'
   if (item.isPrivateTour) return 'Private cave tour'
   return 'Open trip goa'
+}
+
+const getSelectedAddons = (registration) => {
+  const selectedIds = Array.isArray(registration?.addons) ? registration.addons : []
+  return addonOptions
+    .filter((option) => selectedIds.includes(option.id))
+    .map((option) => option.id === 'transport' && registration.transportFrom ? `${option.label} dari ${registration.transportFrom}` : option.label)
 }
 
 function AdminShell({ title, children, navigate, logout, path }) {
@@ -227,10 +234,10 @@ function RegistrationTable({ registrations, trips, setRegistrationStatus, compac
   return (
     <div className="table-wrap">
       <table>
-        <thead><tr><th>Customer</th><th>Kontak</th><th>Peserta</th><th>Cave trip</th><th>Tanggal</th><th>Data utama</th><th>Catatan</th><th>Status</th></tr></thead>
+        <thead><tr><th>Customer</th><th>Kontak</th><th>Peserta</th><th>Cave trip</th><th>Tanggal</th><th>Data utama</th><th>Add-on</th><th>Catatan</th><th>Status</th></tr></thead>
         <tbody>{rows.map((item) => (
           <tr key={item.id}>
-            <td>{item.name}</td><td>{item.whatsapp}<br />{item.email}</td><td>{item.participants}</td><td>{tripName(trips, item.tripId)}</td><td>{formatDate(item.requestedDate || trips.find((trip) => trip.id === item.tripId)?.date)}</td><td>{item.address || '-'}<br />{item.age ? `${item.age} tahun` : '-'} - {item.gender || '-'}<br />{item.healthNotes || '-'}</td><td>{item.notes}</td>
+            <td>{item.name}</td><td>{item.whatsapp}<br />{item.email}</td><td>{item.participants}</td><td>{tripName(trips, item.tripId)}</td><td>{formatDate(item.requestedDate || trips.find((trip) => trip.id === item.tripId)?.date)}</td><td>{item.address || '-'}<br />{item.age ? `${item.age} tahun` : '-'} - {item.gender || '-'}<br />{item.healthNotes || '-'}</td><td>{getSelectedAddons(item).join(', ') || '-'}</td><td>{item.notes}</td>
             <td><select className="status-select" value={item.status} onChange={(e) => setRegistrationStatus(item.id, e.target.value)}>{registrationStatuses.map((status) => <option key={status}>{status}</option>)}</select></td>
           </tr>
         ))}</tbody>
@@ -297,9 +304,9 @@ export function AdminSchedule(props) {
             )
           })}
           {privateSchedules.map(({ registration, trip }) => {
-            const tripJobs = jobs.filter((job) => job.tripId === trip.id)
+            const tripJobs = jobs.filter((job) => Number(job.registrationId) === Number(registration.id))
             const assignedJobs = tripJobs.filter((job) => job.worker).length
-            const workerTarget = tripJobs.length || trip.workerCount || 1
+            const workerTarget = tripJobs.length || getSelectedAddons(registration).length || 0
             const participantDetails = Array.isArray(registration.participantDetails) ? registration.participantDetails : []
             return (
               <article className="schedule-card" key={`private-${registration.id}`}>
@@ -337,7 +344,7 @@ export function AdminSchedule(props) {
 
 function AdminPrivateScheduleDetail({ registration, trips, jobs, setRegistrationStatus, navigate, ...props }) {
   const trip = trips.find((item) => item.id === registration.tripId)
-  const tripJobs = jobs.filter((job) => job.tripId === registration.tripId)
+  const tripJobs = jobs.filter((job) => Number(job.registrationId) === Number(registration.id))
   const assignedJobs = tripJobs.filter((job) => job.worker)
   const participantDetails = Array.isArray(registration.participantDetails) && registration.participantDetails.length
     ? registration.participantDetails
@@ -358,7 +365,7 @@ function AdminPrivateScheduleDetail({ registration, trips, jobs, setRegistration
         <section className="stat-grid dashboard-stats">
           <Metric label="Jumlah peserta" value={registration.participants} />
           <Metric label="Status" value={registration.status} />
-          <Metric label="Pekerja terisi" value={`${assignedJobs.length}/${tripJobs.length || trip?.workerCount || 1}`} />
+          <Metric label="Pekerja terisi" value={`${assignedJobs.length}/${tripJobs.length || getSelectedAddons(registration).length || 0}`} />
           <Metric label="Tanggal request" value={formatDate(registration.requestedDate || trip?.date)} />
         </section>
 
@@ -385,6 +392,9 @@ function AdminPrivateScheduleDetail({ registration, trips, jobs, setRegistration
             <label className="registration-card-status">Status<select className="status-select" value={registration.status} onChange={(e) => setRegistrationStatus(registration.id, e.target.value)}>
               {registrationStatuses.map((status) => <option key={status}>{status}</option>)}
             </select></label>
+            <div className="selected-addon-list">
+              {getSelectedAddons(registration).length ? getSelectedAddons(registration).map((addon) => <span key={addon}>{addon}</span>) : <span>Tidak ada add-on</span>}
+            </div>
             <p className="muted">{registration.notes || '-'}</p>
           </DataPanel>
         </section>
@@ -431,10 +441,10 @@ function AdminScheduleDetail({ trip, registrations, jobs, setRegistrationStatus,
           <DataPanel title="Pekerja Trip">
             <div className="table-wrap compact-table">
               <table>
-                <thead><tr><th>Slot</th><th>Pekerja</th><th>Status</th></tr></thead>
+                <thead><tr><th>Kebutuhan</th><th>Booking</th><th>Pekerja</th><th>Status</th></tr></thead>
                 <tbody>{tripJobs.length ? tripJobs.map((job) => (
-                  <tr key={job.id}><td>{job.slot || 1} dari {job.totalWorkers || trip.workerCount || 1}</td><td>{job.worker || '-'}</td><td><Badge status={job.status} /></td></tr>
-                )) : <tr><td colSpan="3">Belum ada job untuk trip ini.</td></tr>}</tbody>
+                  <tr key={job.id}><td>{job.addonLabel || `${job.slot || 1} dari ${job.totalWorkers || trip.workerCount || 1}`}</td><td>{job.customerName || '-'}</td><td>{job.worker || '-'}</td><td><Badge status={job.status} /></td></tr>
+                )) : <tr><td colSpan="4">Belum ada job add-on untuk trip ini.</td></tr>}</tbody>
               </table>
             </div>
           </DataPanel>
@@ -468,6 +478,7 @@ function RegistrationStatusColumn({ title, items, setRegistrationStatus }) {
                 <div><dt>Jenis</dt><dd>{registrationTripType(item)}</dd></div>
                 <div><dt>Peserta</dt><dd>{item.participants} orang</dd></div>
                 <div><dt>Tanggal</dt><dd>{formatDate(item.requestedDate)}</dd></div>
+                <div><dt>Add-on</dt><dd>{getSelectedAddons(item).join(', ') || '-'}</dd></div>
                 <div><dt>Domisili</dt><dd>{item.address || '-'}</dd></div>
                 <div><dt>Usia</dt><dd>{item.age ? `${item.age} tahun` : '-'}</dd></div>
                 <div><dt>Jenis kelamin</dt><dd>{item.gender || '-'}</dd></div>
@@ -554,10 +565,10 @@ export function JobTable({ jobs, trips, compact }) {
   return (
     <div className="table-wrap">
       <table>
-        <thead><tr><th>Cave trip</th><th>Destinasi</th><th>Tanggal</th><th>Slot</th><th>Tugas</th><th>Status job</th><th>Pekerja</th></tr></thead>
+        <thead><tr><th>Cave trip</th><th>Destinasi</th><th>Tanggal</th><th>Kebutuhan</th><th>Tugas</th><th>Status job</th><th>Pekerja</th></tr></thead>
         <tbody>{rows.map((job) => {
           const trip = trips.find((item) => item.id === job.tripId)
-          return <tr key={job.id}><td>{trip?.name}</td><td>{trip?.destination}</td><td>{formatDate(trip?.date)}</td><td>{job.slot || 1} dari {job.totalWorkers || trip?.workerCount || 1}</td><td>{job.task}</td><td><Badge status={job.status} /></td><td>{job.worker || '-'}</td></tr>
+          return <tr key={job.id}><td>{trip?.name}</td><td>{trip?.destination}</td><td>{formatDate(job.requestedDate || trip?.date)}</td><td>{job.addonLabel || `${job.slot || 1} dari ${job.totalWorkers || trip?.workerCount || 1}`}</td><td>{job.task}</td><td><Badge status={job.status} /></td><td>{job.worker || '-'}</td></tr>
         })}</tbody>
       </table>
     </div>
