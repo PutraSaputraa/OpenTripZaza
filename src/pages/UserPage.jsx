@@ -3,6 +3,7 @@ import testimoni1 from '../assets/testimoni1.png'
 import testimoni2 from '../assets/testimoni2.png'
 import testimoni3 from '../assets/testimoni3.png'
 import backgroundLandingPageUser from '../assets/backgroundlandingpageuser.png'
+import horizontalLogo from '../assets/desainHorizontal.png'
 import { addonOptions } from '../config/constants'
 import { formatCurrency, formatDate, tripName } from '../utils/formatters'
 import { Badge, InfoBlock, NotFound } from './shared'
@@ -45,7 +46,9 @@ export function PublicNav({ navigate, session, logout }) {
 
   return (
     <header className={`public-nav ${isOverHero ? 'nav-on-hero' : ''}`}>
-      <button className="brand" onClick={goHome}>{session?.role === 'customer' ? `Welcome, ${session.name}` : 'Open Cave Trip'}</button>
+      <button className="brand brand-logo-btn" onClick={goHome} aria-label="Open Cave Trip">
+        <img src={horizontalLogo} alt="Open Cave Trip" />
+      </button>
       <nav className="public-nav-center" aria-label="Navigasi halaman">
         <button onClick={() => scrollToHomeSection('open-trip-list')}>Trip</button>
         <button className={currentPath === '/' || currentPath === '/open-trip' ? 'is-active' : ''} onClick={goHome}>Home</button>
@@ -908,7 +911,9 @@ function AuthShell({ children, navigate }) {
     <main className="login-page">
       <section className="auth-shell">
         <aside className="auth-brand-panel">
-          <button className="brand" onClick={() => navigate('/')}>Open Cave Trip</button>
+          <button className="brand brand-logo-btn" onClick={() => navigate('/')} aria-label="Open Cave Trip">
+            <img src={horizontalLogo} alt="Open Cave Trip" />
+          </button>
           <div>
             <p className="eyebrow">Customer area</p>
             <h2>Mulai eksplor goa dari data yang rapi.</h2>

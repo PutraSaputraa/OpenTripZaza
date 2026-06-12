@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import loadingVideo from '../assets/videoloading.mp4'
+import horizontalLogo from '../assets/desainHorizontal.png'
 import { accounts } from '../config/constants'
 
 export function LoginPage({ role, login, navigate }) {
@@ -24,7 +25,9 @@ export function LoginPage({ role, login, navigate }) {
     <main className="login-page">
       <section className="auth-shell">
         <aside className="auth-brand-panel">
-          <button className="brand" onClick={() => navigate('/')}>Open Cave Trip</button>
+          <button className="brand brand-logo-btn" onClick={() => navigate('/')} aria-label="Open Cave Trip">
+            <img src={horizontalLogo} alt="Open Cave Trip" />
+          </button>
           <div>
             <p className="eyebrow">{isAdmin ? 'Admin area' : 'Pekerja area'}</p>
             <h2>{panelTitle}</h2>
@@ -64,7 +67,9 @@ export function Sidebar({ title, links, navigate, logout, path }) {
   return (
     <aside className="sidebar">
       <div className="sidebar-brand">
-        <button className="brand inverse" onClick={() => navigate('/')}>Open Cave Trip</button>
+        <button className="brand inverse brand-logo-btn" onClick={() => navigate('/')} aria-label="Open Cave Trip">
+          <img src={horizontalLogo} alt="Open Cave Trip" />
+        </button>
         <span>{title}</span>
       </div>
       <nav className="sidebar-nav">

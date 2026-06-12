@@ -5208,22 +5208,76 @@ body {
   border-radius: 0;
   background: transparent;
   color: var(--color-ink);
-  padding: 8px 4px;
+  padding: 6px 3px;
   box-shadow: none;
   text-decoration: none;
   font-weight: 500;
+  font-size: 15px;
 }
 
 .public-nav .brand,
 .home-page .public-nav .brand,
 .home-page .public-nav.nav-on-hero .brand {
+  font-size: 17px;
   font-weight: 600;
 }
 
 .public-nav > nav:last-child button,
 .home-page .public-nav > nav:last-child button,
 .home-page .public-nav.nav-on-hero > nav:last-child button {
+  min-height: 38px;
+  padding: 8px 16px;
+  font-size: 15px;
   font-weight: 500;
+}
+
+.public-nav,
+.home-page .public-nav,
+.home-page .public-nav.nav-on-hero {
+  width: min(calc(100% - 44px), 1120px);
+  padding: 12px clamp(18px, 3vw, 42px);
+}
+
+.home-page .public-nav {
+  top: 12px;
+}
+
+.public-nav-center {
+  gap: clamp(14px, 2vw, 26px);
+}
+
+.public-nav > nav:last-child {
+  gap: 9px;
+}
+
+.brand-logo-btn {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  padding: 0;
+}
+
+.brand-logo-btn img {
+  display: block;
+  width: auto;
+  height: 34px;
+  object-fit: contain;
+}
+
+.public-nav .brand-logo-btn img,
+.home-page .public-nav .brand-logo-btn img {
+  height: 30px;
+}
+
+.sidebar-brand .brand-logo-btn img,
+.auth-brand-panel .brand-logo-btn img {
+  height: 42px;
+}
+
+.sidebar-brand .brand-logo-btn {
+  justify-self: start;
 }
 
 .public-nav .public-nav-center button:hover,
@@ -5572,6 +5626,36 @@ body {
 }
 
 @media (max-width: 760px) {
+  .public-nav,
+  .home-page .public-nav,
+  .home-page .public-nav.nav-on-hero {
+    width: min(calc(100% - 24px), 1120px);
+    padding: 10px 14px;
+  }
+
+  .public-nav .brand,
+  .home-page .public-nav .brand {
+    font-size: 16px;
+  }
+
+  .public-nav .brand-logo-btn img,
+  .home-page .public-nav .brand-logo-btn img {
+    height: 26px;
+  }
+
+  .public-nav .public-nav-center button,
+  .home-page .public-nav .public-nav-center button,
+  .home-page .public-nav.nav-on-hero .public-nav-center button {
+    font-size: 14px;
+  }
+
+  .public-nav > nav:last-child button,
+  .home-page .public-nav > nav:last-child button {
+    min-height: 36px;
+    padding: 7px 12px;
+    font-size: 14px;
+  }
+
   .workspace h1 {
     font-size: 34px;
   }
