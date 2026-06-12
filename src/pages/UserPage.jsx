@@ -9,8 +9,9 @@ import { formatCurrency, formatDate, tripName } from '../utils/formatters'
 import { Badge, InfoBlock, NotFound } from './shared'
 
 export function PublicNav({ navigate, session, logout }) {
-  const [isOverHero, setIsOverHero] = useState(() => window.location.pathname === '/' || window.location.pathname === '/open-trip')
   const currentPath = window.location.pathname
+  const isHomePage = currentPath === '/' || currentPath === '/open-trip'
+  const [isOverHero, setIsOverHero] = useState(() => isHomePage)
 
   useEffect(() => {
     const isHomePage = window.location.pathname === '/' || window.location.pathname === '/open-trip'
@@ -45,10 +46,15 @@ export function PublicNav({ navigate, session, logout }) {
   }
 
   return (
-    <header className={`public-nav ${isOverHero ? 'nav-on-hero' : ''}`}>
+    <header className={`public-nav ${isOverHero ? 'nav-on-hero' : ''} ${isHomePage ? 'nav-has-search' : ''}`}>
       <button className="brand brand-logo-btn" onClick={goHome} aria-label="Open Cave Trip">
         <img src={horizontalLogo} alt="Open Cave Trip" />
       </button>
+      {isHomePage && (
+        <div className="public-nav-search">
+          <SearchTripForm navigate={navigate} compact />
+        </div>
+      )}
       <nav className="public-nav-center" aria-label="Navigasi halaman">
         <button onClick={() => scrollToHomeSection('open-trip-list')}>Trip</button>
         <button className={currentPath === '/' || currentPath === '/open-trip' ? 'is-active' : ''} onClick={goHome}>Home</button>
@@ -124,7 +130,7 @@ const filterTripsBySearch = (trips, search) => {
   })
 }
 
-function SearchTripForm({ navigate, initialValue = '' }) {
+function SearchTripForm({ navigate, initialValue = '', compact = false }) {
   const [search, setSearch] = useState(initialValue)
 
   const onSubmit = (event) => {
@@ -134,7 +140,7 @@ function SearchTripForm({ navigate, initialValue = '' }) {
   }
 
   return (
-    <form className="hero-search-form" onSubmit={onSubmit} role="search">
+    <form className={compact ? 'hero-search-form compact-search-form' : 'hero-search-form'} onSubmit={onSubmit} role="search">
       <span className="search-icon" aria-hidden="true" />
       <label>
         <input
@@ -272,9 +278,6 @@ export function CustomerCatalog({ trips, navigate, session, logout }) {
     <main className="public-page home-page">
       <PublicNav navigate={navigate} session={session} logout={logout} />
       <section className="search-hero" style={{ '--landing-bg': `url(${backgroundLandingPageUser})` }}>
-        <div className="hero-content">
-          <SearchTripForm navigate={navigate} />
-        </div>
         <DestinationCarousel trips={featuredTrips} navigate={navigate} />
       </section>
 

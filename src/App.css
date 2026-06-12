@@ -5250,6 +5250,41 @@ body {
   gap: 9px;
 }
 
+.public-nav.nav-has-search,
+.home-page .public-nav.nav-has-search,
+.home-page .public-nav.nav-has-search.nav-on-hero {
+  grid-template-columns: auto minmax(260px, 420px) auto auto;
+  width: min(calc(100% - 44px), 1240px);
+  gap: clamp(16px, 2vw, 28px);
+}
+
+.public-nav-search {
+  min-width: 0;
+}
+
+.public-nav-search .compact-search-form {
+  grid-template-columns: 34px minmax(0, 1fr) 38px;
+  min-height: 44px;
+  border-radius: 999px;
+  padding: 4px 6px 4px 12px;
+  box-shadow: none;
+}
+
+.public-nav-search .compact-search-form input {
+  font-size: 15px;
+}
+
+.public-nav-search .compact-search-form .search-icon {
+  width: 22px;
+  height: 22px;
+}
+
+.public-nav-search .compact-search-form .search-submit {
+  width: 34px;
+  height: 34px;
+  min-height: 34px;
+}
+
 .brand-logo-btn {
   display: inline-flex;
   align-items: center;
@@ -5262,18 +5297,18 @@ body {
 .brand-logo-btn img {
   display: block;
   width: auto;
-  height: 34px;
+  height: 44px;
   object-fit: contain;
 }
 
 .public-nav .brand-logo-btn img,
 .home-page .public-nav .brand-logo-btn img {
-  height: 30px;
+  height: 40px;
 }
 
 .sidebar-brand .brand-logo-btn img,
 .auth-brand-panel .brand-logo-btn img {
-  height: 42px;
+  height: 52px;
 }
 
 .sidebar-brand .brand-logo-btn {
@@ -5640,7 +5675,7 @@ body {
 
   .public-nav .brand-logo-btn img,
   .home-page .public-nav .brand-logo-btn img {
-    height: 26px;
+    height: 34px;
   }
 
   .public-nav .public-nav-center button,
@@ -5654,6 +5689,21 @@ body {
     min-height: 36px;
     padding: 7px 12px;
     font-size: 14px;
+  }
+
+  .public-nav.nav-has-search,
+  .home-page .public-nav.nav-has-search,
+  .home-page .public-nav.nav-has-search.nav-on-hero {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .public-nav-search {
+    order: 2;
+  }
+
+  .public-nav-search .compact-search-form {
+    width: 100%;
   }
 
   .workspace h1 {
@@ -5728,4 +5778,151 @@ body {
 
 .registration-form .compact-form-section-head {
   grid-template-columns: 6px minmax(0, 1fr);
+}
+
+/* Final form polish across user, admin, and worker */
+.data-form,
+.data-form.section-fields,
+.registration-fields,
+.auth-form {
+  border-radius: 24px;
+}
+
+.data-form:not(.compact),
+.data-form.section-fields {
+  border: 1px solid #e6cfa8;
+  background: #fffdf8;
+  padding: clamp(14px, 2vw, 20px);
+}
+
+.form-section-card .data-form.section-fields {
+  background: #fffaf0;
+}
+
+.data-form.compact {
+  background: transparent;
+}
+
+.registration-fields label,
+.auth-form label,
+.data-form label,
+.status-control,
+.admin-search-field,
+.registration-filter-row label {
+  display: grid;
+  gap: 7px;
+  color: #241a08;
+  font-weight: 600;
+}
+
+.data-form label,
+.registration-fields label,
+.auth-form label {
+  align-content: start;
+}
+
+.data-form.section-fields {
+  align-items: start;
+  row-gap: 18px;
+}
+
+.data-form.section-fields label {
+  grid-template-rows: auto 58px minmax(18px, auto);
+}
+
+.data-form.section-fields label input,
+.data-form.section-fields label select {
+  align-self: stretch;
+  min-height: 58px;
+}
+
+.data-form.section-fields label textarea {
+  grid-row: 2 / span 2;
+}
+
+.registration-fields label small,
+.auth-form label small,
+.data-form label small {
+  color: #7d6938;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.45;
+}
+
+.data-form.section-fields label:not(:has(small))::after {
+  min-height: 18px;
+  content: '';
+}
+
+.registration-fields input,
+.registration-fields select,
+.registration-fields textarea,
+.auth-form input,
+.auth-form select,
+.auth-form textarea,
+.data-form input,
+.data-form select,
+.data-form textarea,
+.status-select,
+.status-control select,
+.admin-search-field input,
+.registration-filter-row input,
+.registration-filter-row select {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #e6cfa8;
+  border-radius: 16px;
+  background: #ffffff;
+  color: #241a08;
+  padding: 12px 14px;
+  outline: 0;
+  box-shadow: none;
+}
+
+.data-form input:disabled,
+.data-form select:disabled,
+.data-form textarea:disabled,
+.registration-fields input:disabled,
+.registration-fields select:disabled,
+.registration-fields textarea:disabled,
+.status-select:disabled,
+.status-control select:disabled {
+  background: #f7f1e8;
+  color: #7d6938;
+  cursor: not-allowed;
+}
+
+.registration-fields textarea,
+.auth-form textarea,
+.data-form textarea {
+  min-height: 112px;
+  resize: vertical;
+}
+
+.registration-fields input::placeholder,
+.registration-fields textarea::placeholder,
+.auth-form input::placeholder,
+.auth-form textarea::placeholder,
+.data-form input::placeholder,
+.data-form textarea::placeholder,
+.admin-search-field input::placeholder {
+  color: #9a8757;
+}
+
+.registration-fields input:focus,
+.registration-fields select:focus,
+.registration-fields textarea:focus,
+.auth-form input:focus,
+.auth-form select:focus,
+.auth-form textarea:focus,
+.data-form input:focus,
+.data-form select:focus,
+.data-form textarea:focus,
+.status-select:focus,
+.status-control select:focus,
+.admin-search-field input:focus,
+.registration-filter-row input:focus,
+.registration-filter-row select:focus {
+  border-color: #c08a2e;
+  box-shadow: 0 0 0 3px rgba(192, 138, 46, 0.16);
 }
