@@ -398,26 +398,60 @@ function AdminScheduleDetail({ trip, registrations, jobs, setRegistrationStatus,
   const waitingRegistrations = tripRegistrations.filter((item) => item.status === 'Menunggu Approval')
   const rejectedRegistrations = tripRegistrations.filter((item) => item.status === 'Ditolak')
   const tripJobs = jobs.filter((job) => job.tripId === trip.id)
-  const assignedJobs = tripJobs.filter((job) => job.worker)
-  const approvedCount = approvedParticipants.reduce((sum, item) => sum + Number(item.participants), 0)
+  const [activeStatus, setActiveStatus] = useState('Menunggu Approval')
+  const [search, setSearch] = useState('')
+  const [typeFilter, setTypeFilter] = useState('all')
+  const [selectedRegistration, setSelectedRegistration] = useState(null)
+  const statusTabs = [
+    ['Menunggu Approval', waitingRegistrations.length],
+    ['Disetujui', approvedParticipants.length],
+    ['Ditolak', rejectedRegistrations.length],
+  ]
+  const searchTerm = search.trim().toLowerCase()
+  const activeItems = tripRegistrations
+    .filter((item) => {
+      if (activeStatus === 'Disetujui') return item.status === 'Disetujui' || item.status === 'Selesai'
+      return item.status === activeStatus
+    })
+    .filter((item) => {
+      if (typeFilter === 'private') return item.isPrivateTrip || item.isPrivateTour
+      if (typeFilter === 'open') return !item.isPrivateTrip && !item.isPrivateTour
+      return true
+    })
+    .filter((item) => {
+      if (!searchTerm) return true
+      return [item.name, item.email, item.whatsapp]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase()
+        .includes(searchTerm)
+    })
 
   return (
-    <AdminShell title="Detail Jadwal" navigate={navigate} {...props}>
-      <section className="admin-page-stack">
-        <div className="admin-page-head">
+    <AdminShell title="Manajemen Pendaftaran" navigate={navigate} {...props}>
+      <section className="admin-page-stack registration-management-page">
+        <div className="admin-page-head registration-management-head">
           <div>
-            <p className="eyebrow">Detail trip</p>
-            <h2>{trip.name}</h2>
-            <p className="muted">{trip.destination} - {formatDate(trip.date)} - {trip.isPrivateTrip ? 'Private cave tour' : 'Open trip goa'}</p>
+            <p className="eyebrow">Approval peserta</p>
+            <h2>Manajemen Pendaftaran</h2>
+            <p className="muted">{trip.name} - {trip.destination} - {formatDate(trip.date)}</p>
           </div>
           <button className="outline-btn" onClick={() => navigate('/admin/jadwal')}>Kembali ke jadwal</button>
         </div>
 
-        <section className="stat-grid dashboard-stats">
-          <Metric label="Total pendaftar" value={tripRegistrations.length} />
-          <Metric label="Menunggu approval" value={waitingRegistrations.length} />
-          <Metric label="Peserta disetujui" value={`${approvedCount}/${trip.quota}`} />
-          <Metric label="Pekerja terisi" value={`${assignedJobs.length}/${tripJobs.length}`} />
+        <section className="registration-summary-cards">
+          <button className={activeStatus === 'Menunggu Approval' ? 'is-active' : ''} type="button" onClick={() => setActiveStatus('Menunggu Approval')}>
+            <span>Menunggu</span>
+            <strong>{waitingRegistrations.length}</strong>
+          </button>
+          <button className={activeStatus === 'Disetujui' ? 'is-active' : ''} type="button" onClick={() => setActiveStatus('Disetujui')}>
+            <span>Disetujui</span>
+            <strong>{approvedParticipants.length}</strong>
+          </button>
+          <button className={activeStatus === 'Ditolak' ? 'is-active' : ''} type="button" onClick={() => setActiveStatus('Ditolak')}>
+            <span>Ditolak</span>
+            <strong>{rejectedRegistrations.length}</strong>
+          </button>
         </section>
 
         <section className="schedule-detail-grid">
@@ -439,49 +473,146 @@ function AdminScheduleDetail({ trip, registrations, jobs, setRegistrationStatus,
           </DataPanel>
         </section>
 
-        <section className="registration-status-board">
-          <RegistrationStatusColumn title="Menunggu Approval" items={waitingRegistrations} setRegistrationStatus={setRegistrationStatus} />
-          <RegistrationStatusColumn title="Disetujui" items={approvedParticipants} setRegistrationStatus={setRegistrationStatus} />
-          <RegistrationStatusColumn title="Ditolak" items={rejectedRegistrations} setRegistrationStatus={setRegistrationStatus} />
+        <section className="registration-approval-panel">
+          <div className="registration-toolbar">
+            <div className="segmented-tabs" role="tablist" aria-label="Filter status pendaftaran">
+              {statusTabs.map(([status, count]) => (
+                <button className={activeStatus === status ? 'is-active' : ''} key={status} type="button" onClick={() => setActiveStatus(status)}>
+                  {status}
+                  <span>{count}</span>
+                </button>
+              ))}
+            </div>
+            <div className="registration-filter-row">
+              <label>
+                <span>Cari peserta</span>
+                <input placeholder="Nama, email, atau WhatsApp" value={search} onChange={(event) => setSearch(event.target.value)} />
+              </label>
+              <label>
+                <span>Jenis trip</span>
+                <select value={typeFilter} onChange={(event) => setTypeFilter(event.target.value)}>
+                  <option value="all">Semua jenis</option>
+                  <option value="open">Open trip goa</option>
+                  <option value="private">Private cave tour</option>
+                </select>
+              </label>
+            </div>
+          </div>
+
+          <div className="registration-card-grid">
+            {activeItems.length ? activeItems.map((item) => (
+              <RegistrationApprovalCard
+                item={item}
+                key={item.id}
+                onDetail={() => setSelectedRegistration(item)}
+                setRegistrationStatus={setRegistrationStatus}
+              />
+            )) : <p className="empty-column">Belum ada data untuk filter ini.</p>}
+          </div>
         </section>
+
+        {selectedRegistration && (
+          <RegistrationDetailModal
+            item={selectedRegistration}
+            trip={trip}
+            setRegistrationStatus={setRegistrationStatus}
+            onClose={() => setSelectedRegistration(null)}
+          />
+        )}
       </section>
     </AdminShell>
   )
 }
 
-function RegistrationStatusColumn({ title, items, setRegistrationStatus }) {
+function RegistrationApprovalCard({ item, setRegistrationStatus, onDetail }) {
   return (
-    <section className="registration-status-column">
-      <div className="registration-status-head">
-        <h3>{title}</h3>
-        <span>{items.length}</span>
+    <article className="registration-approval-card">
+      <div className="registration-approval-card-head">
+        <h3>{item.name}</h3>
+        <Badge status={item.status} />
       </div>
-      <div className="registration-status-list">
-        {items.length ? items.map((item) => (
-          <article className="registration-status-card" key={item.id}>
-            <div className="registration-card-main">
-              <h4>{item.name}</h4>
-              <dl>
-                <div><dt>Email</dt><dd>{item.email}</dd></div>
-                <div><dt>WhatsApp</dt><dd>{item.whatsapp}</dd></div>
-                <div><dt>Jenis</dt><dd>{registrationTripType(item)}</dd></div>
-                <div><dt>Peserta</dt><dd>{item.participants} orang</dd></div>
-                <div><dt>Tanggal</dt><dd>{formatDate(item.requestedDate)}</dd></div>
-                <div><dt>Add-on</dt><dd>{getSelectedAddons(item).join(', ') || '-'}</dd></div>
-                <div><dt>Domisili</dt><dd>{item.address || '-'}</dd></div>
-                <div><dt>Usia</dt><dd>{item.age ? `${item.age} tahun` : '-'}</dd></div>
-                <div><dt>Jenis kelamin</dt><dd>{item.gender || '-'}</dd></div>
-                <div><dt>Kondisi kesehatan</dt><dd>{item.healthNotes || '-'}</dd></div>
-                <div><dt>Catatan</dt><dd>{item.notes || '-'}</dd></div>
-              </dl>
+      <dl>
+        <div><dt>Jenis trip</dt><dd>{registrationTripType(item)}</dd></div>
+        <div><dt>Peserta</dt><dd>{item.participants} orang</dd></div>
+        <div><dt>Usia</dt><dd>{item.age ? `${item.age} tahun` : '-'}</dd></div>
+        <div><dt>Domisili</dt><dd>{item.address || '-'}</dd></div>
+        <div className="full"><dt>Add-on</dt><dd>{getSelectedAddons(item).join(', ') || '-'}</dd></div>
+      </dl>
+      <div className="registration-card-actions">
+        <button className="outline-btn" type="button" onClick={onDetail}>Lihat Detail</button>
+        <label>
+          <span>Ubah Status</span>
+          <select className="status-select" value={item.status} onChange={(event) => setRegistrationStatus(item.id, event.target.value)}>
+            {registrationStatuses.map((status) => <option key={status}>{status}</option>)}
+          </select>
+        </label>
+      </div>
+    </article>
+  )
+}
+
+function RegistrationDetailModal({ item, trip, setRegistrationStatus, onClose }) {
+  const participantDetails = Array.isArray(item.participantDetails) && item.participantDetails.length
+    ? item.participantDetails
+    : [{ name: item.name, address: item.address, age: item.age, gender: item.gender, healthNotes: item.healthNotes }]
+
+  return (
+    <div className="modal-backdrop" role="presentation" onClick={onClose}>
+      <section className="modal-panel registration-detail-modal" role="dialog" aria-modal="true" aria-labelledby="registration-detail-title" onClick={(event) => event.stopPropagation()}>
+        <div className="modal-head">
+          <div>
+            <p className="eyebrow">Detail pendaftaran</p>
+            <h2 id="registration-detail-title">{item.name}</h2>
+          </div>
+          <button className="outline-btn" type="button" onClick={onClose}>Tutup</button>
+        </div>
+
+        <div className="registration-detail-sections">
+          <section>
+            <h3>Data Kontak</h3>
+            <dl>
+              <div><dt>Email</dt><dd>{item.email}</dd></div>
+              <div><dt>WhatsApp</dt><dd>{item.whatsapp}</dd></div>
+              <div><dt>Status</dt><dd><Badge status={item.status} /></dd></div>
+            </dl>
+          </section>
+
+          <section>
+            <h3>Detail Trip</h3>
+            <dl>
+              <div><dt>Cave trip</dt><dd>{trip.name}</dd></div>
+              <div><dt>Jenis</dt><dd>{registrationTripType(item)}</dd></div>
+              <div><dt>Tanggal</dt><dd>{formatDate(item.requestedDate || trip.date)}</dd></div>
+              <div><dt>Add-on</dt><dd>{getSelectedAddons(item).join(', ') || '-'}</dd></div>
+            </dl>
+          </section>
+
+          <section>
+            <h3>Informasi Peserta</h3>
+            <div className="participant-detail-list">
+              {participantDetails.map((participant, index) => (
+                <div key={`${item.id}-${index}`}>
+                  <strong>{participant.name || `Peserta ${index + 1}`}</strong>
+                  <span>{participant.gender || '-'} - {participant.age || '-'} tahun - {participant.address || '-'}</span>
+                </div>
+              ))}
             </div>
-            <label className="registration-card-status">Status<select className="status-select" value={item.status} onChange={(e) => setRegistrationStatus(item.id, e.target.value)}>
-                {registrationStatuses.map((status) => <option key={status}>{status}</option>)}
-              </select></label>
-          </article>
-        )) : <p className="empty-column">Belum ada data.</p>}
-      </div>
-    </section>
+          </section>
+
+          <section>
+            <h3>Catatan & Kesehatan</h3>
+            <dl>
+              <div><dt>Kondisi kesehatan</dt><dd>{item.healthNotes || '-'}</dd></div>
+              <div><dt>Catatan</dt><dd>{item.notes || '-'}</dd></div>
+            </dl>
+          </section>
+        </div>
+
+        <label className="registration-card-status">Ubah status<select className="status-select" value={item.status} onChange={(event) => setRegistrationStatus(item.id, event.target.value)}>
+          {registrationStatuses.map((status) => <option key={status}>{status}</option>)}
+        </select></label>
+      </section>
+    </div>
   )
 }
 

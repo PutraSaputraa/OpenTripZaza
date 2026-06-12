@@ -8,6 +8,7 @@ import { Badge, InfoBlock, NotFound } from './shared'
 
 export function PublicNav({ navigate, session, logout }) {
   const [isOverHero, setIsOverHero] = useState(() => window.location.pathname === '/' || window.location.pathname === '/open-trip')
+  const currentPath = window.location.pathname
 
   useEffect(() => {
     const isHomePage = window.location.pathname === '/' || window.location.pathname === '/open-trip'
@@ -46,8 +47,8 @@ export function PublicNav({ navigate, session, logout }) {
       <button className="brand" onClick={goHome}>{session?.role === 'customer' ? `Welcome, ${session.name}` : 'Open Cave Trip'}</button>
       <nav className="public-nav-center" aria-label="Navigasi halaman">
         <button onClick={() => scrollToHomeSection('open-trip-list')}>Trip</button>
-        <button onClick={goHome}>Home</button>
-        <button onClick={() => navigate('/destinasi')}>Destinasi</button>
+        <button className={currentPath === '/' || currentPath === '/open-trip' ? 'is-active' : ''} onClick={goHome}>Home</button>
+        <button className={currentPath.startsWith('/destinasi') ? 'is-active' : ''} onClick={() => navigate('/destinasi')}>Destinasi</button>
         <button onClick={() => scrollToHomeSection('testimoni-list')}>Testimoni</button>
       </nav>
       <nav>

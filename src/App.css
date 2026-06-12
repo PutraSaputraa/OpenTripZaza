@@ -2421,6 +2421,282 @@ button:disabled {
   line-height: 1.45;
 }
 
+.registration-management-page {
+  background: #f7f1e8;
+  margin: -1px;
+  padding: clamp(18px, 2vw, 24px);
+  border-radius: 24px;
+}
+
+.registration-management-head {
+  border-radius: 24px;
+  background: #fffdf8;
+  border-color: #e6cfa8;
+}
+
+.registration-summary-cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.registration-summary-cards button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  border: 1px solid #e6cfa8;
+  border-radius: 20px;
+  background: #ffffff;
+  color: #241a08;
+  padding: 18px;
+  text-align: left;
+  box-shadow: 0 1px 2px rgba(36, 26, 8, 0.06);
+  transition: box-shadow 160ms ease, transform 160ms ease, border-color 160ms ease;
+}
+
+.registration-summary-cards button:hover,
+.registration-summary-cards button:focus-visible,
+.registration-summary-cards button.is-active {
+  border-color: #c08a2e;
+  box-shadow: 0 16px 32px rgba(36, 26, 8, 0.1);
+  transform: translateY(-1px);
+}
+
+.registration-summary-cards span {
+  color: #6f5b2c;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.registration-summary-cards strong {
+  display: grid;
+  min-width: 42px;
+  height: 42px;
+  place-items: center;
+  border-radius: 999px;
+  background: #f7dfaa;
+  color: #241a08;
+  font-size: 20px;
+}
+
+.registration-approval-panel {
+  display: grid;
+  gap: 18px;
+  border: 1px solid #e6cfa8;
+  border-radius: 24px;
+  background: #fffdf8;
+  padding: clamp(16px, 2vw, 22px);
+  box-shadow: 0 1px 2px rgba(36, 26, 8, 0.06);
+}
+
+.registration-toolbar {
+  display: grid;
+  gap: 14px;
+}
+
+.segmented-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  border: 1px solid #e6cfa8;
+  border-radius: 999px;
+  background: #f7f1e8;
+  padding: 6px;
+}
+
+.segmented-tabs button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 42px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: #6f5b2c;
+  padding: 9px 14px;
+  font-weight: 800;
+}
+
+.segmented-tabs button.is-active {
+  background: linear-gradient(135deg, #f2d58a, #c08a2e);
+  color: #241a08;
+  box-shadow: 0 10px 22px rgba(192, 138, 46, 0.18);
+}
+
+.segmented-tabs button span {
+  display: grid;
+  min-width: 24px;
+  height: 24px;
+  place-items: center;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.55);
+  font-size: 12px;
+}
+
+.registration-filter-row {
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) minmax(190px, 260px);
+  gap: 12px;
+}
+
+.registration-filter-row label {
+  display: grid;
+  gap: 7px;
+  color: #6f5b2c;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.registration-filter-row input,
+.registration-filter-row select {
+  width: 100%;
+  border: 1px solid #e6cfa8;
+  border-radius: 16px;
+  background: #ffffff;
+  color: #241a08;
+  padding: 13px 14px;
+  text-transform: none;
+  outline: 0;
+}
+
+.registration-filter-row input:focus,
+.registration-filter-row select:focus {
+  border-color: #c08a2e;
+  box-shadow: 0 0 0 3px rgba(192, 138, 46, 0.16);
+}
+
+.registration-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 14px;
+}
+
+.registration-approval-card {
+  display: grid;
+  gap: 14px;
+  border: 1px solid #e6cfa8;
+  border-radius: 20px;
+  background: #ffffff;
+  padding: 18px;
+  box-shadow: 0 1px 2px rgba(36, 26, 8, 0.06);
+  transition: box-shadow 160ms ease, transform 160ms ease;
+}
+
+.registration-approval-card:hover {
+  box-shadow: 0 16px 32px rgba(36, 26, 8, 0.1);
+  transform: translateY(-1px);
+}
+
+.registration-approval-card-head {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.registration-approval-card h3 {
+  margin: 0;
+  color: #241a08;
+  font-size: 24px;
+  line-height: 1.08;
+}
+
+.registration-approval-card dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0;
+}
+
+.registration-approval-card dl div {
+  display: grid;
+  gap: 4px;
+  border: 1px solid rgba(230, 207, 168, 0.72);
+  border-radius: 16px;
+  background: #fffdf8;
+  padding: 10px;
+}
+
+.registration-approval-card dl .full {
+  grid-column: 1 / -1;
+}
+
+.registration-approval-card dt,
+.registration-card-actions label span,
+.registration-detail-sections dt {
+  color: #6f5b2c;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.registration-approval-card dd,
+.registration-detail-sections dd {
+  margin: 0;
+  color: #241a08;
+  overflow-wrap: anywhere;
+  line-height: 1.45;
+}
+
+.registration-card-actions {
+  display: grid;
+  grid-template-columns: auto minmax(190px, 1fr);
+  gap: 10px;
+  align-items: end;
+  border-top: 1px solid #e6cfa8;
+  padding-top: 14px;
+}
+
+.registration-card-actions label {
+  display: grid;
+  gap: 6px;
+}
+
+.registration-detail-modal {
+  width: min(860px, 100%);
+  background: #fffdf8;
+  border-color: #e6cfa8;
+  border-radius: 24px;
+}
+
+.registration-detail-sections {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  padding: 18px 0;
+}
+
+.registration-detail-sections section {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  border: 1px solid #e6cfa8;
+  border-radius: 20px;
+  background: #ffffff;
+  padding: 16px;
+}
+
+.registration-detail-sections h3 {
+  margin: 0;
+  color: #241a08;
+  font-size: 18px;
+}
+
+.registration-detail-sections dl {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+}
+
+.registration-detail-sections dl div {
+  display: grid;
+  gap: 4px;
+}
+
 .registration-card-status {
   display: grid;
   gap: 7px;
@@ -3098,6 +3374,9 @@ th {
   .faq-section,
   .admin-card-grid,
   .schedule-detail-grid,
+  .registration-summary-cards,
+  .registration-filter-row,
+  .registration-detail-sections,
   .registration-status-board,
   .hero-band {
     grid-template-columns: 1fr;
@@ -3239,6 +3518,19 @@ th {
 
   .registration-submit .primary-btn {
     width: 100%;
+  }
+
+  .registration-card-actions,
+  .registration-approval-card dl {
+    grid-template-columns: 1fr;
+  }
+
+  .segmented-tabs {
+    border-radius: 20px;
+  }
+
+  .segmented-tabs button {
+    flex: 1 1 100%;
   }
 
   .section-head {
@@ -4694,6 +4986,128 @@ body {
   border-color: var(--color-ink);
   background: transparent;
   color: var(--color-ink);
+}
+
+/* Final button contrast pass for admin, worker, and public nav */
+.app-shell .primary-btn,
+.app-shell button.primary-btn,
+.app-shell .modal-panel .primary-btn {
+  border: 1px solid #b8842b;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #f4d98d, #c08a2e);
+  color: #241a08;
+  box-shadow: 0 12px 24px rgba(184, 132, 43, 0.18);
+}
+
+.app-shell .primary-btn:hover,
+.app-shell button.primary-btn:hover,
+.app-shell .modal-panel .primary-btn:hover {
+  background: linear-gradient(135deg, #ffe5a1, #ae751f);
+  color: #241a08;
+  box-shadow: 0 16px 30px rgba(184, 132, 43, 0.24);
+}
+
+.app-shell .outline-btn,
+.app-shell button.outline-btn,
+.app-shell .table-actions button,
+.app-shell .logout-btn {
+  border: 1px solid rgba(184, 132, 43, 0.42);
+  border-radius: 999px;
+  background: #fffdf8;
+  color: #241a08;
+  box-shadow: 0 1px 2px rgba(36, 26, 8, 0.06);
+}
+
+.app-shell .outline-btn:hover,
+.app-shell button.outline-btn:hover,
+.app-shell .table-actions button:hover,
+.app-shell .logout-btn:hover {
+  border-color: #b8842b;
+  background: #f7e8c3;
+  color: #241a08;
+}
+
+.app-shell button:disabled,
+.app-shell .primary-btn:disabled,
+.app-shell .outline-btn:disabled,
+.app-shell select:disabled {
+  opacity: 0.58;
+  cursor: not-allowed;
+  filter: grayscale(0.1);
+}
+
+.app-shell .danger-btn {
+  border-color: #fecaca;
+  background: #fff7f7;
+  color: #991b1b;
+}
+
+.app-shell .danger-btn:hover {
+  border-color: #fca5a5;
+  background: #fee2e2;
+  color: #7f1d1d;
+}
+
+.public-nav .public-nav-center button,
+.home-page .public-nav .public-nav-center button,
+.home-page .public-nav.nav-on-hero .public-nav-center button {
+  border: 0;
+  background: transparent;
+  color: var(--color-ink);
+  text-shadow: none;
+}
+
+.public-nav .public-nav-center button:hover,
+.public-nav .public-nav-center button:focus-visible,
+.public-nav .public-nav-center button.is-active,
+.home-page .public-nav .public-nav-center button:hover,
+.home-page .public-nav .public-nav-center button:focus-visible,
+.home-page .public-nav .public-nav-center button.is-active {
+  border-radius: 999px;
+  background: #f4ead8;
+  color: var(--color-ink);
+  padding-inline: 14px;
+}
+
+.public-nav nav .nav-accent,
+.home-page .public-nav nav .nav-accent,
+.home-page .public-nav.nav-on-hero nav .nav-accent {
+  border-color: #b8842b;
+  background: linear-gradient(135deg, #f4d98d, #c08a2e);
+  color: #241a08;
+}
+
+.public-nav nav button:not(.nav-accent),
+.home-page .public-nav nav button:not(.nav-accent),
+.home-page .public-nav.nav-on-hero nav:last-child button:not(.nav-accent) {
+  border-color: rgba(36, 26, 8, 0.32);
+  background: #fffdf8;
+  color: var(--color-ink);
+}
+
+.public-nav .public-nav-center button,
+.home-page .public-nav .public-nav-center button,
+.home-page .public-nav.nav-on-hero .public-nav-center button {
+  min-height: auto;
+  border: 0;
+  background: transparent;
+  color: var(--color-ink);
+  padding: 6px 8px;
+  box-shadow: none;
+}
+
+.public-nav .public-nav-center button:hover,
+.public-nav .public-nav-center button:focus-visible,
+.public-nav .public-nav-center button.is-active,
+.home-page .public-nav .public-nav-center button:hover,
+.home-page .public-nav .public-nav-center button:focus-visible,
+.home-page .public-nav .public-nav-center button.is-active,
+.home-page .public-nav.nav-on-hero .public-nav-center button:hover,
+.home-page .public-nav.nav-on-hero .public-nav-center button:focus-visible,
+.home-page .public-nav.nav-on-hero .public-nav-center button.is-active {
+  background: #f4ead8;
+  color: var(--color-ink);
+  padding-inline: 14px;
 }
 
 /* Checkout summary image should be rectangular */
