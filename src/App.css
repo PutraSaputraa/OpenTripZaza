@@ -2438,6 +2438,143 @@ button:disabled {
   min-width: 0;
 }
 
+.admin-workers-layout {
+  display: grid;
+}
+
+.worker-accordion-list {
+  display: grid;
+  gap: 12px;
+}
+
+.worker-accordion-item {
+  border: 1px solid var(--color-line);
+  border-radius: 8px;
+  background: var(--color-surface);
+  overflow: hidden;
+}
+
+.worker-accordion-item summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  cursor: pointer;
+  list-style: none;
+  padding: 18px;
+}
+
+.worker-accordion-item summary::-webkit-details-marker {
+  display: none;
+}
+
+.worker-accordion-item summary span:first-child {
+  display: grid;
+  min-width: 0;
+  gap: 5px;
+}
+
+.worker-accordion-item summary strong {
+  color: var(--color-text);
+  font-size: 20px;
+  line-height: 1.18;
+}
+
+.worker-accordion-item summary small {
+  color: var(--color-muted);
+  overflow-wrap: anywhere;
+}
+
+.worker-job-count {
+  flex: 0 0 auto;
+  border: 1px solid var(--color-line);
+  border-radius: 999px;
+  background: var(--color-gold-soft);
+  color: var(--color-text);
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.worker-job-list {
+  display: grid;
+  gap: 10px;
+  border-top: 1px solid var(--color-line);
+  padding: 14px;
+}
+
+.worker-job-item {
+  display: grid;
+  grid-template-columns: minmax(180px, 0.7fr) minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: start;
+  border: 1px solid var(--color-line);
+  border-radius: 8px;
+  background: var(--color-panel);
+  padding: 14px;
+}
+
+.worker-job-item div {
+  display: grid;
+  gap: 5px;
+}
+
+.worker-job-item strong {
+  color: var(--color-text);
+  font-size: 16px;
+}
+
+.worker-job-item span,
+.worker-job-item p {
+  color: var(--color-muted);
+  line-height: 1.45;
+}
+
+.worker-job-item p {
+  margin: 0;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  background: rgba(5, 4, 3, 0.68);
+  padding: 22px;
+}
+
+.modal-panel {
+  width: min(620px, 100%);
+  max-height: min(720px, calc(100vh - 44px));
+  overflow-y: auto;
+  border: 1px solid var(--color-line);
+  border-radius: 8px;
+  background: var(--color-panel);
+  box-shadow: 0 24px 80px rgba(5, 4, 3, 0.32);
+  padding: 22px;
+}
+
+.modal-head {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 16px;
+  border-bottom: 1px solid var(--color-line);
+  padding-bottom: 16px;
+}
+
+.modal-head h2 {
+  margin: 0;
+  color: var(--color-text);
+  font-size: 28px;
+  line-height: 1.12;
+}
+
+.worker-modal .data-form.compact {
+  padding-top: 18px;
+}
+
 .two-col {
   display: grid;
   grid-template-columns: 1.2fr 1fr;
@@ -3086,6 +3223,18 @@ th {
 
   .dashboard-actions button {
     width: 100%;
+  }
+
+  .worker-accordion-item summary,
+  .worker-job-item,
+  .modal-head {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .worker-job-count {
+    width: max-content;
   }
 
   .registration-submit .primary-btn {

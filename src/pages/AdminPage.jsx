@@ -26,7 +26,6 @@ const normalizeTripForm = (trip) => {
     price: 0,
     quota: 10,
     slots: 10,
-    workerCount: 1,
     isPrivateTrip: false,
     imageUrl: '',
     imageUrls: [],
@@ -113,9 +112,7 @@ export function AdminTrips(props) {
           <button className="primary-btn" onClick={() => props.navigate('/admin/open-trip/tambah')}>Tambah cave trip</button>
         </div>
         <div className="admin-trip-grid">
-          {props.trips.length ? props.trips.map((trip) => {
-            const workerCount = trip.workerCount || props.jobs.filter((job) => job.tripId === trip.id).length || 1
-            return (
+          {props.trips.length ? props.trips.map((trip) => (
               <article className="admin-trip-card" key={trip.id}>
                 <div className="admin-trip-card-head">
                   <div>
@@ -136,15 +133,13 @@ export function AdminTrips(props) {
                   {!trip.isPrivateTrip && <div><dt><span className="asset-icon icon-people" aria-hidden="true" />Kuota</dt><dd>{trip.quota} peserta</dd></div>}
                   {!trip.isPrivateTrip && <div><dt><span className="asset-icon icon-ticket" aria-hidden="true" />Slot</dt><dd>{trip.slots} tersedia</dd></div>}
                   <div><dt>Jenis</dt><dd>{trip.isPrivateTrip ? 'Private cave tour' : 'Open trip goa'}</dd></div>
-                  <div><dt><span className="asset-icon icon-people" aria-hidden="true" />Pekerja</dt><dd>{workerCount} orang</dd></div>
                 </dl>
                 <div className="admin-trip-actions">
                   <button className="outline-btn" onClick={() => props.navigate(`/admin/open-trip/edit/${trip.id}`)}>Edit</button>
                   <button className="outline-btn danger-btn" onClick={() => props.deleteTrip(trip.id)}>Hapus</button>
                 </div>
               </article>
-            )
-          }) : <p className="empty-state">Belum ada cave trip.</p>}
+          )) : <p className="empty-state">Belum ada cave trip.</p>}
         </div>
       </section>
     </AdminShell>
@@ -153,11 +148,7 @@ export function AdminTrips(props) {
 
 export function TripForm({ tripId, trips, saveTrip, navigate, ...props }) {
   const selected = trips.find((item) => item.id === tripId)
-  const selectedJobCount = selected ? props.jobs.filter((job) => job.tripId === selected.id).length : 1
-  const [form, setForm] = useState({
-    ...normalizeTripForm(selected),
-    workerCount: selected?.workerCount || selectedJobCount || 1,
-  })
+  const [form, setForm] = useState(normalizeTripForm(selected))
 
   const onSubmit = async (event) => {
     event.preventDefault()
@@ -173,7 +164,6 @@ export function TripForm({ tripId, trips, saveTrip, navigate, ...props }) {
       price: Number(form.price),
       quota: Number(form.quota),
       slots: Number(form.slots),
-      workerCount: Math.max(1, Number(form.workerCount) || 1),
       isPrivateTrip: Boolean(form.isPrivateTrip),
       imageUrl: imageUrls[0] || '',
       imageUrls,
@@ -198,7 +188,6 @@ export function TripForm({ tripId, trips, saveTrip, navigate, ...props }) {
           <label>Harga<input required type="number" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} /></label>
           <label>Kuota peserta<input required type="number" value={form.quota} onChange={(e) => setForm({ ...form, quota: e.target.value })} /></label>
           <label>Slot tersedia<input required type="number" value={form.slots} onChange={(e) => setForm({ ...form, slots: e.target.value })} /></label>
-          <label>Kebutuhan pekerja<input required type="number" min="1" value={form.workerCount} onChange={(e) => setForm({ ...form, workerCount: e.target.value })} /></label>
           <label>Jenis trip<select value={form.isPrivateTrip ? 'private' : 'open'} onChange={(e) => setForm({ ...form, isPrivateTrip: e.target.value === 'private' })}><option value="open">Open trip goa</option><option value="private">Private cave tour</option></select></label>
           <label>Status<select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>{tripStatuses.map((status) => <option key={status}>{status}</option>)}</select></label>
           <label className="full">Link gambar trip<textarea placeholder={'https://static.uc.ac.id/htb/2019/01/maxresdefault.jpg\nhttps://contoh.com/gambar-kedua.jpg'} value={form.imageUrlsText} onChange={(e) => setForm({ ...form, imageUrlsText: e.target.value })} /></label>
@@ -274,7 +263,7 @@ export function AdminSchedule(props) {
             const tripJobs = jobs.filter((job) => job.tripId === trip.id)
             const assignedJobs = tripJobs.filter((job) => job.worker).length
             const approvedCount = participants.reduce((sum, item) => sum + Number(item.participants), 0)
-            const workerTarget = tripJobs.length || trip.workerCount || 1
+            const workerTarget = tripJobs.length
             return (
               <article className="schedule-card" key={trip.id}>
                 <div className="schedule-card-head">
@@ -428,7 +417,7 @@ function AdminScheduleDetail({ trip, registrations, jobs, setRegistrationStatus,
           <Metric label="Total pendaftar" value={tripRegistrations.length} />
           <Metric label="Menunggu approval" value={waitingRegistrations.length} />
           <Metric label="Peserta disetujui" value={`${approvedCount}/${trip.quota}`} />
-          <Metric label="Pekerja terisi" value={`${assignedJobs.length}/${tripJobs.length || trip.workerCount || 1}`} />
+          <Metric label="Pekerja terisi" value={`${assignedJobs.length}/${tripJobs.length}`} />
         </section>
 
         <section className="schedule-detail-grid">
@@ -443,7 +432,7 @@ function AdminScheduleDetail({ trip, registrations, jobs, setRegistrationStatus,
               <table>
                 <thead><tr><th>Kebutuhan</th><th>Booking</th><th>Pekerja</th><th>Status</th></tr></thead>
                 <tbody>{tripJobs.length ? tripJobs.map((job) => (
-                  <tr key={job.id}><td>{job.addonLabel || `${job.slot || 1} dari ${job.totalWorkers || trip.workerCount || 1}`}</td><td>{job.customerName || '-'}</td><td>{job.worker || '-'}</td><td><Badge status={job.status} /></td></tr>
+                  <tr key={job.id}><td>{job.addonLabel || 'Job trip'}</td><td>{job.customerName || '-'}</td><td>{job.worker || '-'}</td><td><Badge status={job.status} /></td></tr>
                 )) : <tr><td colSpan="4">Belum ada job add-on untuk trip ini.</td></tr>}</tbody>
               </table>
             </div>
@@ -497,9 +486,11 @@ function RegistrationStatusColumn({ title, items, setRegistrationStatus }) {
 }
 
 export function AdminWorkers(props) {
-  const { workerAccounts, createWorkerAccount } = props
+  const { workerAccounts, createWorkerAccount, jobs, trips } = props
   const [form, setForm] = useState({ name: '', email: '', password: '' })
   const [error, setError] = useState('')
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const workers = [accounts.worker, ...workerAccounts]
 
   const onSubmit = async (event) => {
     event.preventDefault()
@@ -520,6 +511,13 @@ export function AdminWorkers(props) {
 
     setForm({ name: '', email: '', password: '' })
     setError('')
+    setIsModalOpen(false)
+  }
+
+  const closeModal = () => {
+    setIsModalOpen(false)
+    setError('')
+    setForm({ name: '', email: '', password: '' })
   }
 
   return (
@@ -531,30 +529,67 @@ export function AdminWorkers(props) {
             <h2>Buat dan pantau akun pekerja operasional.</h2>
             <p className="muted">Akun ini dipakai pekerja untuk mengambil job dan mengubah status tugas.</p>
           </div>
+          <button className="primary-btn" type="button" onClick={() => setIsModalOpen(true)}>Buat akun pekerja</button>
         </div>
-        <section className="two-col admin-workers-layout">
-          <DataPanel title="Buat Akun Pekerja">
-            <form className="data-form compact" onSubmit={onSubmit}>
-              {error && <p className="form-error">{error}</p>}
-              <label>Nama pekerja<input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></label>
-              <label>Email<input required type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></label>
-              <label>Password<input required type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} /></label>
-              <button className="primary-btn" type="submit">Buat akun pekerja</button>
-            </form>
-          </DataPanel>
+
+        <section className="admin-workers-layout">
           <DataPanel title="Daftar Akun Pekerja">
-            <div className="table-wrap">
-              <table>
-                <thead><tr><th>Nama</th><th>Email</th><th>Role</th></tr></thead>
-                <tbody>
-                  {[accounts.worker, ...workerAccounts].map((worker) => (
-                    <tr key={worker.email}><td>{worker.name}</td><td>{worker.email}</td><td>{worker.role}</td></tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="worker-accordion-list">
+              {workers.map((worker) => {
+                const workerJobs = jobs
+                  .filter((job) => job.worker === worker.name)
+                  .sort((a, b) => Number(b.id) - Number(a.id))
+                return (
+                  <details className="worker-accordion-item" key={worker.email}>
+                    <summary>
+                      <span>
+                        <strong>{worker.name}</strong>
+                        <small>{worker.email}</small>
+                      </span>
+                      <span className="worker-job-count">{workerJobs.length} job</span>
+                    </summary>
+                    <div className="worker-job-list">
+                      {workerJobs.length ? workerJobs.map((job) => {
+                        const trip = trips.find((item) => item.id === job.tripId)
+                        return (
+                          <article className="worker-job-item" key={job.id}>
+                            <div>
+                              <strong>{job.addonLabel || 'Job trip'}</strong>
+                              <span>{trip?.name || 'Cave trip'} - {formatDate(job.requestedDate || trip?.date)}</span>
+                            </div>
+                            <p>{job.task}</p>
+                            <Badge status={job.status} />
+                          </article>
+                        )
+                      }) : <p className="empty-column">Pekerja ini belum mengambil job.</p>}
+                    </div>
+                  </details>
+                )
+              })}
             </div>
           </DataPanel>
         </section>
+
+        {isModalOpen && (
+          <div className="modal-backdrop" role="presentation" onClick={closeModal}>
+            <section className="modal-panel worker-modal" role="dialog" aria-modal="true" aria-labelledby="worker-modal-title" onClick={(event) => event.stopPropagation()}>
+              <div className="modal-head">
+                <div>
+                  <p className="eyebrow">Akun pekerja baru</p>
+                  <h2 id="worker-modal-title">Buat Akun Pekerja</h2>
+                </div>
+                <button className="outline-btn" type="button" onClick={closeModal}>Tutup</button>
+              </div>
+              <form className="data-form compact" onSubmit={onSubmit}>
+                {error && <p className="form-error">{error}</p>}
+                <label>Nama pekerja<input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></label>
+                <label>Email<input required type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></label>
+                <label>Password<input required type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} /></label>
+                <button className="primary-btn" type="submit">Buat akun pekerja</button>
+              </form>
+            </section>
+          </div>
+        )}
       </section>
     </AdminShell>
   )
@@ -568,7 +603,7 @@ export function JobTable({ jobs, trips, compact }) {
         <thead><tr><th>Cave trip</th><th>Destinasi</th><th>Tanggal</th><th>Kebutuhan</th><th>Tugas</th><th>Status job</th><th>Pekerja</th></tr></thead>
         <tbody>{rows.map((job) => {
           const trip = trips.find((item) => item.id === job.tripId)
-          return <tr key={job.id}><td>{trip?.name}</td><td>{trip?.destination}</td><td>{formatDate(job.requestedDate || trip?.date)}</td><td>{job.addonLabel || `${job.slot || 1} dari ${job.totalWorkers || trip?.workerCount || 1}`}</td><td>{job.task}</td><td><Badge status={job.status} /></td><td>{job.worker || '-'}</td></tr>
+          return <tr key={job.id}><td>{trip?.name}</td><td>{trip?.destination}</td><td>{formatDate(job.requestedDate || trip?.date)}</td><td>{job.addonLabel || 'Job trip'}</td><td>{job.task}</td><td><Badge status={job.status} /></td><td>{job.worker || '-'}</td></tr>
         })}</tbody>
       </table>
     </div>
