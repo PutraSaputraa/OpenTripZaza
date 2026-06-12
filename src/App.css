@@ -5173,6 +5173,79 @@ body {
   height: 34px;
 }
 
+/* Public navbar final polish */
+.public-nav .public-nav-center button,
+.home-page .public-nav .public-nav-center button,
+.home-page .public-nav.nav-on-hero .public-nav-center button,
+.public-nav nav.public-nav-center button:not(.nav-accent),
+.home-page .public-nav nav.public-nav-center button:not(.nav-accent),
+.home-page .public-nav.nav-on-hero nav.public-nav-center button:not(.nav-accent) {
+  min-height: auto;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--color-ink);
+  padding: 8px 4px;
+  box-shadow: none;
+  text-decoration: none;
+}
+
+.public-nav .public-nav-center button:hover,
+.public-nav .public-nav-center button:focus-visible,
+.home-page .public-nav .public-nav-center button:hover,
+.home-page .public-nav .public-nav-center button:focus-visible,
+.home-page .public-nav.nav-on-hero .public-nav-center button:hover,
+.home-page .public-nav.nav-on-hero .public-nav-center button:focus-visible {
+  background: transparent;
+  color: var(--color-ink);
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 8px;
+}
+
+.public-nav .public-nav-center button.is-active,
+.home-page .public-nav .public-nav-center button.is-active,
+.home-page .public-nav.nav-on-hero .public-nav-center button.is-active {
+  background: transparent;
+  color: var(--color-ink);
+  text-decoration: none;
+}
+
+.public-nav > nav:last-child button:not(.nav-accent),
+.home-page .public-nav > nav:last-child button:not(.nav-accent),
+.home-page .public-nav.nav-on-hero > nav:last-child button:not(.nav-accent) {
+  border: 1px solid rgba(36, 26, 8, 0.28);
+  border-radius: 10px;
+  background: #fffdf8;
+  color: var(--color-ink);
+}
+
+.public-nav > nav:last-child .nav-accent,
+.home-page .public-nav > nav:last-child .nav-accent,
+.home-page .public-nav.nav-on-hero > nav:last-child .nav-accent {
+  border: 1px solid #b8842b;
+  border-radius: 10px;
+  background: #d6a13b;
+  color: #241a08;
+}
+
+/* Remove carousel glow/shadow band on the home hero */
+.home-page .destination-carousel::after,
+.destination-carousel::after {
+  display: none;
+  background: none;
+}
+
+.home-page .destination-slide,
+.destination-slide,
+.destination-slide-active {
+  box-shadow: none;
+}
+
+.home-page .hero-search-form {
+  box-shadow: none;
+}
+
 .participant-detail-list {
   display: grid;
   gap: 8px;
