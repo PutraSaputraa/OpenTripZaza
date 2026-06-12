@@ -2569,6 +2569,80 @@ button:disabled {
   box-shadow: 0 0 0 3px rgba(192, 138, 46, 0.16);
 }
 
+/* Hard reset landing navbar placement to prevent overlap */
+.public-nav .public-nav-inner,
+.home-page .public-nav .public-nav-inner,
+.home-page .public-nav.nav-on-hero .public-nav-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 22px;
+}
+
+.public-nav .brand-logo-btn,
+.home-page .public-nav .brand-logo-btn {
+  flex: 0 0 auto;
+}
+
+.public-nav.nav-has-search .public-nav-search,
+.home-page .public-nav.nav-has-search .public-nav-search {
+  flex: 0 0 260px;
+  width: 260px;
+  max-width: 260px;
+  order: 0;
+}
+
+.public-nav.nav-has-search .public-nav-center,
+.home-page .public-nav.nav-has-search .public-nav-center,
+.public-nav .public-nav-center,
+.home-page .public-nav .public-nav-center {
+  position: static;
+  display: flex;
+  flex: 1 1 auto;
+  justify-content: center;
+  min-width: 0;
+  gap: 24px;
+  order: 0;
+}
+
+.public-nav.nav-has-search .public-nav-center button,
+.home-page .public-nav.nav-has-search .public-nav-center button,
+.public-nav .public-nav-center button,
+.home-page .public-nav .public-nav-center button {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.public-nav .public-nav-actions,
+.home-page .public-nav .public-nav-actions {
+  display: flex;
+  flex: 0 0 auto;
+  justify-content: flex-end;
+  gap: 10px;
+  order: 0;
+}
+
+.public-nav-search .compact-search-form,
+.home-page .public-nav-search .compact-search-form {
+  width: 260px;
+}
+
+@media (max-width: 1120px) {
+  .public-nav.nav-has-search .public-nav-search,
+  .home-page .public-nav.nav-has-search .public-nav-search,
+  .public-nav-search .compact-search-form,
+  .home-page .public-nav-search .compact-search-form {
+    width: 220px;
+    max-width: 220px;
+    flex-basis: 220px;
+  }
+
+  .public-nav.nav-has-search .public-nav-center,
+  .home-page .public-nav.nav-has-search .public-nav-center {
+    gap: 16px;
+  }
+}
+
 /* Final public navbar structure: full-width band with centered inner content */
 .public-nav,
 .home-page .public-nav,
@@ -6210,6 +6284,76 @@ body {
   box-shadow: 0 0 0 3px rgba(192, 138, 46, 0.16);
 }
 
+/* Absolute final navbar placement override */
+.public-nav .public-nav-inner,
+.home-page .public-nav .public-nav-inner,
+.home-page .public-nav.nav-on-hero .public-nav-inner {
+  display: flex !important;
+  align-items: center;
+  justify-content: space-between;
+  gap: 22px;
+}
+
+.public-nav.nav-has-search .public-nav-search,
+.home-page .public-nav.nav-has-search .public-nav-search {
+  flex: 0 0 260px !important;
+  width: 260px !important;
+  max-width: 260px !important;
+  min-width: 0;
+  order: 0;
+}
+
+.public-nav-search .compact-search-form,
+.home-page .public-nav-search .compact-search-form {
+  width: 260px !important;
+  min-width: 0;
+}
+
+.public-nav .public-nav-center,
+.home-page .public-nav .public-nav-center,
+.home-page .public-nav.nav-on-hero .public-nav-center {
+  position: static !important;
+  display: flex !important;
+  flex: 1 1 auto !important;
+  justify-content: center;
+  min-width: 0;
+  gap: 24px;
+  order: 0;
+}
+
+.public-nav .public-nav-center button,
+.home-page .public-nav .public-nav-center button,
+.home-page .public-nav.nav-on-hero .public-nav-center button {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.public-nav .public-nav-actions,
+.home-page .public-nav .public-nav-actions,
+.home-page .public-nav.nav-on-hero .public-nav-actions {
+  display: flex !important;
+  flex: 0 0 auto !important;
+  justify-content: flex-end;
+  gap: 10px;
+  order: 0;
+}
+
+@media (max-width: 1120px) {
+  .public-nav.nav-has-search .public-nav-search,
+  .home-page .public-nav.nav-has-search .public-nav-search,
+  .public-nav-search .compact-search-form,
+  .home-page .public-nav-search .compact-search-form {
+    width: 220px !important;
+    max-width: 220px !important;
+    flex-basis: 220px !important;
+  }
+
+  .public-nav .public-nav-center,
+  .home-page .public-nav .public-nav-center {
+    gap: 16px;
+  }
+}
+
 /* Public navbar on inner pages should sit on a full white band */
 .public-page:not(.home-page) .public-nav {
   width: 100%;
@@ -6218,4 +6362,35 @@ body {
   background: #ffffff;
   border-bottom: 1px solid #e6cfa8;
   padding-inline: max(24px, calc((100vw - 1400px) / 2 + 24px));
+}
+
+/* Final public navbar band: full background on all user pages */
+.public-nav,
+.home-page .public-nav,
+.home-page .public-nav.nav-on-hero,
+.public-page:not(.home-page) .public-nav {
+  position: sticky;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  width: 100%;
+  max-width: none;
+  transform: none;
+  border-radius: 0;
+  border: 0;
+  border-bottom: 1px solid #e7d2ac;
+  background: #fffdf8;
+  box-shadow: 0 2px 14px rgba(36, 26, 8, 0.05);
+  padding: 0;
+}
+
+.public-nav .public-nav-inner,
+.home-page .public-nav .public-nav-inner,
+.home-page .public-nav.nav-on-hero .public-nav-inner,
+.public-page:not(.home-page) .public-nav .public-nav-inner {
+  width: min(100%, 1280px);
+  min-height: 72px;
+  margin: 0 auto;
+  padding: 0 clamp(18px, 3vw, 36px);
 }
