@@ -5780,6 +5780,99 @@ body {
   grid-template-columns: 6px minmax(0, 1fr);
 }
 
+/* Landing navbar layout fix: compact search, no overlap */
+.public-nav.nav-has-search,
+.home-page .public-nav.nav-has-search,
+.home-page .public-nav.nav-has-search.nav-on-hero {
+  grid-template-columns: auto 300px minmax(0, 1fr) auto;
+  width: min(calc(100% - 48px), 1280px);
+  gap: clamp(14px, 1.6vw, 24px);
+  align-items: center;
+}
+
+.public-nav.nav-has-search .brand-logo-btn img,
+.home-page .public-nav.nav-has-search .brand-logo-btn img {
+  height: 36px;
+}
+
+.public-nav-search {
+  width: 300px;
+  max-width: 300px;
+}
+
+.public-nav-search .compact-search-form,
+.home-page .public-nav-search .compact-search-form {
+  width: 100%;
+  min-width: 0;
+  grid-template-columns: 28px minmax(0, 1fr) 32px;
+  min-height: 38px;
+  padding: 4px 5px 4px 10px;
+}
+
+.public-nav-search .compact-search-form input {
+  min-width: 0;
+  font-size: 14px;
+}
+
+.public-nav-search .compact-search-form .search-submit {
+  width: 30px;
+  height: 30px;
+  min-height: 30px;
+  padding: 0;
+}
+
+.public-nav.nav-has-search .public-nav-center,
+.home-page .public-nav.nav-has-search .public-nav-center {
+  justify-content: center;
+  flex-wrap: nowrap;
+  gap: clamp(14px, 1.7vw, 24px);
+  min-width: 0;
+}
+
+.public-nav.nav-has-search .public-nav-center button,
+.home-page .public-nav.nav-has-search .public-nav-center button {
+  white-space: nowrap;
+  font-size: 15px;
+}
+
+.public-nav.nav-has-search > nav:last-child,
+.home-page .public-nav.nav-has-search > nav:last-child {
+  flex-wrap: nowrap;
+  justify-content: flex-end;
+}
+
+@media (max-width: 1180px) {
+  .public-nav.nav-has-search,
+  .home-page .public-nav.nav-has-search,
+  .home-page .public-nav.nav-has-search.nav-on-hero {
+    grid-template-columns: auto minmax(220px, 280px) auto;
+  }
+
+  .public-nav.nav-has-search .public-nav-center,
+  .home-page .public-nav.nav-has-search .public-nav-center {
+    grid-column: 1 / -1;
+    order: 4;
+    justify-content: center;
+  }
+
+  .public-nav-search {
+    width: min(280px, 34vw);
+  }
+}
+
+@media (max-width: 760px) {
+  .public-nav.nav-has-search,
+  .home-page .public-nav.nav-has-search,
+  .home-page .public-nav.nav-has-search.nav-on-hero {
+    grid-template-columns: 1fr;
+  }
+
+  .public-nav-search {
+    width: 100%;
+    max-width: none;
+  }
+}
+
 /* Final form polish across user, admin, and worker */
 .data-form,
 .data-form.section-fields,
@@ -5925,4 +6018,14 @@ body {
 .registration-filter-row select:focus {
   border-color: #c08a2e;
   box-shadow: 0 0 0 3px rgba(192, 138, 46, 0.16);
+}
+
+/* Public navbar on inner pages should sit on a full white band */
+.public-page:not(.home-page) .public-nav {
+  width: 100%;
+  max-width: none;
+  border-radius: 0;
+  background: #ffffff;
+  border-bottom: 1px solid #e6cfa8;
+  padding-inline: max(24px, calc((100vw - 1400px) / 2 + 24px));
 }
