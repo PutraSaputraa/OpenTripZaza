@@ -2569,6 +2569,196 @@ button:disabled {
   box-shadow: 0 0 0 3px rgba(192, 138, 46, 0.16);
 }
 
+/* Final public navbar structure: full-width band with centered inner content */
+.public-nav,
+.home-page .public-nav,
+.home-page .public-nav.nav-on-hero,
+.public-page:not(.home-page) .public-nav {
+  position: sticky;
+  top: 0;
+  left: auto;
+  right: auto;
+  z-index: 50;
+  width: 100%;
+  max-width: none;
+  transform: none;
+  border-radius: 0;
+  border: 0;
+  border-bottom: 1px solid #e7d2ac;
+  background: linear-gradient(180deg, #fffdf8, #fbf5ea);
+  box-shadow: 0 2px 14px rgba(36, 26, 8, 0.05);
+  padding: 0;
+}
+
+.public-nav-inner {
+  display: grid;
+  grid-template-columns: auto minmax(210px, 300px) minmax(0, 1fr) auto;
+  gap: clamp(18px, 2.2vw, 34px);
+  align-items: center;
+  width: min(100%, 1280px);
+  min-height: 72px;
+  margin: 0 auto;
+  padding: 0 clamp(18px, 3vw, 36px);
+}
+
+.public-nav:not(.nav-has-search) .public-nav-inner {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+}
+
+.public-nav:not(.nav-has-search) .public-nav-center {
+  grid-column: 2;
+}
+
+.public-nav:not(.nav-has-search) .public-nav-actions {
+  grid-column: 3;
+}
+
+.public-nav .brand-logo-btn img,
+.home-page .public-nav .brand-logo-btn img {
+  height: 42px;
+}
+
+.public-nav-search {
+  width: 100%;
+  max-width: 300px;
+}
+
+.public-nav-search .compact-search-form,
+.home-page .public-nav-search .compact-search-form {
+  grid-template-columns: 28px minmax(0, 1fr) 32px;
+  min-height: 40px;
+  border-radius: 999px;
+  padding: 4px 5px 4px 11px;
+}
+
+.public-nav-search .compact-search-form input {
+  min-width: 0;
+  font-size: 14px;
+}
+
+.public-nav-search .compact-search-form .search-submit {
+  width: 30px;
+  height: 30px;
+  min-height: 30px;
+  padding: 0;
+}
+
+.public-nav-center,
+.public-nav-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+}
+
+.public-nav-center {
+  justify-content: center;
+  gap: clamp(16px, 2vw, 28px);
+}
+
+.public-nav-actions {
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.public-nav .public-nav-center button,
+.home-page .public-nav .public-nav-center button,
+.home-page .public-nav.nav-on-hero .public-nav-center button {
+  white-space: nowrap;
+  font-size: 15px;
+}
+
+.public-nav-actions button:not(.nav-accent),
+.home-page .public-nav-actions button:not(.nav-accent) {
+  min-height: 40px;
+  border: 1px solid rgba(36, 26, 8, 0.28);
+  border-radius: 10px;
+  background: #fffdf8;
+  color: #241a08;
+  padding: 8px 18px;
+}
+
+.public-nav-actions .nav-accent,
+.home-page .public-nav-actions .nav-accent {
+  min-height: 40px;
+  border: 1px solid #b8842b;
+  border-radius: 10px;
+  background: #d49a2a;
+  color: #241a08;
+  padding: 8px 20px;
+}
+
+.nav-menu-toggle {
+  display: none;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border: 1px solid #e7d2ac;
+  border-radius: 10px;
+  background: #fffdf8;
+  padding: 9px;
+}
+
+.nav-menu-toggle span {
+  display: block;
+  width: 18px;
+  height: 2px;
+  border-radius: 999px;
+  background: #241a08;
+}
+
+@media (max-width: 1020px) {
+  .public-nav-inner,
+  .public-nav:not(.nav-has-search) .public-nav-inner {
+    grid-template-columns: auto 1fr auto;
+  }
+
+  .public-nav-search {
+    grid-column: 1 / -1;
+    order: 5;
+    max-width: none;
+    display: none;
+  }
+
+  .nav-menu-toggle {
+    display: grid;
+    justify-self: end;
+  }
+
+  .public-nav-center,
+  .public-nav-actions {
+    display: none;
+  }
+
+  .public-nav.is-menu-open .public-nav-center,
+  .public-nav.is-menu-open .public-nav-actions,
+  .public-nav.is-menu-open .public-nav-search {
+    display: flex;
+  }
+
+  .public-nav.is-menu-open .public-nav-search {
+    display: block;
+  }
+
+  .public-nav.is-menu-open .public-nav-center,
+  .public-nav.is-menu-open .public-nav-actions {
+    grid-column: 1 / -1;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 760px) {
+  .public-nav-inner {
+    min-height: 64px;
+    padding-inline: 14px;
+  }
+
+  .public-nav .brand-logo-btn img,
+  .home-page .public-nav .brand-logo-btn img {
+    height: 34px;
+  }
+}
+
 .registration-card-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
