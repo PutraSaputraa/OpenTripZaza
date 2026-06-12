@@ -5092,8 +5092,12 @@ body {
   border: 0;
   background: transparent;
   color: var(--color-ink);
-  padding: 6px 8px;
+  padding: 8px 4px;
   box-shadow: none;
+  border-radius: 0;
+  text-decoration: none;
+  text-underline-offset: 8px;
+  text-decoration-thickness: 2px;
 }
 
 .public-nav .public-nav-center button:hover,
@@ -5105,9 +5109,37 @@ body {
 .home-page .public-nav.nav-on-hero .public-nav-center button:hover,
 .home-page .public-nav.nav-on-hero .public-nav-center button:focus-visible,
 .home-page .public-nav.nav-on-hero .public-nav-center button.is-active {
-  background: #f4ead8;
+  background: transparent;
   color: var(--color-ink);
-  padding-inline: 14px;
+  padding-inline: 4px;
+  text-decoration: underline;
+}
+
+.public-nav > nav:last-child button:not(.nav-accent),
+.home-page .public-nav > nav:last-child button:not(.nav-accent),
+.home-page .public-nav.nav-on-hero > nav:last-child button:not(.nav-accent) {
+  border: 1px solid rgba(36, 26, 8, 0.28);
+  border-radius: 10px;
+  background: #fffdf8;
+  color: var(--color-ink);
+  box-shadow: none;
+}
+
+.public-nav > nav:last-child button:not(.nav-accent):hover,
+.home-page .public-nav > nav:last-child button:not(.nav-accent):hover,
+.home-page .public-nav.nav-on-hero > nav:last-child button:not(.nav-accent):hover {
+  background: #ffffff;
+  color: var(--color-ink);
+}
+
+.public-nav > nav:last-child .nav-accent,
+.home-page .public-nav > nav:last-child .nav-accent,
+.home-page .public-nav.nav-on-hero > nav:last-child .nav-accent {
+  border: 1px solid #b8842b;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #f1cf76, #d49a2d);
+  color: #241a08;
+  box-shadow: none;
 }
 
 /* Checkout summary image should be rectangular */
