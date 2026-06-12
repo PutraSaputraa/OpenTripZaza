@@ -47,16 +47,11 @@ export function PublicNav({ navigate, session, logout }) {
   }
 
   return (
-    <header className={`public-nav ${isOverHero ? 'nav-on-hero' : ''} ${isHomePage ? 'nav-has-search' : ''} ${isMenuOpen ? 'is-menu-open' : ''}`}>
+    <header className={`public-nav ${isOverHero ? 'nav-on-hero' : ''} ${isMenuOpen ? 'is-menu-open' : ''}`}>
       <div className="public-nav-inner">
         <button className="brand brand-logo-btn" onClick={goHome} aria-label="Open Cave Trip">
           <img src={horizontalLogo} alt="Open Cave Trip" />
         </button>
-        {isHomePage && (
-          <div className="public-nav-search">
-            <SearchTripForm navigate={navigate} compact />
-          </div>
-        )}
         <button className="nav-menu-toggle" type="button" onClick={() => setIsMenuOpen((current) => !current)} aria-expanded={isMenuOpen} aria-label="Buka menu">
           <span />
           <span />
@@ -286,6 +281,9 @@ export function CustomerCatalog({ trips, navigate, session, logout }) {
     <main className="public-page home-page">
       <PublicNav navigate={navigate} session={session} logout={logout} />
       <section className="search-hero" style={{ '--landing-bg': `url(${backgroundLandingPageUser})` }}>
+        <div className="hero-content">
+          <SearchTripForm navigate={navigate} />
+        </div>
         <DestinationCarousel trips={featuredTrips} navigate={navigate} />
       </section>
 

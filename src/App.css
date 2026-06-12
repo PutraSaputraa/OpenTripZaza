@@ -6394,3 +6394,216 @@ body {
   margin: 0 auto;
   padding: 0 clamp(18px, 3vw, 36px);
 }
+
+/* Final public navbar layout: logo left, menu centered, auth right */
+.public-nav,
+.home-page .public-nav,
+.home-page .public-nav.nav-on-hero,
+.public-page:not(.home-page) .public-nav {
+  background: #fffdf8 !important;
+  border-bottom: 1px solid #e7d2ac !important;
+  box-shadow: 0 2px 12px rgba(36, 26, 8, 0.04) !important;
+}
+
+.public-nav .public-nav-inner,
+.home-page .public-nav .public-nav-inner,
+.home-page .public-nav.nav-on-hero .public-nav-inner,
+.public-page:not(.home-page) .public-nav .public-nav-inner {
+  display: grid !important;
+  grid-template-columns: minmax(180px, 1fr) auto minmax(180px, 1fr);
+  align-items: center;
+  gap: clamp(16px, 2.4vw, 34px);
+  width: min(100%, 1400px);
+  min-height: 72px;
+  margin: 0 auto;
+  padding: 0 clamp(20px, 3vw, 48px);
+}
+
+.public-nav .brand-logo-btn,
+.home-page .public-nav .brand-logo-btn,
+.home-page .public-nav.nav-on-hero .brand-logo-btn {
+  grid-column: 1;
+  justify-self: start;
+  width: auto;
+  min-width: 0;
+}
+
+.public-nav .brand-logo-btn img,
+.home-page .public-nav .brand-logo-btn img,
+.home-page .public-nav.nav-on-hero .brand-logo-btn img {
+  width: clamp(132px, 11vw, 170px);
+  height: auto;
+  max-height: 42px;
+  object-fit: contain;
+}
+
+.public-nav .public-nav-center,
+.home-page .public-nav .public-nav-center,
+.home-page .public-nav.nav-on-hero .public-nav-center,
+.public-page:not(.home-page) .public-nav .public-nav-center {
+  position: static !important;
+  grid-column: 2;
+  justify-self: center;
+  display: flex !important;
+  flex: none !important;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(24px, 3vw, 42px);
+  min-width: 0;
+  transform: none !important;
+}
+
+.public-nav .public-nav-center button,
+.home-page .public-nav .public-nav-center button,
+.home-page .public-nav.nav-on-hero .public-nav-center button,
+.public-page:not(.home-page) .public-nav .public-nav-center button {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent !important;
+  color: #1b1711 !important;
+  box-shadow: none !important;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.public-nav .public-nav-center button:hover,
+.public-nav .public-nav-center button:focus-visible,
+.public-nav .public-nav-center button.is-active,
+.home-page .public-nav .public-nav-center button:hover,
+.home-page .public-nav .public-nav-center button:focus-visible,
+.home-page .public-nav .public-nav-center button.is-active,
+.home-page .public-nav.nav-on-hero .public-nav-center button:hover,
+.home-page .public-nav.nav-on-hero .public-nav-center button:focus-visible,
+.home-page .public-nav.nav-on-hero .public-nav-center button.is-active {
+  background: transparent !important;
+  color: #1b1711 !important;
+  text-decoration: none !important;
+  box-shadow: none !important;
+}
+
+.public-nav .public-nav-actions,
+.home-page .public-nav .public-nav-actions,
+.home-page .public-nav.nav-on-hero .public-nav-actions,
+.public-page:not(.home-page) .public-nav .public-nav-actions {
+  grid-column: 3;
+  justify-self: end;
+  display: flex !important;
+  flex: none !important;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  min-width: 0;
+}
+
+.public-nav .public-nav-actions button,
+.home-page .public-nav .public-nav-actions button,
+.home-page .public-nav.nav-on-hero .public-nav-actions button {
+  min-height: 48px;
+  padding: 0 26px;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.public-nav .public-nav-actions .nav-icon-btn,
+.home-page .public-nav .public-nav-actions .nav-icon-btn,
+.home-page .public-nav.nav-on-hero .public-nav-actions .nav-icon-btn {
+  width: 48px;
+  min-width: 48px;
+  padding: 0;
+}
+
+.public-nav .public-nav-actions button:not(.nav-accent),
+.home-page .public-nav .public-nav-actions button:not(.nav-accent),
+.home-page .public-nav.nav-on-hero .public-nav-actions button:not(.nav-accent) {
+  border: 1px solid #bfb7aa;
+  background: #fffdf8 !important;
+  color: #17130d !important;
+  box-shadow: none !important;
+}
+
+.public-nav .public-nav-actions .nav-accent,
+.home-page .public-nav .public-nav-actions .nav-accent,
+.home-page .public-nav.nav-on-hero .public-nav-actions .nav-accent {
+  border: 1px solid #b87916;
+  background: linear-gradient(180deg, #dfac45 0%, #d29a35 100%) !important;
+  color: #17130d !important;
+  box-shadow: none !important;
+}
+
+.public-nav-search {
+  display: none !important;
+}
+
+.public-nav .nav-menu-toggle,
+.home-page .public-nav .nav-menu-toggle,
+.home-page .public-nav.nav-on-hero .nav-menu-toggle {
+  display: none;
+}
+
+@media (max-width: 920px) {
+  .public-nav .public-nav-inner,
+  .home-page .public-nav .public-nav-inner,
+  .home-page .public-nav.nav-on-hero .public-nav-inner,
+  .public-page:not(.home-page) .public-nav .public-nav-inner {
+    grid-template-columns: auto 1fr auto;
+    min-height: 68px;
+    padding: 0 18px;
+  }
+
+  .public-nav .brand-logo-btn,
+  .home-page .public-nav .brand-logo-btn {
+    grid-column: 1;
+  }
+
+  .public-nav .brand-logo-btn img,
+  .home-page .public-nav .brand-logo-btn img {
+    width: 128px;
+  }
+
+  .public-nav .nav-menu-toggle,
+  .home-page .public-nav .nav-menu-toggle,
+  .home-page .public-nav.nav-on-hero .nav-menu-toggle {
+    grid-column: 3;
+    justify-self: end;
+    display: inline-grid;
+    place-items: center;
+    width: 42px;
+    height: 42px;
+    border: 1px solid #e7d2ac;
+    border-radius: 12px;
+    background: #fffdf8;
+  }
+
+  .public-nav .public-nav-center,
+  .home-page .public-nav .public-nav-center,
+  .home-page .public-nav.nav-on-hero .public-nav-center,
+  .public-nav .public-nav-actions,
+  .home-page .public-nav .public-nav-actions,
+  .home-page .public-nav.nav-on-hero .public-nav-actions {
+    display: none !important;
+  }
+
+  .public-nav.is-menu-open .public-nav-center,
+  .home-page .public-nav.is-menu-open .public-nav-center,
+  .home-page .public-nav.nav-on-hero.is-menu-open .public-nav-center {
+    grid-column: 1 / -1;
+    display: flex !important;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 18px;
+    padding-top: 14px;
+  }
+
+  .public-nav.is-menu-open .public-nav-actions,
+  .home-page .public-nav.is-menu-open .public-nav-actions,
+  .home-page .public-nav.nav-on-hero.is-menu-open .public-nav-actions {
+    grid-column: 1 / -1;
+    display: flex !important;
+    justify-content: center;
+    padding-bottom: 14px;
+  }
+}
