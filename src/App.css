@@ -4968,7 +4968,10 @@ body {
 /* Solid color hero, matching the landing sections */
 .home-page .search-hero,
 .search-hero {
-  background: var(--color-cream);
+  background:
+    linear-gradient(180deg, rgba(247, 241, 232, 0.86), rgba(247, 241, 232, 0.72)),
+    var(--landing-bg, none) center / cover no-repeat,
+    var(--color-cream);
 }
 
 .home-page .public-nav.nav-on-hero {

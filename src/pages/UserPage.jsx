@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import testimoni1 from '../assets/testimoni1.png'
 import testimoni2 from '../assets/testimoni2.png'
 import testimoni3 from '../assets/testimoni3.png'
+import backgroundLandingPageUser from '../assets/backgroundlandingpageuser.png'
 import { addonOptions } from '../config/constants'
 import { formatCurrency, formatDate, tripName } from '../utils/formatters'
 import { Badge, InfoBlock, NotFound } from './shared'
@@ -267,7 +268,7 @@ export function CustomerCatalog({ trips, navigate, session, logout }) {
   return (
     <main className="public-page home-page">
       <PublicNav navigate={navigate} session={session} logout={logout} />
-      <section className="search-hero">
+      <section className="search-hero" style={{ '--landing-bg': `url(${backgroundLandingPageUser})` }}>
         <div className="hero-content">
           <SearchTripForm navigate={navigate} />
         </div>
