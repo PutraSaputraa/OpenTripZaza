@@ -4968,10 +4968,30 @@ body {
 /* Solid color hero, matching the landing sections */
 .home-page .search-hero,
 .search-hero {
+  position: relative;
   background:
     linear-gradient(180deg, rgba(247, 241, 232, 0.86), rgba(247, 241, 232, 0.72)),
     var(--landing-bg, none) center / cover no-repeat,
     var(--color-cream);
+}
+
+.home-page .search-hero::after,
+.search-hero::after {
+  position: absolute;
+  right: 0;
+  bottom: -1px;
+  left: 0;
+  z-index: 0;
+  height: clamp(120px, 18vw, 260px);
+  background: linear-gradient(180deg, rgba(247, 241, 232, 0), var(--color-cream) 76%);
+  content: '';
+  pointer-events: none;
+}
+
+.home-page .search-hero > *,
+.search-hero > * {
+  position: relative;
+  z-index: 1;
 }
 
 .home-page .public-nav.nav-on-hero {
@@ -5191,6 +5211,19 @@ body {
   padding: 8px 4px;
   box-shadow: none;
   text-decoration: none;
+  font-weight: 500;
+}
+
+.public-nav .brand,
+.home-page .public-nav .brand,
+.home-page .public-nav.nav-on-hero .brand {
+  font-weight: 600;
+}
+
+.public-nav > nav:last-child button,
+.home-page .public-nav > nav:last-child button,
+.home-page .public-nav.nav-on-hero > nav:last-child button {
+  font-weight: 500;
 }
 
 .public-nav .public-nav-center button:hover,
