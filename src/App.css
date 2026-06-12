@@ -5246,6 +5246,312 @@ body {
   box-shadow: none;
 }
 
+/* Admin UX refresh */
+.app-shell {
+  background: #f7f1e8;
+}
+
+.workspace {
+  padding: clamp(18px, 2vw, 28px);
+}
+
+.workspace h1 {
+  margin-bottom: 18px;
+  font-size: clamp(34px, 4vw, 52px);
+  line-height: 1;
+}
+
+.admin-page-stack,
+.admin-dashboard {
+  gap: 18px;
+}
+
+.admin-page-head,
+.dashboard-hero {
+  align-items: center;
+  min-height: 0;
+  border-radius: 24px;
+  background: #fffdf8;
+  border-color: #e6cfa8;
+  padding: clamp(18px, 2.4vw, 28px);
+  box-shadow: 0 10px 28px rgba(36, 26, 8, 0.06);
+}
+
+.admin-page-head h2,
+.dashboard-hero h2 {
+  max-width: 760px;
+  font-size: clamp(26px, 3vw, 40px);
+  line-height: 1.08;
+}
+
+.admin-page-head .muted,
+.dashboard-hero .muted {
+  max-width: 640px;
+  margin-top: 8px;
+}
+
+.stat-grid {
+  gap: 12px;
+}
+
+.app-shell .metric {
+  border-radius: 18px;
+  padding: 16px;
+}
+
+.admin-list-toolbar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 420px);
+  gap: 14px;
+  align-items: end;
+  border: 1px solid #e6cfa8;
+  border-radius: 22px;
+  background: #fffdf8;
+  padding: 14px;
+  box-shadow: 0 8px 22px rgba(36, 26, 8, 0.05);
+}
+
+.compact-tabs {
+  width: max-content;
+  max-width: 100%;
+}
+
+.admin-search-field {
+  display: grid;
+  gap: 6px;
+  color: #6f5b2c;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.admin-search-field input {
+  width: 100%;
+  border: 1px solid #e6cfa8;
+  border-radius: 16px;
+  background: #ffffff;
+  color: #241a08;
+  padding: 12px 14px;
+  outline: 0;
+}
+
+.admin-search-field input:focus {
+  border-color: #c08a2e;
+  box-shadow: 0 0 0 3px rgba(192, 138, 46, 0.16);
+}
+
+.admin-trip-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.app-shell .admin-trip-card {
+  gap: 14px;
+  border-radius: 22px;
+  background: #fffdf8;
+  border-color: #e6cfa8;
+  padding: 16px;
+  box-shadow: 0 10px 26px rgba(36, 26, 8, 0.06);
+}
+
+.admin-trip-card h3 {
+  font-size: 21px;
+}
+
+.admin-trip-price {
+  border-radius: 18px;
+  padding: 12px;
+}
+
+.admin-trip-price strong {
+  font-size: 23px;
+}
+
+.admin-trip-meta {
+  gap: 8px;
+}
+
+.admin-trip-meta div {
+  border-radius: 16px;
+  padding: 10px;
+}
+
+.admin-trip-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.trip-section-form {
+  display: grid;
+  gap: 16px;
+  max-width: 1120px;
+}
+
+.form-section-card {
+  display: grid;
+  gap: 16px;
+  border: 1px solid #e6cfa8;
+  border-radius: 24px;
+  background: #fffdf8;
+  padding: clamp(16px, 2vw, 22px);
+  box-shadow: 0 10px 26px rgba(36, 26, 8, 0.06);
+}
+
+.form-section-title {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+}
+
+.form-section-title > span {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border-radius: 999px;
+  background: #f3d68b;
+  color: #241a08;
+  font-weight: 800;
+}
+
+.form-section-title h3 {
+  margin: 0;
+  color: #241a08;
+  font-size: 22px;
+}
+
+.form-section-title p {
+  margin-top: 4px;
+  color: #6f5b2c;
+  line-height: 1.5;
+}
+
+.data-form.section-fields {
+  max-width: none;
+  border: 0;
+  background: transparent;
+  padding: 0;
+}
+
+.section-fields small {
+  color: #7d6938;
+  font-weight: 500;
+  line-height: 1.45;
+}
+
+.media-preview {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid #e6cfa8;
+  border-radius: 18px;
+  background: #f7f1e8;
+}
+
+.media-preview img {
+  display: block;
+  width: 100%;
+  max-height: 280px;
+  object-fit: cover;
+}
+
+.media-preview span {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  border-radius: 999px;
+  background: rgba(255, 253, 248, 0.92);
+  color: #241a08;
+  padding: 7px 10px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.form-sticky-actions {
+  position: sticky;
+  bottom: 14px;
+  z-index: 5;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  border: 1px solid #e6cfa8;
+  border-radius: 20px;
+  background: rgba(255, 253, 248, 0.92);
+  padding: 12px;
+  box-shadow: 0 12px 30px rgba(36, 26, 8, 0.12);
+  backdrop-filter: blur(10px);
+}
+
+.app-shell .empty-state,
+.app-shell .empty-column {
+  border-radius: 20px;
+  background: #fffdf8;
+  border-color: #e6cfa8;
+  color: #6f5b2c;
+}
+
+.app-shell .badge-tersedia {
+  background: #ecfdf3;
+  color: #166534;
+}
+
+.app-shell .badge-penuh {
+  background: #fff7ed;
+  color: #9a3412;
+}
+
+.app-shell .badge-ditutup {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.app-shell .badge-menunggu-approval {
+  background: #fffbeb;
+  color: #92400e;
+}
+
+.app-shell .badge-disetujui {
+  background: #ecfdf3;
+  color: #166534;
+}
+
+.app-shell .badge-ditolak {
+  background: #fef2f2;
+  color: #991b1b;
+}
+
+.app-shell .badge-selesai {
+  background: #f4ead8;
+  color: #6f5b2c;
+}
+
+@media (max-width: 1180px) {
+  .admin-trip-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-list-toolbar {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .workspace h1 {
+    font-size: 34px;
+  }
+
+  .admin-trip-grid,
+  .admin-trip-actions,
+  .form-sticky-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .form-sticky-actions {
+    position: static;
+    display: grid;
+  }
+}
+
 .participant-detail-list {
   display: grid;
   gap: 8px;

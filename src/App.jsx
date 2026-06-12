@@ -285,12 +285,20 @@ function App() {
   }
 
   const saveTrip = async (trip) => {
+    const normalizedTrip = {
+      ...trip,
+      slots: Number(trip.slots),
+      quota: Number(trip.quota),
+      price: Number(trip.price),
+      minParticipants: Number(trip.minParticipants || 1),
+      maxParticipants: Number(trip.maxParticipants || trip.quota || 1),
+    }
     if (trip.id) {
-      const nextTrip = { ...trip, id: Number(trip.id) }
+      const nextTrip = { ...normalizedTrip, id: Number(trip.id) }
       await setDoc(doc(db, collections.trips, String(trip.id)), nextTrip)
     } else {
       const id = Date.now()
-      const nextTrip = { ...trip, id, slots: Number(trip.slots), quota: Number(trip.quota), price: Number(trip.price) }
+      const nextTrip = { ...normalizedTrip, id }
       await setDoc(doc(db, collections.trips, String(id)), nextTrip)
     }
     navigate('/admin/open-trip')

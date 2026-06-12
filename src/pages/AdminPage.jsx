@@ -26,6 +26,10 @@ const normalizeTripForm = (trip) => {
     price: 0,
     quota: 10,
     slots: 10,
+    minParticipants: 2,
+    maxParticipants: 10,
+    privateNotes: '',
+    flexibleSchedule: true,
     isPrivateTrip: false,
     imageUrl: '',
     imageUrls: [],
@@ -56,7 +60,7 @@ function AdminShell({ title, children, navigate, logout, path }) {
     <main className="app-shell">
       <Sidebar title="Admin" links={[
         ['/admin/dashboard', 'Dashboard'],
-        ['/admin/open-trip', 'Cave Trip'],
+        ['/admin/open-trip', 'Paket Trip'],
         ['/admin/jadwal', 'Jadwal'],
         ['/admin/pekerja', 'Akun Pekerja'],
       ]} navigate={navigate} logout={logout} path={path} />
@@ -71,7 +75,7 @@ function AdminShell({ title, children, navigate, logout, path }) {
 export function AdminDashboard(props) {
   const { trips, registrations, jobs } = props
   const stats = [
-    ['Total cave trip', trips.length],
+    ['Total paket trip', trips.length],
     ['Total pendaftar', registrations.length],
     ['Menunggu approval', registrations.filter((item) => item.status === 'Menunggu Approval').length],
     ['Disetujui', registrations.filter((item) => item.status === 'Disetujui').length],
@@ -89,7 +93,7 @@ export function AdminDashboard(props) {
             <p className="muted">Gunakan dashboard ini sebagai pintu masuk cepat. Detail lengkap tetap ada di halaman masing-masing menu.</p>
           </div>
           <div className="dashboard-actions">
-            <button className="primary-btn" onClick={() => props.navigate('/admin/open-trip')}>Kelola cave trip</button>
+            <button className="primary-btn" onClick={() => props.navigate('/admin/open-trip')}>Kelola paket trip</button>
             <button className="outline-btn" onClick={() => props.navigate('/admin/jadwal')}>Lihat jadwal</button>
           </div>
         </div>
@@ -100,19 +104,57 @@ export function AdminDashboard(props) {
 }
 
 export function AdminTrips(props) {
+  const [activeType, setActiveType] = useState('all')
+  const [search, setSearch] = useState('')
+  const searchTerm = search.trim().toLowerCase()
+  const filteredTrips = props.trips
+    .filter((trip) => {
+      if (activeType === 'open') return !trip.isPrivateTrip
+      if (activeType === 'private') return trip.isPrivateTrip
+      return true
+    })
+    .filter((trip) => {
+      if (!searchTerm) return true
+      return [trip.name, trip.destination, trip.description]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase()
+        .includes(searchTerm)
+    })
+  const typeTabs = [
+    ['all', 'Semua', props.trips.length],
+    ['open', 'Open Trip', props.trips.filter((trip) => !trip.isPrivateTrip).length],
+    ['private', 'Private Trip', props.trips.filter((trip) => trip.isPrivateTrip).length],
+  ]
+
   return (
-    <AdminShell title="Manajemen Cave Trip" {...props}>
-      <section className="admin-page-stack">
+    <AdminShell title="Paket Trip" {...props}>
+      <section className="admin-page-stack admin-trip-page">
         <div className="admin-page-head">
           <div>
             <p className="eyebrow">Katalog trip</p>
-            <h2>Atur paket open trip goa dan private cave tour yang tampil untuk customer.</h2>
-            <p className="muted">Tambah, edit, atau tutup slot cave trip dari daftar utama ini.</p>
+            <h2>Kelola paket Open Trip dan Private Trip dari satu tempat.</h2>
+            <p className="muted">Filter jenis trip, cek status, lalu update paket yang tampil untuk customer.</p>
           </div>
-          <button className="primary-btn" onClick={() => props.navigate('/admin/open-trip/tambah')}>Tambah cave trip</button>
+          <button className="primary-btn" onClick={() => props.navigate('/admin/open-trip/tambah')}>Tambah paket trip</button>
         </div>
+
+        <section className="admin-list-toolbar">
+          <div className="segmented-tabs compact-tabs" role="tablist" aria-label="Filter jenis paket trip">
+            {typeTabs.map(([value, label, count]) => (
+              <button className={activeType === value ? 'is-active' : ''} key={value} type="button" onClick={() => setActiveType(value)}>
+                {label}<span>{count}</span>
+              </button>
+            ))}
+          </div>
+          <label className="admin-search-field">
+            <span>Cari paket</span>
+            <input placeholder="Nama trip, destinasi, atau deskripsi" value={search} onChange={(event) => setSearch(event.target.value)} />
+          </label>
+        </section>
+
         <div className="admin-trip-grid">
-          {props.trips.length ? props.trips.map((trip) => (
+          {filteredTrips.length ? filteredTrips.map((trip) => (
               <article className="admin-trip-card" key={trip.id}>
                 <div className="admin-trip-card-head">
                   <div>
@@ -120,26 +162,27 @@ export function AdminTrips(props) {
                     <p className="icon-line"><span className="asset-icon icon-geo" aria-hidden="true" />{trip.destination}</p>
                   </div>
                   <div className="card-badge-stack">
-                    {trip.isPrivateTrip && <span className="trip-type-chip">Private cave tour</span>}
+                    <span className="trip-type-chip">{trip.isPrivateTrip ? 'Private Trip' : 'Open Trip'}</span>
                     <Badge status={trip.status} />
                   </div>
                 </div>
                 <div className="admin-trip-price">
-                  <span><span className="asset-icon icon-currency" aria-hidden="true" />Harga</span>
+                  <span><span className="asset-icon icon-currency" aria-hidden="true" />{trip.isPrivateTrip ? 'Mulai dari' : 'Harga per orang'}</span>
                   <strong>{formatCurrency(trip.price)}</strong>
                 </div>
                 <dl className="admin-trip-meta">
-                  <div><dt><span className="asset-icon icon-calendar" aria-hidden="true" />Tanggal</dt><dd>{formatDate(trip.date)}</dd></div>
-                  {!trip.isPrivateTrip && <div><dt><span className="asset-icon icon-people" aria-hidden="true" />Kuota</dt><dd>{trip.quota} peserta</dd></div>}
-                  {!trip.isPrivateTrip && <div><dt><span className="asset-icon icon-ticket" aria-hidden="true" />Slot</dt><dd>{trip.slots} tersedia</dd></div>}
-                  <div><dt>Jenis</dt><dd>{trip.isPrivateTrip ? 'Private cave tour' : 'Open trip goa'}</dd></div>
+                  <div><dt><span className="asset-icon icon-calendar" aria-hidden="true" />Jadwal</dt><dd>{trip.isPrivateTrip ? 'Jadwal fleksibel' : formatDate(trip.date)}</dd></div>
+                  {!trip.isPrivateTrip && <div><dt><span className="asset-icon icon-people" aria-hidden="true" />Kuota / Slot</dt><dd>{trip.quota} / {trip.slots}</dd></div>}
+                  {trip.isPrivateTrip && <div><dt><span className="asset-icon icon-people" aria-hidden="true" />Peserta</dt><dd>Min {trip.minParticipants || 2} - Max {trip.maxParticipants || trip.quota || 10}</dd></div>}
+                  <div><dt>Status</dt><dd>{trip.status}</dd></div>
                 </dl>
                 <div className="admin-trip-actions">
+                  <button className="outline-btn" onClick={() => props.navigate(`/admin/jadwal/${trip.id}`)}>Detail</button>
                   <button className="outline-btn" onClick={() => props.navigate(`/admin/open-trip/edit/${trip.id}`)}>Edit</button>
                   <button className="outline-btn danger-btn" onClick={() => props.deleteTrip(trip.id)}>Hapus</button>
                 </div>
               </article>
-          )) : <p className="empty-state">Belum ada cave trip.</p>}
+          )) : <p className="empty-state">Belum ada paket trip untuk filter ini.</p>}
         </div>
       </section>
     </AdminShell>
@@ -149,6 +192,8 @@ export function AdminTrips(props) {
 export function TripForm({ tripId, trips, saveTrip, navigate, ...props }) {
   const selected = trips.find((item) => item.id === tripId)
   const [form, setForm] = useState(normalizeTripForm(selected))
+  const isPrivateTrip = Boolean(form.isPrivateTrip)
+  const previewImage = parseImageUrls(form.imageUrlsText || form.imageUrl)[0]
 
   const onSubmit = async (event) => {
     event.preventDefault()
@@ -162,39 +207,95 @@ export function TripForm({ tripId, trips, saveTrip, navigate, ...props }) {
       ...tripForm,
       activity: form.activity.trim(),
       price: Number(form.price),
-      quota: Number(form.quota),
-      slots: Number(form.slots),
-      isPrivateTrip: Boolean(form.isPrivateTrip),
+      quota: isPrivateTrip ? Number(form.maxParticipants || form.quota) : Number(form.quota),
+      slots: isPrivateTrip ? Number(form.maxParticipants || form.slots || form.quota) : Number(form.slots),
+      minParticipants: isPrivateTrip ? Number(form.minParticipants) || 1 : 1,
+      maxParticipants: isPrivateTrip ? Number(form.maxParticipants) || Number(form.quota) || 1 : Number(form.quota),
+      privateNotes: isPrivateTrip ? form.privateNotes || '' : '',
+      flexibleSchedule: isPrivateTrip,
+      isPrivateTrip,
       imageUrl: imageUrls[0] || '',
       imageUrls,
     })
   }
 
   return (
-    <AdminShell title={selected ? 'Edit Cave Trip' : 'Tambah Cave Trip'} navigate={navigate} {...props}>
-      <section className="admin-page-stack">
+    <AdminShell title={selected ? 'Edit Paket Trip' : 'Tambah Paket Trip'} navigate={navigate} {...props}>
+      <section className="admin-page-stack trip-form-page">
         <div className="admin-page-head">
           <div>
-            <p className="eyebrow">{selected ? 'Update cave trip' : 'Cave trip baru'}</p>
-            <h2>{selected ? 'Perbarui detail cave trip.' : 'Lengkapi informasi cave trip baru.'}</h2>
-            <p className="muted">Informasi ini akan muncul di katalog customer dan dipakai untuk monitoring internal.</p>
+            <p className="eyebrow">{selected ? 'Update paket' : 'Paket baru'}</p>
+            <h2>{selected ? 'Perbarui detail paket trip.' : 'Lengkapi informasi paket trip baru.'}</h2>
+            <p className="muted">Gunakan field sesuai jenis trip agar form tetap ringkas dan mudah dipakai admin.</p>
           </div>
           <button className="outline-btn" onClick={() => navigate('/admin/open-trip')}>Kembali</button>
         </div>
-        <form className="data-form admin-form admin-form-card" onSubmit={onSubmit}>
-          <label>Nama trip<input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></label>
-          <label>Destinasi<input required value={form.destination} onChange={(e) => setForm({ ...form, destination: e.target.value })} /></label>
-          <label>Tanggal keberangkatan<input required type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} /></label>
-          <label>Harga<input required type="number" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} /></label>
-          <label>Kuota peserta<input required type="number" value={form.quota} onChange={(e) => setForm({ ...form, quota: e.target.value })} /></label>
-          <label>Slot tersedia<input required type="number" value={form.slots} onChange={(e) => setForm({ ...form, slots: e.target.value })} /></label>
-          <label>Jenis trip<select value={form.isPrivateTrip ? 'private' : 'open'} onChange={(e) => setForm({ ...form, isPrivateTrip: e.target.value === 'private' })}><option value="open">Open trip goa</option><option value="private">Private cave tour</option></select></label>
-          <label>Status<select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>{tripStatuses.map((status) => <option key={status}>{status}</option>)}</select></label>
-          <label className="full">Link gambar trip<textarea placeholder={'https://static.uc.ac.id/htb/2019/01/maxresdefault.jpg\nhttps://contoh.com/gambar-kedua.jpg'} value={form.imageUrlsText} onChange={(e) => setForm({ ...form, imageUrlsText: e.target.value })} /></label>
-          <label className="full">Deskripsi<textarea required value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></label>
-          <label className="full">Activity<textarea required placeholder="Contoh: briefing keselamatan, eksplor lorong goa, cave tubing, sesi foto, dan kembali ke meeting point." value={form.activity} onChange={(e) => setForm({ ...form, activity: e.target.value })} /></label>
-          <label className="full">Fasilitas<textarea required value={form.facilities} onChange={(e) => setForm({ ...form, facilities: e.target.value })} /></label>
-          <button className="primary-btn full" type="submit">Simpan cave trip</button>
+        <form className="trip-section-form" onSubmit={onSubmit}>
+          <section className="form-section-card">
+            <div className="form-section-title">
+              <span>1</span>
+              <div><h3>Informasi Dasar</h3><p>Identitas utama paket yang tampil di katalog customer.</p></div>
+            </div>
+            <div className="data-form section-fields">
+              <label>{isPrivateTrip ? 'Nama private trip' : 'Nama trip'}<input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></label>
+              <label>Destinasi<input required value={form.destination} onChange={(e) => setForm({ ...form, destination: e.target.value })} /></label>
+              <label>Jenis trip<select value={isPrivateTrip ? 'private' : 'open'} onChange={(e) => setForm({ ...form, isPrivateTrip: e.target.value === 'private' })}><option value="open">Open Trip</option><option value="private">Private Trip</option></select><small>{isPrivateTrip ? 'Private Trip menerima request tanggal dari customer.' : 'Open Trip memakai tanggal keberangkatan tetap.'}</small></label>
+              <label>Status<select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>{tripStatuses.map((status) => <option key={status}>{status}</option>)}</select></label>
+            </div>
+          </section>
+
+          <section className="form-section-card">
+            <div className="form-section-title">
+              <span>2</span>
+              <div><h3>Harga & Kapasitas</h3><p>{isPrivateTrip ? 'Gunakan jadwal fleksibel karena customer dapat request tanggal sendiri.' : 'Gunakan tanggal tetap karena trip ini memiliki jadwal keberangkatan tertentu.'}</p></div>
+            </div>
+            <div className="data-form section-fields">
+              {!isPrivateTrip ? (
+                <>
+                  <label>Tanggal keberangkatan<input required type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} /><small>Gunakan tanggal tetap untuk Open Trip.</small></label>
+                  <label>Harga per orang<input required type="number" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} /></label>
+                  <label>Kuota peserta<input required type="number" min="1" value={form.quota} onChange={(e) => setForm({ ...form, quota: e.target.value })} /></label>
+                  <label>Slot tersedia<input required type="number" min="0" value={form.slots} onChange={(e) => setForm({ ...form, slots: e.target.value })} /><small>Biasanya sama dengan kuota saat paket baru dibuat.</small></label>
+                </>
+              ) : (
+                <>
+                  <label>Jadwal fleksibel<input disabled value="Customer memilih tanggal saat checkout" /><small>Gunakan jadwal fleksibel karena customer dapat request tanggal sendiri.</small></label>
+                  <label>Harga mulai dari / harga paket<input required type="number" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} /></label>
+                  <label>Minimal peserta<input required type="number" min="1" value={form.minParticipants} onChange={(e) => setForm({ ...form, minParticipants: e.target.value })} /></label>
+                  <label>Maksimal peserta<input required type="number" min="1" value={form.maxParticipants} onChange={(e) => setForm({ ...form, maxParticipants: e.target.value, quota: e.target.value, slots: e.target.value })} /></label>
+                </>
+              )}
+            </div>
+          </section>
+
+          <section className="form-section-card">
+            <div className="form-section-title">
+              <span>3</span>
+              <div><h3>Media</h3><p>Tambahkan satu atau beberapa URL gambar, pisahkan dengan baris baru.</p></div>
+            </div>
+            <div className="data-form section-fields">
+              <label className="full">Link gambar trip<textarea placeholder={'https://static.uc.ac.id/htb/2019/01/maxresdefault.jpg\nhttps://contoh.com/gambar-kedua.jpg'} value={form.imageUrlsText} onChange={(e) => setForm({ ...form, imageUrlsText: e.target.value })} /></label>
+              {previewImage && <div className="media-preview full"><img src={previewImage} alt="Preview trip" /><span>Preview gambar utama</span></div>}
+            </div>
+          </section>
+
+          <section className="form-section-card">
+            <div className="form-section-title">
+              <span>4</span>
+              <div><h3>Detail Trip</h3><p>Isi narasi dan fasilitas yang membantu customer memahami pengalaman trip.</p></div>
+            </div>
+            <div className="data-form section-fields">
+              <label className="full">Deskripsi<textarea required value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></label>
+              <label className="full">Activity<textarea required placeholder="Contoh: briefing keselamatan, eksplor lorong goa, cave tubing, sesi foto, dan kembali ke meeting point." value={form.activity} onChange={(e) => setForm({ ...form, activity: e.target.value })} /></label>
+              <label className="full">Fasilitas<textarea required value={form.facilities} onChange={(e) => setForm({ ...form, facilities: e.target.value })} /></label>
+              {isPrivateTrip && <label className="full">Catatan khusus private trip<textarea placeholder="Contoh: itinerary bisa menyesuaikan request keluarga/perusahaan." value={form.privateNotes} onChange={(e) => setForm({ ...form, privateNotes: e.target.value })} /></label>}
+            </div>
+          </section>
+
+          <div className="form-sticky-actions">
+            <button className="outline-btn" type="button" onClick={() => navigate('/admin/open-trip')}>Batal</button>
+            <button className="primary-btn" type="submit">Simpan paket trip</button>
+          </div>
         </form>
       </section>
     </AdminShell>

@@ -1,4 +1,4 @@
-export const tripStatuses = ['Tersedia', 'Penuh', 'Selesai']
+export const tripStatuses = ['Tersedia', 'Penuh', 'Ditutup', 'Selesai']
 export const registrationStatuses = ['Menunggu Approval', 'Disetujui', 'Ditolak', 'Selesai']
 export const jobStatuses = ['Tersedia', 'Diambil', 'Sedang Berjalan', 'Selesai']
 
