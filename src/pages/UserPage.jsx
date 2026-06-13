@@ -57,13 +57,13 @@ export function PublicNav({ navigate, session, logout }) {
           <span />
           <span />
         </button>
-        <nav className="public-nav-center" aria-label="Navigasi halaman">
+        <nav className="public-nav-links" aria-label="Navigasi halaman">
           <button className={currentPath === '/' || currentPath === '/open-trip' ? 'is-active' : ''} onClick={goHome}>Home</button>
           <button onClick={() => scrollToHomeSection('open-trip-list')}>Trip</button>
           <button className={currentPath.startsWith('/destinasi') ? 'is-active' : ''} onClick={() => navigate('/destinasi')}>Destinasi</button>
           <button onClick={() => scrollToHomeSection('testimoni-list')}>Testimoni</button>
         </nav>
-        <nav className="public-nav-actions">
+        <nav className="public-nav-auth">
           {session?.role === 'customer' ? (
             <>
               <button className="nav-icon-btn" onClick={() => navigate('/akun')} aria-label="Akun customer" title="Akun">
