@@ -6607,3 +6607,83 @@ body {
     padding-bottom: 14px;
   }
 }
+
+/* Navbar one-line placement override */
+.public-nav .public-nav-inner,
+.home-page .public-nav .public-nav-inner,
+.home-page .public-nav.nav-on-hero .public-nav-inner,
+.public-page:not(.home-page) .public-nav .public-nav-inner {
+  display: grid !important;
+  grid-template-columns: minmax(160px, 1fr) auto minmax(160px, 1fr) !important;
+  align-items: center !important;
+}
+
+.public-nav .brand-logo-btn,
+.home-page .public-nav .brand-logo-btn,
+.home-page .public-nav.nav-on-hero .brand-logo-btn,
+.public-page:not(.home-page) .public-nav .brand-logo-btn {
+  grid-column: 1 !important;
+  justify-self: start !important;
+}
+
+.public-nav .public-nav-center,
+.home-page .public-nav .public-nav-center,
+.home-page .public-nav.nav-on-hero .public-nav-center,
+.public-page:not(.home-page) .public-nav .public-nav-center {
+  grid-column: 2 !important;
+  justify-self: center !important;
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.public-nav .public-nav-actions,
+.home-page .public-nav .public-nav-actions,
+.home-page .public-nav.nav-on-hero .public-nav-actions,
+.public-page:not(.home-page) .public-nav .public-nav-actions {
+  grid-column: 3 !important;
+  justify-self: end !important;
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+}
+
+@media (max-width: 920px) {
+  .public-nav .public-nav-inner,
+  .home-page .public-nav .public-nav-inner,
+  .home-page .public-nav.nav-on-hero .public-nav-inner,
+  .public-page:not(.home-page) .public-nav .public-nav-inner {
+    grid-template-columns: auto 1fr auto !important;
+  }
+
+  .public-nav .public-nav-center,
+  .home-page .public-nav .public-nav-center,
+  .home-page .public-nav.nav-on-hero .public-nav-center,
+  .public-page:not(.home-page) .public-nav .public-nav-center,
+  .public-nav .public-nav-actions,
+  .home-page .public-nav .public-nav-actions,
+  .home-page .public-nav.nav-on-hero .public-nav-actions,
+  .public-page:not(.home-page) .public-nav .public-nav-actions {
+    display: none !important;
+  }
+
+  .public-nav.is-menu-open .public-nav-center,
+  .home-page .public-nav.is-menu-open .public-nav-center,
+  .home-page .public-nav.nav-on-hero.is-menu-open .public-nav-center,
+  .public-page:not(.home-page) .public-nav.is-menu-open .public-nav-center {
+    display: flex !important;
+    flex-wrap: wrap !important;
+  }
+
+  .public-nav.is-menu-open .public-nav-actions,
+  .home-page .public-nav.is-menu-open .public-nav-actions,
+  .home-page .public-nav.nav-on-hero.is-menu-open .public-nav-actions,
+  .public-page:not(.home-page) .public-nav.is-menu-open .public-nav-actions {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+  }
+}
