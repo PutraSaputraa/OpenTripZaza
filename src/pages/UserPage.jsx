@@ -4,12 +4,111 @@ import testimoni2 from '../assets/testimoni2.png'
 import testimoni3 from '../assets/testimoni3.png'
 import backgroundLandingPageUser from '../assets/backgroundlandingpageuser.png'
 import horizontalLogo from '../assets/desainHorizontal.png'
+import verticalLogo from '../assets/desainvertikal.png'
 import { addonOptions } from '../config/constants'
 import { formatCurrency, formatDate, tripName } from '../utils/formatters'
 import { Badge, InfoBlock, NotFound } from './shared'
 
-export function PublicNav() {
-  return null
+export function PublicNav({ navigate, session, logout }) {
+  const [isScrolled, setIsScrolled] = useState(false)
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const isLoggedIn = Boolean(session)
+
+  useEffect(() => {
+    const handleScroll = () => setIsScrolled(window.scrollY > 28)
+    handleScroll()
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
+  const goToSection = (id) => {
+    setIsMenuOpen(false)
+    if (window.location.pathname !== '/' && window.location.pathname !== '/open-trip') {
+      navigate('/')
+      window.setTimeout(() => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80)
+      return
+    }
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+
+  const goToPage = (target) => {
+    setIsMenuOpen(false)
+    navigate(target)
+  }
+
+  const goToAccount = () => {
+    if (session?.role === 'admin') {
+      goToPage('/admin/dashboard')
+      return
+    }
+    if (session?.role === 'pekerja') {
+      goToPage('/pekerja/dashboard')
+      return
+    }
+    goToPage('/akun')
+  }
+
+  const handleLogout = () => {
+    setIsMenuOpen(false)
+    logout?.()
+  }
+
+  return (
+    <header className={`public-nav ${isScrolled ? 'is-scrolled' : ''}`}>
+      <button className="public-nav-logo" type="button" onClick={() => goToPage('/')} aria-label="MAUA home">
+        <img src={horizontalLogo} alt="MAUA" />
+      </button>
+
+      <nav className="public-nav-menu" aria-label="Navigasi utama">
+        <button type="button" onClick={() => goToPage('/destinasi')}>Trip</button>
+        <button type="button" onClick={() => goToPage('/')}>Home</button>
+        <button type="button" onClick={() => goToSection('faq-list')}>FAQ</button>
+      </nav>
+
+      <div className="public-nav-actions">
+        {isLoggedIn ? (
+          <>
+            <button className="public-signup-btn" type="button" onClick={goToAccount}>Akun</button>
+            <button className="public-login-btn" type="button" onClick={handleLogout}>Logout</button>
+          </>
+        ) : (
+          <>
+            <button className="public-login-btn" type="button" onClick={() => goToPage('/login')}>Login</button>
+            <button className="public-signup-btn" type="button" onClick={() => goToPage('/signup')}>Sign Up</button>
+          </>
+        )}
+      </div>
+
+      <button
+        className={`public-menu-toggle ${isMenuOpen ? 'is-open' : ''}`}
+        type="button"
+        onClick={() => setIsMenuOpen((current) => !current)}
+        aria-label={isMenuOpen ? 'Tutup menu' : 'Buka menu'}
+        aria-expanded={isMenuOpen}
+      >
+        <span />
+        <span />
+        <span />
+      </button>
+
+      <div className={`public-mobile-menu ${isMenuOpen ? 'is-open' : ''}`}>
+        <button type="button" onClick={() => goToPage('/destinasi')}>Trip</button>
+        <button type="button" onClick={() => goToPage('/')}>Home</button>
+        <button type="button" onClick={() => goToSection('faq-list')}>FAQ</button>
+        {isLoggedIn ? (
+          <>
+            <button type="button" onClick={goToAccount}>Akun</button>
+            <button type="button" onClick={handleLogout}>Logout</button>
+          </>
+        ) : (
+          <>
+            <button type="button" onClick={() => goToPage('/signup')}>Sign Up</button>
+            <button type="button" onClick={() => goToPage('/login')}>Login</button>
+          </>
+        )}
+      </div>
+    </header>
+  )
 }
 
 const tripTypeLabel = (trip, registration) => {
@@ -209,6 +308,11 @@ export function CustomerCatalog({ trips, navigate, session, logout }) {
       <PublicNav navigate={navigate} session={session} logout={logout} />
       <section className="search-hero" style={{ '--landing-bg': `url(${backgroundLandingPageUser})` }}>
         <div className="hero-content">
+          <div className="hero-brand">
+            <img src={verticalLogo} alt="MAUA" />
+            <h1>Temukan Pengalaman Menjelajahi Goa</h1>
+            <p>Pilih jadwal, cek paket, dan daftar trip dalam satu tempat.</p>
+          </div>
           <SearchTripForm navigate={navigate} />
         </div>
         <DestinationCarousel trips={featuredTrips} navigate={navigate} />
@@ -245,7 +349,7 @@ export function CustomerCatalog({ trips, navigate, session, logout }) {
 
       <TestimonialCarousel />
 
-      <section className="faq-section">
+      <section className="faq-section" id="faq-list">
         <div className="faq-head">
           <p className="eyebrow">Pertanyaan umum</p>
           <h2>FAQ</h2>
