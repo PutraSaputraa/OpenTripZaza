@@ -8,81 +8,8 @@ import { addonOptions } from '../config/constants'
 import { formatCurrency, formatDate, tripName } from '../utils/formatters'
 import { Badge, InfoBlock, NotFound } from './shared'
 
-export function PublicNav({ navigate, session, logout }) {
-  const currentPath = window.location.pathname
-  const isHomePage = currentPath === '/' || currentPath === '/open-trip'
-  const [isOverHero, setIsOverHero] = useState(() => isHomePage)
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
-
-  useEffect(() => {
-    const isHomePage = window.location.pathname === '/' || window.location.pathname === '/open-trip'
-    if (!isHomePage) return undefined
-
-    const updateNavState = () => {
-      setIsOverHero(window.scrollY <= 8)
-    }
-
-    const frame = window.requestAnimationFrame(updateNavState)
-    window.addEventListener('scroll', updateNavState, { passive: true })
-    window.addEventListener('resize', updateNavState)
-    return () => {
-      window.cancelAnimationFrame(frame)
-      window.removeEventListener('scroll', updateNavState)
-      window.removeEventListener('resize', updateNavState)
-    }
-  }, [])
-
-  const goHome = () => {
-    navigate('/')
-  }
-
-  const scrollToHomeSection = (sectionId) => {
-    const scrollToTarget = () => document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth' })
-    if (window.location.pathname === '/' || window.location.pathname === '/open-trip') {
-      scrollToTarget()
-      return
-    }
-    navigate('/')
-    window.setTimeout(scrollToTarget, 120)
-  }
-
-  return (
-    <header className={`public-nav ${isOverHero ? 'nav-on-hero' : ''} ${isMenuOpen ? 'is-menu-open' : ''}`}>
-      <div className="public-nav-inner">
-        <button className="brand brand-logo-btn" onClick={goHome} aria-label="Open Cave Trip">
-          <img src={horizontalLogo} alt="Open Cave Trip" />
-        </button>
-        <button className="nav-menu-toggle" type="button" onClick={() => setIsMenuOpen((current) => !current)} aria-expanded={isMenuOpen} aria-label="Buka menu">
-          <span />
-          <span />
-          <span />
-        </button>
-        <nav className="public-nav-links" aria-label="Navigasi halaman">
-          <button className={currentPath === '/' || currentPath === '/open-trip' ? 'is-active' : ''} onClick={goHome}>Home</button>
-          <button onClick={() => scrollToHomeSection('open-trip-list')}>Trip</button>
-          <button className={currentPath.startsWith('/destinasi') ? 'is-active' : ''} onClick={() => navigate('/destinasi')}>Destinasi</button>
-          <button onClick={() => scrollToHomeSection('testimoni-list')}>Testimoni</button>
-        </nav>
-        <nav className="public-nav-auth">
-          {session?.role === 'customer' ? (
-            <>
-              <button className="nav-icon-btn" onClick={() => navigate('/akun')} aria-label="Akun customer" title="Akun">
-                <span className="nav-icon nav-icon-account" aria-hidden="true" />
-              </button>
-              <button className="nav-icon-btn" onClick={logout} aria-label="Keluar" title="Keluar">
-                <span className="nav-icon nav-icon-logout" aria-hidden="true" />
-              </button>
-            </>
-          ) : (
-            <>
-              <button onClick={() => navigate('/login')}>Login</button>
-              <button className="nav-accent" onClick={() => navigate('/signup')}>Signup</button>
-            </>
-          )}
-        </nav>
-      </div>
-    </header>
-  )
+export function PublicNav() {
+  return null
 }
 
 const tripTypeLabel = (trip, registration) => {
