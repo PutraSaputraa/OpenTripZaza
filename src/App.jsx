@@ -77,7 +77,7 @@ function App() {
     return false
   }
 
-  const loginCustomer = (form) => {
+  const loginCustomer = (form, redirectTo = '/open-trip') => {
     const account = customerAccounts.find((item) => item.email === form.email && item.password === form.password)
     if (!account) return false
     const nextSession = {
@@ -91,7 +91,7 @@ function App() {
       healthNotes: account.healthNotes || '',
     }
     setSession(nextSession)
-    navigate('/open-trip')
+    navigate(redirectTo)
     return true
   }
 
@@ -326,8 +326,8 @@ function App() {
     showToast('Job berhasil diambil.')
   }
 
-  const updateJobStatus = async (id, status) => {
-    await updateDoc(doc(db, collections.jobs, String(id)), { status })
+  const updateJobStatus = async (id, status, extraFields = {}) => {
+    await updateDoc(doc(db, collections.jobs, String(id)), { status, ...extraFields })
   }
 
   const props = {
@@ -375,11 +375,17 @@ function RouteRenderer(props) {
 
   if (path === '/' || path === '/open-trip') return <CustomerCatalog {...props} />
   if (path.startsWith('/destinasi')) return <DestinationPage {...props} />
-  if (path === '/akun') return <CustomerAccountPage {...props} />
+  if (path === '/akun') {
+    if (session?.role !== 'customer') return <CustomerLoginPage afterLoginPath="/akun" {...props} />
+    return <CustomerAccountPage {...props} />
+  }
   if (path === '/login' || path === '/customer/login') return <CustomerLoginPage {...props} />
   if (path === '/signup' || path === '/customer/signup') return <CustomerSignupPage {...props} />
   if (parts[0] === 'open-trip' && id) return <TripDetail tripId={id} {...props} />
-  if (parts[0] === 'daftar' && id) return <RegistrationPage tripId={id} {...props} />
+  if (parts[0] === 'daftar' && id) {
+    if (session?.role !== 'customer') return <CustomerLoginPage afterLoginPath={`/daftar/${id}`} {...props} />
+    return <RegistrationPage tripId={id} {...props} />
+  }
   if (path === '/admin/login') return <LoginPage role="admin" {...props} />
   if (path === '/admin/dashboard') return <AdminDashboard {...props} />
   if (path === '/admin/open-trip') return <AdminTrips {...props} />

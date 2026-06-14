@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { accounts, addonOptions, registrationStatuses, tripStatuses } from '../config/constants'
 import { formatCurrency, formatDate, tripName } from '../utils/formatters'
-import { Badge, DataPanel, Metric, Sidebar } from './shared'
+import { AppModal, Badge, DataPanel, Metric, Sidebar } from './shared'
 
 const parseImageUrls = (value) => String(value || '')
   .split(/\r?\n|,/)
@@ -106,6 +106,7 @@ export function AdminDashboard(props) {
 export function AdminTrips(props) {
   const [activeType, setActiveType] = useState('all')
   const [search, setSearch] = useState('')
+  const [tripToDelete, setTripToDelete] = useState(null)
   const searchTerm = search.trim().toLowerCase()
   const filteredTrips = props.trips
     .filter((trip) => {
@@ -126,6 +127,11 @@ export function AdminTrips(props) {
     ['open', 'Open Trip', props.trips.filter((trip) => !trip.isPrivateTrip).length],
     ['private', 'Private Trip', props.trips.filter((trip) => trip.isPrivateTrip).length],
   ]
+  const confirmDeleteTrip = async () => {
+    if (!tripToDelete) return
+    await props.deleteTrip(tripToDelete.id)
+    setTripToDelete(null)
+  }
 
   return (
     <AdminShell title="Paket Trip" {...props}>
@@ -179,11 +185,21 @@ export function AdminTrips(props) {
                 <div className="admin-trip-actions">
                   <button className="outline-btn" onClick={() => props.navigate(`/admin/jadwal/${trip.id}`)}>Detail</button>
                   <button className="outline-btn" onClick={() => props.navigate(`/admin/open-trip/edit/${trip.id}`)}>Edit</button>
-                  <button className="outline-btn danger-btn" onClick={() => props.deleteTrip(trip.id)}>Hapus</button>
+                  <button className="outline-btn danger-btn" onClick={() => setTripToDelete(trip)}>Hapus</button>
                 </div>
               </article>
           )) : <p className="empty-state">Belum ada paket trip untuk filter ini.</p>}
         </div>
+        <AppModal
+          isOpen={Boolean(tripToDelete)}
+          title="Hapus paket trip?"
+          description="Paket trip yang dihapus tidak akan tampil lagi untuk customer. Pastikan paket ini memang sudah tidak diperlukan."
+          confirmText="Ya, Hapus"
+          cancelText="Batal"
+          variant="danger"
+          onConfirm={confirmDeleteTrip}
+          onCancel={() => setTripToDelete(null)}
+        />
       </section>
     </AdminShell>
   )
@@ -338,6 +354,8 @@ function RegistrationTable({ registrations, trips, setRegistrationStatus, compac
 
 export function AdminSchedule(props) {
   const { trips, registrations, jobs, scheduleTripId, scheduleRegistrationId } = props
+  const [activeType, setActiveType] = useState('all')
+  const [search, setSearch] = useState('')
   const selectedTrip = trips.find((trip) => trip.id === scheduleTripId)
   const selectedRegistration = registrations.find((item) => item.id === scheduleRegistrationId)
   if (scheduleTripId && selectedTrip) return <AdminScheduleDetail trip={selectedTrip} {...props} />
@@ -346,6 +364,26 @@ export function AdminSchedule(props) {
   const privateSchedules = registrations
     .map((item) => ({ registration: item, trip: trips.find((trip) => trip.id === item.tripId) }))
     .filter(({ registration, trip }) => trip && (trip.isPrivateTrip || registration.isPrivateTour))
+  const searchTerm = search.trim().toLowerCase()
+  const matchesSearch = (...values) => {
+    if (!searchTerm) return true
+    return values
+      .filter(Boolean)
+      .join(' ')
+      .toLowerCase()
+      .includes(searchTerm)
+  }
+  const visibleOpenTrips = activeType === 'private'
+    ? []
+    : openTrips.filter((trip) => matchesSearch(trip.name, trip.destination, trip.description))
+  const visiblePrivateSchedules = activeType === 'open'
+    ? []
+    : privateSchedules.filter(({ registration, trip }) => matchesSearch(trip.name, trip.destination, registration.name, registration.whatsapp, registration.email))
+  const scheduleTabs = [
+    ['all', 'Semua', openTrips.length + privateSchedules.length],
+    ['open', 'Open Trip', openTrips.length],
+    ['private', 'Private Trip', privateSchedules.length],
+  ]
 
   return (
     <AdminShell title="Monitoring Jadwal" {...props}>
@@ -357,8 +395,21 @@ export function AdminSchedule(props) {
             <p className="muted">Daftar ini membantu admin mengecek kesiapan peserta sebelum hari keberangkatan.</p>
           </div>
         </div>
+        <section className="admin-list-toolbar">
+          <div className="segmented-tabs compact-tabs" role="tablist" aria-label="Filter jenis jadwal">
+            {scheduleTabs.map(([value, label, count]) => (
+              <button className={activeType === value ? 'is-active' : ''} key={value} type="button" onClick={() => setActiveType(value)}>
+                {label}<span>{count}</span>
+              </button>
+            ))}
+          </div>
+          <label className="admin-search-field">
+            <span>Cari jadwal</span>
+            <input placeholder="Nama trip, destinasi, atau pemesan" value={search} onChange={(event) => setSearch(event.target.value)} />
+          </label>
+        </section>
         <div className="schedule-list admin-card-grid">
-          {openTrips.map((trip) => {
+          {visibleOpenTrips.map((trip) => {
             const participants = registrations.filter((item) => item.tripId === trip.id && (item.status === 'Disetujui' || item.status === 'Selesai'))
             const waitingCount = registrations.filter((item) => item.tripId === trip.id && item.status === 'Menunggu Approval').length
             const tripJobs = jobs.filter((job) => job.tripId === trip.id)
@@ -386,6 +437,7 @@ export function AdminSchedule(props) {
                   <div><dt>Menunggu</dt><dd>{waitingCount}</dd></div>
                   <div><dt><span className="asset-icon icon-people" aria-hidden="true" />Pekerja</dt><dd>{assignedJobs}/{workerTarget}</dd></div>
                 </dl>
+                
                 <div className="schedule-card-footer">
                   <div className="participant-list">{participants.length ? participants.slice(0, 3).map((item) => <span key={item.id}>{item.name} ({item.participants})</span>) : <span>Belum ada peserta disetujui</span>}</div>
                   <button className="outline-btn" onClick={() => props.navigate(`/admin/jadwal/${trip.id}`)}>Detail jadwal</button>
@@ -393,7 +445,7 @@ export function AdminSchedule(props) {
               </article>
             )
           })}
-          {privateSchedules.map(({ registration, trip }) => {
+          {visiblePrivateSchedules.map(({ registration, trip }) => {
             const tripJobs = jobs.filter((job) => Number(job.registrationId) === Number(registration.id))
             const assignedJobs = tripJobs.filter((job) => job.worker).length
             const workerTarget = tripJobs.length || getSelectedAddons(registration).length || 0
@@ -426,6 +478,7 @@ export function AdminSchedule(props) {
               </article>
             )
           })}
+          {!visibleOpenTrips.length && !visiblePrivateSchedules.length && <p className="empty-state">Belum ada jadwal untuk filter ini.</p>}
         </div>
       </section>
     </AdminShell>

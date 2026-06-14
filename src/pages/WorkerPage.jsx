@@ -1,8 +1,24 @@
+import { useState } from 'react'
 import { jobStatuses } from '../config/constants'
 import { formatDate } from '../utils/formatters'
-import { Badge, InfoBlock, Metric, NotFound, Sidebar } from './shared'
+import { AppModal, Badge, InfoBlock, Metric, NotFound, Sidebar } from './shared'
 
 const getJobScope = (job) => job.registrationId ? `registration-${job.registrationId}` : `trip-${job.tripId}`
+const completionStatusOptions = jobStatuses.filter((status) => status !== 'Tersedia' && status !== 'Selesai')
+const mediaAddonIds = ['drone', 'camera360', 'documentation']
+
+const getCompletionType = (job) => {
+  const typeText = [job.addonId, job.addonLabel, job.jobType, job.addonType, job.category]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase()
+
+  if (mediaAddonIds.includes(job.addonId) || typeText.includes('drone') || typeText.includes('camera 360') || typeText.includes('camera360') || typeText.includes('video') || typeText.includes('foto')) {
+    return 'drive'
+  }
+  if (job.addonId === 'transport' || typeText.includes('transport')) return 'transport'
+  return ''
+}
 
 function WorkerShell({ title, children, navigate, logout, path }) {
   return (
@@ -62,6 +78,7 @@ export function WorkerJobDetail({ jobId, jobs, trips, takeJob, updateJobStatus, 
   const trip = trips.find((item) => item.id === job.tripId)
   const registration = props.registrations?.find((item) => item.id === job.registrationId)
   const alreadyTookScope = jobs.some((item) => getJobScope(item) === getJobScope(job) && item.worker === props.session?.name)
+  const showCompletionChecklist = job.status !== 'Tersedia' && Boolean(job.worker)
   return (
     <WorkerShell title="Detail Job" navigate={navigate} {...props}>
       <article className="detail-panel standalone">
@@ -76,8 +93,9 @@ export function WorkerJobDetail({ jobId, jobs, trips, takeJob, updateJobStatus, 
         </div>
         <InfoBlock title="Detail tugas" text={job.task} />
         {job.status === 'Tersedia' ? <button className="primary-btn" disabled={alreadyTookScope} onClick={() => takeJob(job.id)}>{alreadyTookScope ? 'Sudah ambil booking ini' : 'Ambil job'}</button> : (
-          <label className="status-control">Update status<select value={job.status} onChange={(e) => updateJobStatus(job.id, e.target.value)}>{jobStatuses.filter((status) => status !== 'Tersedia').map((status) => <option key={status}>{status}</option>)}</select></label>
+          <label className="status-control">Update status<select value={job.status === 'Selesai' ? 'Selesai' : job.status} disabled={job.status === 'Selesai'} onChange={(e) => updateJobStatus(job.id, e.target.value)}>{job.status === 'Selesai' && <option>Selesai</option>}{completionStatusOptions.map((status) => <option key={status}>{status}</option>)}</select></label>
         )}
+        {showCompletionChecklist && <JobCompletionChecklist key={`${job.id}-${job.status}-${job.driveLink || job.completionLink || ''}-${job.proofPhotoName || ''}`} job={job} updateJobStatus={updateJobStatus} />}
       </article>
     </WorkerShell>
   )
@@ -94,8 +112,91 @@ function JobCard({ job, trips, registrations, navigate, takeJob, mine, updateJob
       <p>{formatDate(job.requestedDate || trip?.date)} - {registration?.name || job.customerName || 'Customer'} ({registration?.participants || (trip ? trip.quota - trip.slots : 0)} peserta)</p>
       <p className="muted">{job.task}</p>
       {job.status === 'Tersedia' && !mine && <button className="primary-btn" onClick={() => takeJob(job.id)}>Ambil job</button>}
-      {mine && <select className="status-select" value={job.status} onChange={(e) => updateJobStatus(job.id, e.target.value)}>{jobStatuses.filter((status) => status !== 'Tersedia').map((status) => <option key={status}>{status}</option>)}</select>}
+      {mine && <select className="status-select" value={job.status === 'Selesai' ? 'Selesai' : job.status} disabled={job.status === 'Selesai'} onChange={(e) => updateJobStatus(job.id, e.target.value)}>{job.status === 'Selesai' && <option>Selesai</option>}{completionStatusOptions.map((status) => <option key={status}>{status}</option>)}</select>}
+      {mine && <JobCompletionChecklist key={`${job.id}-${job.status}-${job.driveLink || job.completionLink || ''}-${job.proofPhotoName || ''}`} job={job} updateJobStatus={updateJobStatus} compact />}
       <button className="outline-btn" onClick={() => navigate(`/pekerja/job/${job.id}`)}>Detail</button>
     </article>
+  )
+}
+
+function JobCompletionChecklist({ job, updateJobStatus, compact = false }) {
+  const completionType = getCompletionType(job)
+  const isDone = job.status === 'Selesai'
+  const initialChecked = isDone || Boolean(job.completionChecked || job.transportCompleted)
+  const initialDriveLink = job.driveLink || job.completionLink || ''
+  const [checked, setChecked] = useState(initialChecked)
+  const [driveLink, setDriveLink] = useState(initialDriveLink)
+  const [photoName, setPhotoName] = useState(job.proofPhotoName || '')
+  const [error, setError] = useState('')
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false)
+
+  if (!completionType) return null
+
+  const openCompletionConfirmation = () => {
+    if (!checked) {
+      setError('Lengkapi checklist dan bukti pekerjaan terlebih dahulu.')
+      return
+    }
+    if (completionType === 'drive' && !driveLink.trim()) {
+      setError('Lengkapi checklist dan bukti pekerjaan terlebih dahulu.')
+      return
+    }
+    if (completionType === 'transport' && !photoName.trim()) {
+      setError('Lengkapi checklist dan bukti pekerjaan terlebih dahulu.')
+      return
+    }
+
+    setError('')
+    setIsConfirmModalOpen(true)
+  }
+
+  const completeJob = () => {
+    const completionFields = completionType === 'drive'
+      ? { completionChecked: true, driveLink: driveLink.trim(), completionLink: driveLink.trim() }
+      : { completionChecked: true, transportCompleted: true, proofPhotoName: photoName }
+    updateJobStatus(job.id, 'Selesai', completionFields)
+    setIsConfirmModalOpen(false)
+    setError('')
+  }
+
+  return (
+    <section className={`job-completion-card ${compact ? 'is-compact' : ''}`}>
+      <div className="job-completion-head">
+        <h4>Checklist penyelesaian</h4>
+        {isDone && <Badge status="Selesai" />}
+      </div>
+      <label className="completion-check">
+        <input type="checkbox" checked={checked} disabled={isDone} onChange={(event) => setChecked(event.target.checked)} />
+        <span>{completionType === 'transport' ? 'Selesai mengantar customer' : 'Upload foto/video ke Google Drive'}</span>
+      </label>
+
+      {completionType === 'drive' ? (
+        <label className="completion-field">Link Google Drive
+          <input type="url" placeholder="Tempel link Google Drive di sini" value={driveLink} disabled={isDone} onChange={(event) => setDriveLink(event.target.value)} />
+        </label>
+      ) : (
+        <div className="completion-field">
+          <span>Kirim Foto Bukti</span>
+          <label className="proof-upload-btn">Pilih Foto
+            <input type="file" accept="image/*" disabled={isDone} onChange={(event) => setPhotoName(event.target.files?.[0]?.name || '')} />
+          </label>
+          {photoName && <small className="proof-file-name">{photoName}</small>}
+          <small>Upload foto masih berupa formalitas dan akan disimpan setelah fitur database tersedia.</small>
+        </div>
+      )}
+
+      {error && <p className="form-error job-completion-error">{error}</p>}
+      {!isDone && <button className="primary-btn" type="button" onClick={openCompletionConfirmation}>Selesaikan Pekerjaan</button>}
+      <AppModal
+        isOpen={isConfirmModalOpen}
+        title="Selesaikan pekerjaan?"
+        description="Pastikan checklist pekerjaan sudah dipenuhi dan bukti pekerjaan sudah diisi dengan benar sebelum menyelesaikan tugas."
+        confirmText="Ya, Selesaikan"
+        cancelText="Batal"
+        variant="success"
+        onConfirm={completeJob}
+        onCancel={() => setIsConfirmModalOpen(false)}
+      />
+    </section>
   )
 }

@@ -7,11 +7,12 @@ import horizontalLogo from '../assets/desainHorizontal.png'
 import verticalLogo from '../assets/desainvertikal.png'
 import { addonOptions } from '../config/constants'
 import { formatCurrency, formatDate, tripName } from '../utils/formatters'
-import { Badge, InfoBlock, NotFound } from './shared'
+import { AppModal, Badge, InfoBlock, NotFound } from './shared'
 
 export function PublicNav({ navigate, session, logout }) {
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false)
   const isLoggedIn = Boolean(session)
 
   useEffect(() => {
@@ -50,64 +51,81 @@ export function PublicNav({ navigate, session, logout }) {
 
   const handleLogout = () => {
     setIsMenuOpen(false)
+    setIsLogoutModalOpen(true)
+  }
+
+  const confirmLogout = () => {
+    setIsLogoutModalOpen(false)
     logout?.()
   }
 
   return (
-    <header className={`public-nav ${isScrolled ? 'is-scrolled' : ''}`}>
-      <button className="public-nav-logo" type="button" onClick={() => goToPage('/')} aria-label="MAUA home">
-        <img src={horizontalLogo} alt="MAUA" />
-      </button>
+    <>
+      <header className={`public-nav ${isScrolled ? 'is-scrolled' : ''}`}>
+        <button className="public-nav-logo" type="button" onClick={() => goToPage('/')} aria-label="MAUA home">
+          <img src={horizontalLogo} alt="MAUA" />
+        </button>
 
-      <nav className="public-nav-menu" aria-label="Navigasi utama">
-        <button type="button" onClick={() => goToPage('/destinasi')}>Trip</button>
-        <button type="button" onClick={() => goToPage('/')}>Home</button>
-        <button type="button" onClick={() => goToSection('faq-list')}>FAQ</button>
-      </nav>
+        <nav className="public-nav-menu" aria-label="Navigasi utama">
+          <button type="button" onClick={() => goToPage('/destinasi')}>Trip</button>
+          <button type="button" onClick={() => goToPage('/')}>Home</button>
+          <button type="button" onClick={() => goToSection('faq-list')}>FAQ</button>
+        </nav>
 
-      <div className="public-nav-actions">
-        {isLoggedIn ? (
-          <>
-            <button className="public-signup-btn" type="button" onClick={goToAccount}>Akun</button>
-            <button className="public-login-btn" type="button" onClick={handleLogout}>Logout</button>
-          </>
-        ) : (
-          <>
-            <button className="public-login-btn" type="button" onClick={() => goToPage('/login')}>Login</button>
-            <button className="public-signup-btn" type="button" onClick={() => goToPage('/signup')}>Sign Up</button>
-          </>
-        )}
-      </div>
+        <div className="public-nav-actions">
+          {isLoggedIn ? (
+            <>
+              <button className="public-signup-btn" type="button" onClick={goToAccount}>Akun</button>
+              <button className="public-login-btn" type="button" onClick={handleLogout}>Logout</button>
+            </>
+          ) : (
+            <>
+              <button className="public-login-btn" type="button" onClick={() => goToPage('/login')}>Login</button>
+              <button className="public-signup-btn" type="button" onClick={() => goToPage('/signup')}>Sign Up</button>
+            </>
+          )}
+        </div>
 
-      <button
-        className={`public-menu-toggle ${isMenuOpen ? 'is-open' : ''}`}
-        type="button"
-        onClick={() => setIsMenuOpen((current) => !current)}
-        aria-label={isMenuOpen ? 'Tutup menu' : 'Buka menu'}
-        aria-expanded={isMenuOpen}
-      >
-        <span />
-        <span />
-        <span />
-      </button>
+        <button
+          className={`public-menu-toggle ${isMenuOpen ? 'is-open' : ''}`}
+          type="button"
+          onClick={() => setIsMenuOpen((current) => !current)}
+          aria-label={isMenuOpen ? 'Tutup menu' : 'Buka menu'}
+          aria-expanded={isMenuOpen}
+        >
+          <span />
+          <span />
+          <span />
+        </button>
 
-      <div className={`public-mobile-menu ${isMenuOpen ? 'is-open' : ''}`}>
-        <button type="button" onClick={() => goToPage('/destinasi')}>Trip</button>
-        <button type="button" onClick={() => goToPage('/')}>Home</button>
-        <button type="button" onClick={() => goToSection('faq-list')}>FAQ</button>
-        {isLoggedIn ? (
-          <>
-            <button type="button" onClick={goToAccount}>Akun</button>
-            <button type="button" onClick={handleLogout}>Logout</button>
-          </>
-        ) : (
-          <>
-            <button type="button" onClick={() => goToPage('/signup')}>Sign Up</button>
-            <button type="button" onClick={() => goToPage('/login')}>Login</button>
-          </>
-        )}
-      </div>
-    </header>
+        <div className={`public-mobile-menu ${isMenuOpen ? 'is-open' : ''}`}>
+          <button type="button" onClick={() => goToPage('/destinasi')}>Trip</button>
+          <button type="button" onClick={() => goToPage('/')}>Home</button>
+          <button type="button" onClick={() => goToSection('faq-list')}>FAQ</button>
+          {isLoggedIn ? (
+            <>
+              <button type="button" onClick={goToAccount}>Akun</button>
+              <button type="button" onClick={handleLogout}>Logout</button>
+            </>
+          ) : (
+            <>
+              <button type="button" onClick={() => goToPage('/signup')}>Sign Up</button>
+              <button type="button" onClick={() => goToPage('/login')}>Login</button>
+            </>
+          )}
+        </div>
+      </header>
+      <AppModal
+        isOpen={isLogoutModalOpen}
+        title="Keluar dari akun?"
+        description="Kamu akan keluar dari akun ini dan perlu login kembali untuk mengakses fitur akun."
+        confirmText="Ya, Logout"
+        cancelText="Batal"
+        variant="warning"
+        onConfirm={confirmLogout}
+        onCancel={() => setIsLogoutModalOpen(false)}
+      />
+    </>
   )
 }
 
@@ -542,9 +560,17 @@ const getSelectedAddons = (registration) => {
 }
 
 export function TripDetail({ tripId, trips, navigate, session, logout }) {
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false)
   const trip = trips.find((item) => item.id === tripId)
   if (!trip) return <NotFound navigate={navigate} />
   const isOpen = trip.slots > 0 && trip.status === 'Tersedia'
+  const startCheckout = () => {
+    if (session?.role !== 'customer') {
+      setIsLoginModalOpen(true)
+      return
+    }
+    navigate(`/daftar/${trip.id}`)
+  }
 
   return (
     <main className="public-page">
@@ -578,13 +604,24 @@ export function TripDetail({ tripId, trips, navigate, session, logout }) {
             <section className="detail-side-card checkout-card">
               <span>Mulai dari</span>
               <div className="checkout-price"><strong>{formatCurrency(trip.price)}</strong><small>/ orang</small></div>
-              <button className="primary-btn wide" disabled={!isOpen} onClick={() => navigate(`/daftar/${trip.id}`)}>
+              <button className="primary-btn wide" disabled={!isOpen} onClick={startCheckout}>
                 {isOpen ? 'Checkout' : 'Pendaftaran ditutup'}
               </button>
             </section>
           </aside>
         </div>
       </section>
+      <AppModal
+        isOpen={isLoginModalOpen}
+        title="Login terlebih dahulu"
+        description="Silakan login atau buat akun terlebih dahulu sebelum melanjutkan checkout dan mengirim pendaftaran trip."
+        confirmText="Login"
+        cancelText="Sign Up"
+        variant="default"
+        onConfirm={() => navigate('/login')}
+        onCancel={() => navigate('/signup')}
+        onBackdrop={() => setIsLoginModalOpen(false)}
+      />
     </main>
   )
 }
@@ -606,6 +643,7 @@ export function RegistrationPage({ tripId, trips, submitRegistration, navigate, 
     participantDetails: [buildParticipant({ ...customerProfile, name: session?.name || customerProfile.name })],
   })
   const [error, setError] = useState('')
+  const [pendingSubmission, setPendingSubmission] = useState(null)
   const selectedTrip = trips.find((item) => item.id === Number(form.tripId)) || trip
   const participants = Number(form.participants) || 1
   const estimatedTotal = selectedTrip ? selectedTrip.price * participants : 0
@@ -634,8 +672,15 @@ export function RegistrationPage({ tripId, trips, submitRegistration, navigate, 
       setError('Isi titik jemput atau asal transportasi.')
       return
     }
-    const isSubmitted = await submitRegistration({ ...form, participantDetails, participants: isPrivateBooking ? participants : 1, isPrivateTour: isPrivateBooking })
+    setPendingSubmission({ ...form, participantDetails, participants: isPrivateBooking ? participants : 1, isPrivateTour: isPrivateBooking })
+    setError('')
+  }
+
+  const confirmSubmitRegistration = async () => {
+    if (!pendingSubmission) return
+    const isSubmitted = await submitRegistration(pendingSubmission)
     if (!isSubmitted) setError('Pendaftaran gagal dikirim. Cek slot dan koneksi Firebase.')
+    setPendingSubmission(null)
   }
 
   const updateParticipant = (index, field, value) => {
@@ -778,17 +823,47 @@ export function RegistrationPage({ tripId, trips, submitRegistration, navigate, 
           </form>
         </div>
       </section>
+      <AppModal
+        isOpen={Boolean(pendingSubmission)}
+        title="Kirim pendaftaran trip?"
+        description="Pastikan data diri, jumlah peserta, addon, dan bukti pembayaran sudah benar sebelum dikirim ke admin."
+        confirmText="Kirim Pendaftaran"
+        cancelText="Periksa Lagi"
+        variant="warning"
+        onConfirm={confirmSubmitRegistration}
+        onCancel={() => setPendingSubmission(null)}
+      />
     </main>
   )
 }
 
 export function CustomerAccountPage({ registrations, trips, navigate, session, logout }) {
+  const [activeFilter, setActiveFilter] = useState('Semua')
+  const [selectedOrder, setSelectedOrder] = useState(null)
+
   if (session?.role !== 'customer') {
     navigate('/login')
     return null
   }
 
   const myRegistrations = registrations.filter((item) => item.email === session.email)
+  const waitingCount = myRegistrations.filter((item) => item.status === 'Menunggu Approval').length
+  const approvedCount = myRegistrations.filter((item) => item.status === 'Disetujui' || item.status === 'Selesai').length
+  const rejectedCount = myRegistrations.filter((item) => item.status === 'Ditolak').length
+  const filterOptions = [
+    ['Semua', myRegistrations.length],
+    ['Menunggu', waitingCount],
+    ['Disetujui', approvedCount],
+    ['Ditolak', rejectedCount],
+  ]
+  const visibleRegistrations = myRegistrations.filter((item) => {
+    if (activeFilter === 'Semua') return true
+    if (activeFilter === 'Menunggu') return item.status === 'Menunggu Approval'
+    if (activeFilter === 'Disetujui') return item.status === 'Disetujui' || item.status === 'Selesai'
+    return item.status === 'Ditolak'
+  })
+  const selectedTrip = selectedOrder ? trips.find((tripItem) => tripItem.id === selectedOrder.tripId) : null
+  const selectedAddons = selectedOrder ? getSelectedAddons(selectedOrder) : []
 
   return (
     <main className="public-page">
@@ -797,74 +872,131 @@ export function CustomerAccountPage({ registrations, trips, navigate, session, l
         <div className="account-hero">
           <div>
             <p className="eyebrow">Akun customer</p>
-            <h1>Halo, {session.name}</h1>
-            <p className="muted">Pantau semua pendaftaran open trip goa kamu dari sini, termasuk status approval dari admin.</p>
+            <h1>Pemesanan Saya</h1>
+            <p className="account-greeting">Halo, {session.name}</p>
+            <p className="muted">Pantau semua pemesanan trip kamu di sini, termasuk status approval dari admin.</p>
           </div>
-          <button className="outline-btn" onClick={() => navigate('/open-trip')}>Lihat cave trip</button>
+          <button className="primary-btn" onClick={() => navigate('/open-trip')}>Pesan Trip Lagi</button>
         </div>
 
         <section className="account-summary-grid">
-          <div className="metric"><span>Total pendaftaran</span><strong>{myRegistrations.length}</strong></div>
-          <div className="metric"><span>Menunggu approval</span><strong>{myRegistrations.filter((item) => item.status === 'Menunggu Approval').length}</strong></div>
-          <div className="metric"><span>Disetujui</span><strong>{myRegistrations.filter((item) => item.status === 'Disetujui').length}</strong></div>
-          <div className="metric"><span>Ditolak</span><strong>{myRegistrations.filter((item) => item.status === 'Ditolak').length}</strong></div>
+          <div className="metric account-metric"><span>Total Pemesanan</span><strong>{myRegistrations.length}</strong></div>
+          <div className="metric account-metric"><span>Menunggu Approval</span><strong>{waitingCount}</strong></div>
+          <div className="metric account-metric"><span>Disetujui</span><strong>{approvedCount}</strong></div>
+          <div className="metric account-metric"><span>Ditolak</span><strong>{rejectedCount}</strong></div>
         </section>
 
+        <div className="account-filter-tabs" role="tablist" aria-label="Filter status pemesanan">
+          {filterOptions.map(([label, count]) => (
+            <button
+              className={activeFilter === label ? 'is-active' : ''}
+              key={label}
+              onClick={() => setActiveFilter(label)}
+              type="button"
+              role="tab"
+              aria-selected={activeFilter === label}
+            >
+              {label}<span>{count}</span>
+            </button>
+          ))}
+        </div>
+
         <section className="account-registration-list">
-          {myRegistrations.length ? myRegistrations.map((item) => {
+          {visibleRegistrations.length ? visibleRegistrations.map((item) => {
             const trip = trips.find((tripItem) => tripItem.id === item.tripId)
+            const totalPrice = trip ? Number(trip.price || 0) * Number(item.participants || 1) : 0
             return (
               <article className="account-registration-card" key={item.id}>
                 <div className="account-registration-head">
                   <div>
                     <h2>{tripName(trips, item.tripId)}</h2>
-              <p className="icon-line"><span className="asset-icon icon-geo" aria-hidden="true" />{trip?.destination || 'Destinasi belum tersedia'}</p>
+                    <p className="icon-line"><span className="asset-icon icon-geo" aria-hidden="true" />{trip?.destination || 'Destinasi belum tersedia'}</p>
                   </div>
                   <Badge status={item.status} />
                 </div>
-                <dl>
+                <dl className="account-order-meta">
                   <div><dt><span className="asset-icon icon-calendar" aria-hidden="true" />Tanggal</dt><dd>{item.requestedDate ? formatDate(item.requestedDate) : trip ? formatDate(trip.date) : '-'}</dd></div>
                   <div><dt>Jenis</dt><dd>{tripTypeLabel(trip, item)}</dd></div>
                   <div><dt><span className="asset-icon icon-people" aria-hidden="true" />Peserta</dt><dd>{item.participants} orang</dd></div>
-                  <div><dt>WhatsApp</dt><dd>{item.whatsapp}</dd></div>
-                  <div><dt>Domisili</dt><dd>{item.address || '-'}</dd></div>
-                  <div><dt>Usia</dt><dd>{item.age ? `${item.age} tahun` : '-'}</dd></div>
-                  <div><dt>Jenis kelamin</dt><dd>{item.gender || '-'}</dd></div>
-                  <div><dt>Kondisi kesehatan</dt><dd>{item.healthNotes || '-'}</dd></div>
-                  <div><dt>Catatan</dt><dd>{item.notes || '-'}</dd></div>
+                  <div><dt>Harga total</dt><dd>{trip ? formatCurrency(totalPrice) : '-'}</dd></div>
+                  <div><dt>Kode booking</dt><dd>MAUA-{item.id}</dd></div>
                 </dl>
-                {getSelectedAddons(item).length > 0 && (
-                  <div className="selected-addon-list">
-                    {getSelectedAddons(item).map((addon) => (
-                      <span key={addon.id}>{addon.label}{addon.detail ? ` dari ${addon.detail}` : ''}</span>
-                    ))}
-                  </div>
-                )}
-                {Array.isArray(item.participantDetails) && item.participantDetails.length > 1 && (
-                  <div className="participant-detail-list">
-                    {item.participantDetails.map((participant, index) => (
-                      <div key={`${item.id}-${index}`}>
-                        <strong>Peserta {index + 1}: {participant.name}</strong>
-                        <span>{participant.gender || '-'} - {participant.age || '-'} tahun - {participant.address || '-'}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-                <button className="outline-btn" onClick={() => navigate(`/open-trip/${item.tripId}`)}>Lihat detail cave trip</button>
+                <div className="account-card-actions">
+                  <button className="outline-btn" onClick={() => setSelectedOrder(item)} type="button">Lihat Detail</button>
+                  <a className="outline-btn" href="https://wa.me/62882005881248" target="_blank" rel="noreferrer">Hubungi Admin</a>
+                  <button className="text-link-btn" onClick={() => navigate(`/open-trip/${item.tripId}`)} type="button">Lihat Trip</button>
+                </div>
               </article>
             )
           }) : (
-            <div className="empty-state">
-              Belum ada pendaftaran. Pilih cave trip dulu untuk mulai mendaftar.
+            <div className="account-empty-state">
+              <span className="account-empty-icon"><span className="asset-icon icon-ticket" aria-hidden="true" /></span>
+              <h2>Belum ada pemesanan trip</h2>
+              <p>{myRegistrations.length ? 'Tidak ada pemesanan dengan status ini.' : 'Pilih open trip atau private trip favoritmu, lalu pantau status approval-nya di sini.'}</p>
+              <button className="primary-btn" onClick={() => navigate('/open-trip')} type="button">Lihat Trip</button>
             </div>
           )}
         </section>
       </section>
+      {selectedOrder && (
+        <div className="modal-backdrop" role="presentation" onClick={() => setSelectedOrder(null)}>
+          <section className="modal-panel account-detail-modal" role="dialog" aria-modal="true" aria-label="Detail pemesanan" onClick={(event) => event.stopPropagation()}>
+            <div className="modal-head">
+              <div>
+                <p className="eyebrow">Detail pemesanan</p>
+                <h2>{tripName(trips, selectedOrder.tripId)}</h2>
+              </div>
+              <button className="outline-btn" onClick={() => setSelectedOrder(null)} type="button">Tutup</button>
+            </div>
+            <div className="account-detail-grid">
+              <section>
+                <h3>Data pemesan</h3>
+                <dl>
+                  <div><dt>Nama pemesan</dt><dd>{selectedOrder.name || '-'}</dd></div>
+                  <div><dt>Nomor WhatsApp</dt><dd>{selectedOrder.whatsapp || '-'}</dd></div>
+                  <div><dt>Email</dt><dd>{selectedOrder.email || '-'}</dd></div>
+                  <div><dt>Catatan tambahan</dt><dd>{selectedOrder.notes || '-'}</dd></div>
+                  <div><dt>Kode booking</dt><dd>MAUA-{selectedOrder.id}</dd></div>
+                </dl>
+              </section>
+              <section>
+                <h3>Ringkasan trip</h3>
+                <dl>
+                  <div><dt>Lokasi</dt><dd>{selectedTrip?.destination || '-'}</dd></div>
+                  <div><dt>Jenis trip</dt><dd>{tripTypeLabel(selectedTrip, selectedOrder)}</dd></div>
+                  <div><dt>Tanggal</dt><dd>{selectedOrder.requestedDate ? formatDate(selectedOrder.requestedDate) : selectedTrip ? formatDate(selectedTrip.date) : '-'}</dd></div>
+                  <div><dt>Jumlah peserta</dt><dd>{selectedOrder.participants || 1} orang</dd></div>
+                  <div><dt>Status approval</dt><dd><Badge status={selectedOrder.status} /></dd></div>
+                </dl>
+              </section>
+            </div>
+            {selectedAddons.length > 0 && (
+              <div className="selected-addon-list account-addon-list">
+                {selectedAddons.map((addon) => (
+                  <span key={addon.id}>{addon.label}{addon.detail ? ` dari ${addon.detail}` : ''}</span>
+                ))}
+              </div>
+            )}
+            <section className="account-participant-section">
+              <h3>Data peserta</h3>
+              <div className="participant-detail-list">
+                {(Array.isArray(selectedOrder.participantDetails) && selectedOrder.participantDetails.length ? selectedOrder.participantDetails : [selectedOrder]).map((participant, index) => (
+                  <div key={`${selectedOrder.id}-${index}`}>
+                    <strong>{selectedOrder.participants > 1 ? `Peserta ${index + 1}: ` : ''}{participant.name || '-'}</strong>
+                    <span>{participant.gender || '-'} - {participant.age || '-'} tahun - {participant.address || '-'}</span>
+                    <span>Kondisi kesehatan: {participant.healthNotes || '-'}</span>
+                  </div>
+                ))}
+              </div>
+            </section>
+          </section>
+        </div>
+      )}
     </main>
   )
 }
 
-export function CustomerLoginPage({ loginCustomer, navigate }) {
+export function CustomerLoginPage({ loginCustomer, navigate, afterLoginPath = '/open-trip' }) {
   const [form, setForm] = useState({ email: '', password: '' })
   const [error, setError] = useState('')
 
@@ -874,7 +1006,7 @@ export function CustomerLoginPage({ loginCustomer, navigate }) {
       setError('Email dan password wajib diisi.')
       return
     }
-    if (!loginCustomer(form)) setError('Akun customer tidak ditemukan atau password salah.')
+    if (!loginCustomer(form, afterLoginPath)) setError('Akun customer tidak ditemukan atau password salah.')
   }
 
   return (

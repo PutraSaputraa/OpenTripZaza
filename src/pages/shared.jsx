@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import loadingVideo from '../assets/videoloading.mp4'
 import horizontalLogo from '../assets/desainHorizontal.png'
 import { accounts } from '../config/constants'
@@ -64,6 +65,13 @@ export function LoadingPage({ onIntroFinished }) {
 }
 
 export function Sidebar({ title, links, navigate, logout, path }) {
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false)
+
+  const confirmLogout = () => {
+    setIsLogoutModalOpen(false)
+    logout?.()
+  }
+
   return (
     <aside className="sidebar">
       <div className="sidebar-brand">
@@ -79,8 +87,18 @@ export function Sidebar({ title, links, navigate, logout, path }) {
         })}
       </nav>
       <div className="sidebar-footer">
-        <button className="logout-btn" onClick={logout}>Keluar</button>
+        <button className="logout-btn" onClick={() => setIsLogoutModalOpen(true)}>Keluar</button>
       </div>
+      <AppModal
+        isOpen={isLogoutModalOpen}
+        title="Keluar dari akun?"
+        description="Kamu akan keluar dari akun ini dan perlu login kembali untuk mengakses fitur akun."
+        confirmText="Ya, Logout"
+        cancelText="Batal"
+        variant="warning"
+        onConfirm={confirmLogout}
+        onCancel={() => setIsLogoutModalOpen(false)}
+      />
     </aside>
   )
 }
@@ -100,6 +118,33 @@ export function InfoBlock({ title, text }) {
 export function Badge({ status }) {
   const className = `badge badge-${status.toLowerCase().replaceAll(' ', '-')}`
   return <span className={className}>{status}</span>
+}
+
+export function AppModal({ isOpen, title, description, confirmText, cancelText, onConfirm, onCancel, onBackdrop, variant = 'default' }) {
+  if (!isOpen) return null
+
+  return createPortal((
+    <div className="modal-backdrop app-modal-backdrop" role="presentation" onClick={onBackdrop || onCancel}>
+      <section
+        className={`modal-panel app-modal app-modal-${variant}`}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="app-modal-title"
+        aria-describedby="app-modal-description"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="app-modal-icon" aria-hidden="true" />
+        <div className="app-modal-copy">
+          <h2 id="app-modal-title">{title}</h2>
+          <p id="app-modal-description">{description}</p>
+        </div>
+        <div className="app-modal-actions">
+          <button className="outline-btn" type="button" onClick={onCancel}>{cancelText}</button>
+          <button className="primary-btn" type="button" onClick={onConfirm}>{confirmText}</button>
+        </div>
+      </section>
+    </div>
+  ), document.body)
 }
 
 export function NotFound({ navigate }) {
