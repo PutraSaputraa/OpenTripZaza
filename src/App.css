@@ -781,8 +781,9 @@ button:disabled {
   inset: 0;
   background: linear-gradient(
     180deg,
-    rgba(20, 20, 19, 0.02),
-    rgba(20, 20, 19, 0.72)
+    rgba(20, 20, 19, 0.08) 0%,
+    rgba(20, 20, 19, 0.34) 52%,
+    rgba(20, 20, 19, 0.76) 100%
   );
   content: "";
 }
