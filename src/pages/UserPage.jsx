@@ -1088,8 +1088,8 @@ function AuthShell({ children, navigate }) {
           </button>
           <div>
             <p className="eyebrow">Customer area</p>
-            <h2>Mulai eksplor goa dari data yang rapi.</h2>
-            <p>Masuk atau buat akun untuk menyimpan kontak pendaftaran dan melanjutkan proses cave trip dengan lebih nyaman.</p>
+            <h2>Explor Vertical Caving Yogyakarta.</h2>
+            <p>Login untuk merasakan indahnya goa di yogyakarta</p>
           </div>
         </aside>
         {children}

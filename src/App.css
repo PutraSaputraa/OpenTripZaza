@@ -2259,6 +2259,8 @@ button:disabled {
   overflow: hidden;
 }
 .auth-brand-panel {
+  position: relative;
+  isolation: isolate;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -2266,31 +2268,41 @@ button:disabled {
   padding: clamp(24px, 4vw, 44px);
   background:
     linear-gradient(
-      160deg,
-      rgba(242, 199, 92, 0.94),
-      rgba(255, 255, 255, 0.86)
+      180deg,
+      rgba(10, 9, 7, 0.18),
+      rgba(10, 9, 7, 0.7)
     ),
-    var(--color-gold);
-  color: var(--color-ink);
+    linear-gradient(135deg, rgba(36, 26, 8, 0.32), rgba(36, 26, 8, 0)),
+    url("./assets/loginsignuppicture.jpg") center / cover no-repeat;
+  color: #ffffff;
 }
 .auth-brand-panel .brand {
   width: max-content;
   padding: 0;
 }
+.auth-brand-panel .brand-logo-btn img {
+  filter: drop-shadow(0 3px 12px rgba(0, 0, 0, 0.42));
+}
+.auth-brand-panel .eyebrow {
+  color: #f7d77a;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
+}
 .auth-brand-panel h2 {
   max-width: 420px;
   margin: 0;
-  color: var(--color-ink);
+  color: #ffffff;
   font-size: clamp(34px, 4vw, 54px);
   line-height: 1.02;
   letter-spacing: -0.02em;
+  text-shadow: 0 3px 18px rgba(0, 0, 0, 0.42);
 }
 .auth-brand-panel p:not(.eyebrow) {
   max-width: 430px;
   margin-top: 16px;
-  color: var(--color-ink);
+  color: rgba(255, 255, 255, 0.9);
   font-size: 17px;
   line-height: 1.65;
+  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.48);
 }
 .auth-panel {
   display: grid;
