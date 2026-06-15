@@ -55,13 +55,22 @@ const getSelectedAddons = (registration) => {
     .map((option) => option.id === 'transport' && registration.transportFrom ? `${option.label} dari ${registration.transportFrom}` : option.label)
 }
 
-function AdminShell({ title, children, navigate, logout, path }) {
+const isPendingRegistration = (registration) => {
+  const status = String(registration?.status || '').toLowerCase()
+  return status.includes('pending') || status.includes('menunggu')
+}
+
+const countParticipants = (items) => items.reduce((sum, item) => sum + Number(item.participants || 0), 0)
+
+function AdminShell({ title, children, navigate, logout, path, registrations = [] }) {
+  const pendingParticipants = countParticipants(registrations.filter(isPendingRegistration))
+
   return (
     <main className="app-shell">
       <Sidebar title="Admin" links={[
         ['/admin/dashboard', 'Dashboard'],
         ['/admin/open-trip', 'Paket Trip'],
-        ['/admin/jadwal', 'Jadwal'],
+        ['/admin/jadwal', 'Jadwal', pendingParticipants],
         ['/admin/pekerja', 'Akun Pekerja'],
       ]} navigate={navigate} logout={logout} path={path} />
       <section className="workspace">
@@ -77,7 +86,7 @@ export function AdminDashboard(props) {
   const stats = [
     ['Total paket trip', trips.length],
     ['Total pendaftar', registrations.length],
-    ['Menunggu approval', registrations.filter((item) => item.status === 'Menunggu Approval').length],
+    ['Menunggu approval', countParticipants(registrations.filter(isPendingRegistration))],
     ['Disetujui', registrations.filter((item) => item.status === 'Disetujui').length],
     ['Ditolak', registrations.filter((item) => item.status === 'Ditolak').length],
     ['Job tersedia', jobs.filter((item) => item.status === 'Tersedia').length],
@@ -364,8 +373,39 @@ export function AdminSchedule(props) {
   const privateSchedules = registrations
     .map((item) => ({ registration: item, trip: trips.find((trip) => trip.id === item.tripId) }))
     .filter(({ registration, trip }) => trip && (trip.isPrivateTrip || registration.isPrivateTour))
+  const openScheduleItems = openTrips.map((trip) => {
+    const openTripRegistrations = registrations.filter((item) => item.tripId === trip.id && !item.isPrivateTrip && !item.isPrivateTour)
+    const approvedRegistrations = openTripRegistrations.filter((item) => item.status === 'Disetujui' || item.status === 'Selesai')
+    const waitingRegistrations = openTripRegistrations.filter(isPendingRegistration)
+    return {
+      type: 'open',
+      key: `open-${trip.id}`,
+      trip,
+      approvedRegistrations,
+      approvedParticipants: countParticipants(approvedRegistrations),
+      waitingParticipants: countParticipants(waitingRegistrations),
+      searchValues: [trip.name, trip.destination, trip.description],
+      date: trip.date,
+    }
+  })
+  const privateScheduleItems = privateSchedules.map(({ registration, trip }) => {
+    const participantDetails = Array.isArray(registration.participantDetails) ? registration.participantDetails : []
+    return {
+      type: 'private',
+      key: `private-${registration.id}`,
+      registration,
+      trip,
+      participantDetails,
+      waitingParticipants: isPendingRegistration(registration) ? Number(registration.participants || 0) : 0,
+      searchValues: [trip.name, trip.destination, registration.name, registration.whatsapp, registration.email],
+      date: registration.requestedDate || trip.date,
+    }
+  })
+  const scheduleItems = [...openScheduleItems, ...privateScheduleItems]
+  const pendingParticipants = scheduleItems.reduce((sum, item) => sum + item.waitingParticipants, 0)
+  const pendingScheduleCount = scheduleItems.filter((item) => item.waitingParticipants > 0).length
   const searchTerm = search.trim().toLowerCase()
-  const matchesSearch = (...values) => {
+  const matchesSearch = (values) => {
     if (!searchTerm) return true
     return values
       .filter(Boolean)
@@ -373,16 +413,23 @@ export function AdminSchedule(props) {
       .toLowerCase()
       .includes(searchTerm)
   }
-  const visibleOpenTrips = activeType === 'private'
-    ? []
-    : openTrips.filter((trip) => matchesSearch(trip.name, trip.destination, trip.description))
-  const visiblePrivateSchedules = activeType === 'open'
-    ? []
-    : privateSchedules.filter(({ registration, trip }) => matchesSearch(trip.name, trip.destination, registration.name, registration.whatsapp, registration.email))
+  const visibleScheduleItems = scheduleItems
+    .filter((item) => {
+      if (activeType === 'open') return item.type === 'open'
+      if (activeType === 'private') return item.type === 'private'
+      if (activeType === 'waiting') return item.waitingParticipants > 0
+      return true
+    })
+    .filter((item) => matchesSearch(item.searchValues))
+    .sort((a, b) => {
+      if (b.waitingParticipants !== a.waitingParticipants) return b.waitingParticipants - a.waitingParticipants
+      return String(a.date || '').localeCompare(String(b.date || ''))
+    })
   const scheduleTabs = [
-    ['all', 'Semua', openTrips.length + privateSchedules.length],
+    ['all', 'Semua', scheduleItems.length],
     ['open', 'Open Trip', openTrips.length],
     ['private', 'Private Trip', privateSchedules.length],
+    ['waiting', 'Menunggu Approval', pendingParticipants],
   ]
 
   return (
@@ -408,22 +455,27 @@ export function AdminSchedule(props) {
             <input placeholder="Nama trip, destinasi, atau pemesan" value={search} onChange={(event) => setSearch(event.target.value)} />
           </label>
         </section>
+        <p className={`schedule-review-summary ${pendingParticipants > 0 ? 'has-waiting' : ''}`}>
+          {pendingParticipants > 0
+            ? `Ada ${pendingParticipants} peserta menunggu approval dari ${pendingScheduleCount} jadwal.`
+            : 'Tidak ada pendaftar yang menunggu approval.'}
+        </p>
         <div className="schedule-list admin-card-grid">
-          {visibleOpenTrips.map((trip) => {
-            const participants = registrations.filter((item) => item.tripId === trip.id && (item.status === 'Disetujui' || item.status === 'Selesai'))
-            const waitingCount = registrations.filter((item) => item.tripId === trip.id && item.status === 'Menunggu Approval').length
-            const tripJobs = jobs.filter((job) => job.tripId === trip.id)
-            const assignedJobs = tripJobs.filter((job) => job.worker).length
-            const approvedCount = participants.reduce((sum, item) => sum + Number(item.participants), 0)
-            const workerTarget = tripJobs.length
-            return (
-              <article className="schedule-card" key={trip.id}>
+          {visibleScheduleItems.map((item) => {
+            if (item.type === 'open') {
+              const { trip, approvedRegistrations, approvedParticipants, waitingParticipants } = item
+              const tripJobs = jobs.filter((job) => job.tripId === trip.id)
+              const assignedJobs = tripJobs.filter((job) => job.worker).length
+              const workerTarget = tripJobs.length
+              return (
+                <article className={`schedule-card ${waitingParticipants > 0 ? 'needs-review' : ''}`} key={item.key}>
                 <div className="schedule-card-head">
                   <div>
                     <h3>{trip.name}</h3>
                     <p className="icon-line"><span className="asset-icon icon-geo" aria-hidden="true" />{trip.destination}</p>
                   </div>
                   <div className="card-badge-stack">
+                    {waitingParticipants > 0 && <span className="review-badge">Ada Pendaftar Baru</span>}
                     {trip.isPrivateTrip && <span className="trip-type-chip">Private cave tour</span>}
                     <Badge status={trip.status} />
                   </div>
@@ -433,31 +485,32 @@ export function AdminSchedule(props) {
                   <strong>{formatDate(trip.date)}</strong>
                 </div>
                 <dl className="schedule-metrics">
-                  <div><dt><span className="asset-icon icon-people" aria-hidden="true" />Peserta</dt><dd>{approvedCount}/{trip.quota}</dd></div>
-                  <div><dt>Menunggu</dt><dd>{waitingCount}</dd></div>
+                  <div><dt><span className="asset-icon icon-people" aria-hidden="true" />Peserta</dt><dd>{approvedParticipants}/{trip.quota}</dd></div>
+                  <div className={waitingParticipants > 0 ? 'metric-highlight' : ''}><dt>Menunggu</dt><dd>{waitingParticipants}</dd></div>
                   <div><dt><span className="asset-icon icon-people" aria-hidden="true" />Pekerja</dt><dd>{assignedJobs}/{workerTarget}</dd></div>
                 </dl>
                 
                 <div className="schedule-card-footer">
-                  <div className="participant-list">{participants.length ? participants.slice(0, 3).map((item) => <span key={item.id}>{item.name} ({item.participants})</span>) : <span>Belum ada peserta disetujui</span>}</div>
-                  <button className="outline-btn" onClick={() => props.navigate(`/admin/jadwal/${trip.id}`)}>Detail jadwal</button>
+                  <div className="participant-list">{approvedRegistrations.length ? approvedRegistrations.slice(0, 3).map((participant) => <span key={participant.id}>{participant.name} ({participant.participants})</span>) : <span>Belum ada peserta disetujui</span>}</div>
+                  <button className="outline-btn" onClick={() => props.navigate(`/admin/jadwal/${trip.id}`)}>{waitingParticipants > 0 ? 'Review Pendaftar' : 'Detail jadwal'}</button>
                 </div>
               </article>
-            )
-          })}
-          {visiblePrivateSchedules.map(({ registration, trip }) => {
+              )
+            }
+
+            const { registration, trip, participantDetails, waitingParticipants } = item
             const tripJobs = jobs.filter((job) => Number(job.registrationId) === Number(registration.id))
             const assignedJobs = tripJobs.filter((job) => job.worker).length
             const workerTarget = tripJobs.length || getSelectedAddons(registration).length || 0
-            const participantDetails = Array.isArray(registration.participantDetails) ? registration.participantDetails : []
             return (
-              <article className="schedule-card" key={`private-${registration.id}`}>
+              <article className={`schedule-card ${waitingParticipants > 0 ? 'needs-review' : ''}`} key={item.key}>
                 <div className="schedule-card-head">
                   <div>
                     <h3>{trip.name}</h3>
                     <p className="icon-line"><span className="asset-icon icon-geo" aria-hidden="true" />{trip.destination}</p>
                   </div>
                   <div className="card-badge-stack">
+                    {waitingParticipants > 0 && <span className="review-badge">Butuh Review</span>}
                     <span className="trip-type-chip">Private booking</span>
                     <Badge status={registration.status} />
                   </div>
@@ -468,17 +521,17 @@ export function AdminSchedule(props) {
                 </div>
                 <dl className="schedule-metrics">
                   <div><dt><span className="asset-icon icon-people" aria-hidden="true" />Peserta</dt><dd>{registration.participants}</dd></div>
-                  <div><dt>Pemesan</dt><dd>{registration.name}</dd></div>
+                  <div className={waitingParticipants > 0 ? 'metric-highlight' : ''}><dt>Menunggu</dt><dd>{waitingParticipants}</dd></div>
                   <div><dt><span className="asset-icon icon-people" aria-hidden="true" />Pekerja</dt><dd>{assignedJobs}/{workerTarget}</dd></div>
                 </dl>
                 <div className="schedule-card-footer">
                   <div className="participant-list">{participantDetails.length ? participantDetails.slice(0, 3).map((item, index) => <span key={`${registration.id}-${index}`}>{item.name}</span>) : <span>{registration.name} ({registration.participants})</span>}</div>
-                  <button className="outline-btn" onClick={() => props.navigate(`/admin/jadwal/private/${registration.id}`)}>Detail jadwal</button>
+                  <button className="outline-btn" onClick={() => props.navigate(`/admin/jadwal/private/${registration.id}`)}>{waitingParticipants > 0 ? 'Review Pendaftar' : 'Detail jadwal'}</button>
                 </div>
               </article>
             )
           })}
-          {!visibleOpenTrips.length && !visiblePrivateSchedules.length && <p className="empty-state">Belum ada jadwal untuk filter ini.</p>}
+          {!visibleScheduleItems.length && <p className="empty-state">Belum ada jadwal untuk filter ini.</p>}
         </div>
       </section>
     </AdminShell>
@@ -549,7 +602,7 @@ function AdminPrivateScheduleDetail({ registration, trips, jobs, setRegistration
 function AdminScheduleDetail({ trip, registrations, jobs, setRegistrationStatus, navigate, ...props }) {
   const tripRegistrations = registrations.filter((item) => item.tripId === trip.id)
   const approvedParticipants = tripRegistrations.filter((item) => item.status === 'Disetujui' || item.status === 'Selesai')
-  const waitingRegistrations = tripRegistrations.filter((item) => item.status === 'Menunggu Approval')
+  const waitingRegistrations = tripRegistrations.filter(isPendingRegistration)
   const rejectedRegistrations = tripRegistrations.filter((item) => item.status === 'Ditolak')
   const tripJobs = jobs.filter((job) => job.tripId === trip.id)
   const [activeStatus, setActiveStatus] = useState('Menunggu Approval')
@@ -565,6 +618,7 @@ function AdminScheduleDetail({ trip, registrations, jobs, setRegistrationStatus,
   const activeItems = tripRegistrations
     .filter((item) => {
       if (activeStatus === 'Disetujui') return item.status === 'Disetujui' || item.status === 'Selesai'
+      if (activeStatus === 'Menunggu Approval') return isPendingRegistration(item)
       return item.status === activeStatus
     })
     .filter((item) => {

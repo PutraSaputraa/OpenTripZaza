@@ -2401,6 +2401,29 @@ button:disabled {
     border-color 160ms ease,
     color 160ms ease;
 }
+.sidebar-nav button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.sidebar-nav-label {
+  min-width: 0;
+}
+.sidebar-menu-badge {
+  display: inline-grid;
+  min-width: 24px;
+  height: 24px;
+  place-items: center;
+  border: 1px solid rgba(240, 200, 76, 0.36);
+  border-radius: 999px;
+  background: var(--color-gold);
+  color: #241a08;
+  padding: 0 7px;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1;
+}
 .sidebar-nav button:hover,
 .sidebar-nav button:focus-visible {
   border-color: rgba(240, 200, 76, 0.24);
@@ -2643,6 +2666,10 @@ button:disabled {
   gap: 20px;
   padding: 20px;
 }
+.schedule-card.needs-review {
+  border-color: rgba(192, 138, 46, 0.52);
+  box-shadow: 0 14px 32px rgba(192, 138, 46, 0.12);
+}
 .schedule-card h3 {
   font-size: 20px;
   line-height: 1.15;
@@ -2694,6 +2721,11 @@ button:disabled {
   color: var(--color-ink);
   padding: 12px;
   box-shadow: var(--shadow-soft);
+}
+.schedule-metrics div.metric-highlight {
+  border-color: rgba(192, 138, 46, 0.56);
+  background: #fff4d6;
+  box-shadow: 0 10px 22px rgba(192, 138, 46, 0.12);
 }
 .schedule-metrics dd {
   margin: 0;
@@ -2873,6 +2905,34 @@ button:disabled {
 .admin-search-field {
   font-size: 12px;
   text-transform: uppercase;
+}
+.schedule-review-summary {
+  border: 1px solid #e6cfa8;
+  border-radius: 18px;
+  background: #fffdf8;
+  color: #6f5b2c;
+  margin: 0;
+  padding: 13px 16px;
+  font-weight: 700;
+  box-shadow: 0 8px 20px rgba(36, 26, 8, 0.05);
+}
+.schedule-review-summary.has-waiting {
+  border-color: rgba(192, 138, 46, 0.46);
+  background: #fff7df;
+  color: #6b4710;
+}
+.review-badge {
+  display: inline-flex;
+  align-items: center;
+  width: max-content;
+  border: 1px solid rgba(192, 138, 46, 0.45);
+  border-radius: 999px;
+  background: linear-gradient(135deg, #fff4d6, #f1c65f);
+  color: #5f3d08;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
 }
 .app-shell .admin-trip-card {
   gap: 14px;

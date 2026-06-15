@@ -81,9 +81,14 @@ export function Sidebar({ title, links, navigate, logout, path }) {
         <span>{title}</span>
       </div>
       <nav className="sidebar-nav">
-        {links.map(([href, label]) => {
+        {links.map(([href, label, badgeCount]) => {
           const isActive = path === href || path?.startsWith(`${href}/`)
-          return <button className={isActive ? 'active' : ''} disabled={isActive} aria-current={isActive ? 'page' : undefined} key={href} onClick={() => navigate(href)}>{label}</button>
+          return (
+            <button className={isActive ? 'active' : ''} disabled={isActive} aria-current={isActive ? 'page' : undefined} key={href} onClick={() => navigate(href)}>
+              <span className="sidebar-nav-label">{label}</span>
+              {Number(badgeCount) > 0 && <span className="sidebar-menu-badge">{badgeCount}</span>}
+            </button>
+          )
         })}
       </nav>
       <div className="sidebar-footer">
