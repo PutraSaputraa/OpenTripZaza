@@ -12,6 +12,11 @@ dist
 dist-ssr
 *.local
 
+# Local secrets and service account keys
+src/privatekeyfirebase/
+*service-account*.json
+*firebase-adminsdk*.json
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

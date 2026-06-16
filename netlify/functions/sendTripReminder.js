@@ -1,5 +1,6 @@
 import process from 'node:process'
 import admin from 'firebase-admin'
+import nodemailer from 'nodemailer'
 import { Resend } from 'resend'
 
 const jsonResponse = (statusCode, body) => ({
@@ -152,21 +153,38 @@ const buildEmail = ({ registration, trip, tripDate }) => {
 
 const sendEmail = async ({ to, subject, text, html }) => {
   const provider = String(process.env.EMAIL_PROVIDER || 'resend').toLowerCase()
-  if (provider !== 'resend') {
-    throw new Error(`Email provider "${provider}" belum didukung.`)
+  const from = process.env.REMINDER_EMAIL_FROM || process.env.EMAIL_FROM || process.env.GMAIL_USER
+
+  if (provider === 'gmail') {
+    const user = process.env.GMAIL_USER
+    const pass = process.env.GMAIL_APP_PASSWORD
+    if (!user || !pass || !from) {
+      throw new Error('Konfigurasi GMAIL_USER, GMAIL_APP_PASSWORD, dan REMINDER_EMAIL_FROM wajib tersedia.')
+    }
+
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: { user, pass },
+    })
+    await transporter.sendMail({ from, to, subject, text, html })
+    return
   }
 
-  const apiKey = process.env.RESEND_API_KEY
-  const from = process.env.REMINDER_EMAIL_FROM || process.env.EMAIL_FROM
-  if (!apiKey || !from) {
-    throw new Error('Konfigurasi RESEND_API_KEY dan REMINDER_EMAIL_FROM wajib tersedia.')
+  if (provider === 'resend') {
+    const apiKey = process.env.RESEND_API_KEY
+    if (!apiKey || !from) {
+      throw new Error('Konfigurasi RESEND_API_KEY dan REMINDER_EMAIL_FROM wajib tersedia.')
+    }
+
+    const resend = new Resend(apiKey)
+    const response = await resend.emails.send({ from, to, subject, text, html })
+    if (response.error) {
+      throw new Error(response.error.message || 'Provider email menolak pengiriman.')
+    }
+    return
   }
 
-  const resend = new Resend(apiKey)
-  const response = await resend.emails.send({ from, to, subject, text, html })
-  if (response.error) {
-    throw new Error(response.error.message || 'Provider email menolak pengiriman.')
-  }
+  throw new Error(`Email provider "${provider}" belum didukung.`)
 }
 
 const writeReminderLog = (db, fields) => {
