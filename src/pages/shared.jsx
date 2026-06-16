@@ -125,7 +125,20 @@ export function Badge({ status }) {
   return <span className={className}>{status}</span>
 }
 
-export function AppModal({ isOpen, title, description, confirmText, cancelText, onConfirm, onCancel, onBackdrop, variant = 'default' }) {
+export function AppModal({
+  isOpen,
+  title,
+  description,
+  confirmText,
+  cancelText,
+  onConfirm,
+  onCancel,
+  onBackdrop,
+  variant = 'default',
+  children,
+  confirmDisabled = false,
+  cancelDisabled = false,
+}) {
   if (!isOpen) return null
 
   return createPortal((
@@ -143,9 +156,10 @@ export function AppModal({ isOpen, title, description, confirmText, cancelText, 
           <h2 id="app-modal-title">{title}</h2>
           <p id="app-modal-description">{description}</p>
         </div>
+        {children && <div className="app-modal-extra">{children}</div>}
         <div className="app-modal-actions">
-          <button className="outline-btn" type="button" onClick={onCancel}>{cancelText}</button>
-          <button className="primary-btn" type="button" onClick={onConfirm}>{confirmText}</button>
+          <button className="outline-btn" type="button" disabled={cancelDisabled} onClick={onCancel}>{cancelText}</button>
+          <button className="primary-btn" type="button" disabled={confirmDisabled} onClick={onConfirm}>{confirmText}</button>
         </div>
       </section>
     </div>

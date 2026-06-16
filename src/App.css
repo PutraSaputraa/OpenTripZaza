@@ -2823,6 +2823,22 @@ button:disabled {
   background: #fffdf8;
   border-color: #e6cfa8;
 }
+.registration-management-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+}
+.reminder-action-wrap {
+  display: grid;
+  gap: 6px;
+  justify-items: end;
+}
+.reminder-action-wrap > span {
+  color: #7d6938;
+  font-size: 13px;
+  font-weight: 700;
+}
 .registration-summary-cards {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -3470,6 +3486,30 @@ button:disabled {
   margin: 0;
   color: #6f5b2c;
   line-height: 1.62;
+}
+.app-modal-extra {
+  display: grid;
+  gap: 10px;
+}
+.reminder-modal-count {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  border: 1px solid #e6cfa8;
+  border-radius: 18px;
+  background: #fff7df;
+  padding: 14px 16px;
+}
+.reminder-modal-count span {
+  color: #6f5b2c;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.reminder-modal-count strong {
+  color: #241a08;
+  font-size: 22px;
 }
 .app-modal-actions {
   display: flex;

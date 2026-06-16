@@ -351,6 +351,7 @@ function App() {
     deleteTrip,
     takeJob,
     updateJobStatus,
+    showToast,
   }
 
   return (
