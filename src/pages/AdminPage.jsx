@@ -653,9 +653,15 @@ function AdminScheduleDetail({ trip, registrations, jobs, setRegistrationStatus,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ scheduleId: trip.id }),
       })
-      const result = await response.json().catch(() => ({}))
+      const responseText = await response.text()
+      let result = {}
+      try {
+        result = responseText ? JSON.parse(responseText) : {}
+      } catch {
+        result = {}
+      }
       if (!response.ok) {
-        throw new Error(result.message || 'Pengingat gagal dikirim.')
+        throw new Error(result.message || responseText || 'Pengingat gagal dikirim.')
       }
       const sent = Number(result.sent || 0)
       const failed = Number(result.failed || 0)
