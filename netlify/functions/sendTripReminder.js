@@ -1,6 +1,7 @@
 import { Buffer } from 'node:buffer'
 import process from 'node:process'
-import admin from 'firebase-admin'
+import { cert, getApps, initializeApp } from 'firebase-admin/app'
+import { FieldValue, getFirestore } from 'firebase-admin/firestore'
 import nodemailer from 'nodemailer'
 import { Resend } from 'resend'
 
@@ -79,14 +80,14 @@ const parseServiceAccount = () => {
 }
 
 const getAdminDb = () => {
-  if (!admin.apps.length) {
+  if (!getApps().length) {
     const serviceAccount = parseServiceAccount()
     if (!serviceAccount) {
       throw new Error('Konfigurasi Firebase Admin belum tersedia.')
     }
     try {
-      admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount),
+      initializeApp({
+        credential: cert(serviceAccount),
         projectId: process.env.FIREBASE_PROJECT_ID || serviceAccount.projectId,
       })
     } catch (error) {
@@ -94,7 +95,7 @@ const getAdminDb = () => {
     }
   }
 
-  return admin.firestore()
+  return getFirestore()
 }
 
 const normalizeStatus = (status) => String(status || '').trim().toLowerCase()
@@ -237,7 +238,7 @@ const sendEmail = async ({ to, subject, text, html }) => {
 const writeReminderLog = (db, fields) => {
   return db.collection('reminderLogs').add({
     ...fields,
-    sentAt: admin.firestore.FieldValue.serverTimestamp(),
+    sentAt: FieldValue.serverTimestamp(),
   })
 }
 
