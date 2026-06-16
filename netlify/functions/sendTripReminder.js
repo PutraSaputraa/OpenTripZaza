@@ -1,3 +1,4 @@
+import { Buffer } from 'node:buffer'
 import process from 'node:process'
 import admin from 'firebase-admin'
 import nodemailer from 'nodemailer'
@@ -14,22 +15,49 @@ const jsonResponse = (statusCode, body) => ({
   body: JSON.stringify(body),
 })
 
+const parseServiceAccountJson = (rawValue) => {
+  const trimmedValue = String(rawValue || '').trim()
+  if (!trimmedValue) return null
+
+  try {
+    return JSON.parse(trimmedValue)
+  } catch (jsonError) {
+    try {
+      return JSON.parse(Buffer.from(trimmedValue, 'base64').toString('utf8'))
+    } catch (base64Error) {
+      base64Error.cause = jsonError
+      throw new Error('FIREBASE_SERVICE_ACCOUNT harus berupa JSON service account Firebase yang valid.', { cause: base64Error })
+    }
+  }
+}
+
+const normalizeServiceAccount = (serviceAccount) => {
+  const projectId = serviceAccount?.project_id || serviceAccount?.projectId
+  const clientEmail = serviceAccount?.client_email || serviceAccount?.clientEmail
+  const privateKey = String(serviceAccount?.private_key || serviceAccount?.privateKey || '').replace(/\\n/g, '\n')
+
+  if (!projectId || !clientEmail || !privateKey) {
+    throw new Error('FIREBASE_SERVICE_ACCOUNT belum lengkap. Pastikan project_id, client_email, dan private_key ada.')
+  }
+
+  if (!privateKey.includes('BEGIN PRIVATE KEY')) {
+    throw new Error('FIREBASE_SERVICE_ACCOUNT private_key tidak valid. Gunakan isi JSON service account asli dari Firebase.')
+  }
+
+  return { projectId, clientEmail, privateKey }
+}
+
 const parseServiceAccount = () => {
   if (process.env.FIREBASE_SERVICE_ACCOUNT) {
-    const parsed = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT)
-    return {
-      projectId: parsed.project_id || parsed.projectId,
-      clientEmail: parsed.client_email || parsed.clientEmail,
-      privateKey: (parsed.private_key || parsed.privateKey || '').replace(/\\n/g, '\n'),
-    }
+    return normalizeServiceAccount(parseServiceAccountJson(process.env.FIREBASE_SERVICE_ACCOUNT))
   }
 
   if (process.env.FIREBASE_PRIVATE_KEY && process.env.FIREBASE_CLIENT_EMAIL && process.env.FIREBASE_PROJECT_ID) {
-    return {
+    return normalizeServiceAccount({
       projectId: process.env.FIREBASE_PROJECT_ID,
       clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
       privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
-    }
+    })
   }
 
   return null
@@ -41,10 +69,14 @@ const getAdminDb = () => {
     if (!serviceAccount) {
       throw new Error('Konfigurasi Firebase Admin belum tersedia.')
     }
-    admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount),
-      projectId: process.env.FIREBASE_PROJECT_ID || serviceAccount.projectId,
-    })
+    try {
+      admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount),
+        projectId: process.env.FIREBASE_PROJECT_ID || serviceAccount.projectId,
+      })
+    } catch (error) {
+      throw new Error(`Firebase Admin gagal diinisialisasi: ${error.message}`, { cause: error })
+    }
   }
 
   return admin.firestore()
