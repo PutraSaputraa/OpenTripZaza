@@ -15,6 +15,20 @@ const jsonResponse = (statusCode, body) => ({
   body: JSON.stringify(body),
 })
 
+const getErrorMessage = (error) => {
+  if (error instanceof Error) return error.message
+  return String(error || 'Unknown error')
+}
+
+const logFunctionError = (stage, error, extra = {}) => {
+  console.error('[sendTripReminder]', {
+    stage,
+    message: getErrorMessage(error),
+    stack: error?.stack,
+    ...extra,
+  })
+}
+
 const parseServiceAccountJson = (rawValue) => {
   const trimmedValue = String(rawValue || '').trim()
   if (!trimmedValue) return null
@@ -25,8 +39,9 @@ const parseServiceAccountJson = (rawValue) => {
     try {
       return JSON.parse(Buffer.from(trimmedValue, 'base64').toString('utf8'))
     } catch (base64Error) {
-      base64Error.cause = jsonError
-      throw new Error('FIREBASE_SERVICE_ACCOUNT harus berupa JSON service account Firebase yang valid.', { cause: base64Error })
+      const parseError = new Error('FIREBASE_SERVICE_ACCOUNT harus berupa JSON service account Firebase yang valid.', { cause: base64Error })
+      parseError.jsonParseMessage = getErrorMessage(jsonError)
+      throw parseError
     }
   }
 }
@@ -230,15 +245,22 @@ export const handler = async (event) => {
   if (event.httpMethod === 'OPTIONS') return jsonResponse(200, {})
   if (event.httpMethod !== 'POST') return jsonResponse(405, { message: 'Method not allowed.' })
 
+  let stage = 'start'
+
   try {
+    stage = 'parse request body'
     const body = JSON.parse(event.body || '{}')
     const scheduleId = body.scheduleId || body.tripScheduleId
     if (!scheduleId) return jsonResponse(400, { message: 'scheduleId atau tripScheduleId wajib dikirim.' })
 
+    stage = 'initialize firebase admin'
     const db = getAdminDb()
+
+    stage = 'find trip'
     const trip = await findTrip(db, scheduleId)
     if (!trip) return jsonResponse(404, { message: 'Jadwal trip tidak ditemukan.' })
 
+    stage = 'find registrations'
     const registrations = await findRegistrations(db, scheduleId)
     const tripDate = formatTripDate(trip.date)
     const results = []
@@ -254,10 +276,14 @@ export const handler = async (event) => {
       }
 
       try {
+        stage = `send email to registration ${logBase.registrationId}`
         await sendEmail({ to: registration.email, ...email })
+        stage = `write sent log ${logBase.registrationId}`
         await writeReminderLog(db, { ...logBase, status: 'sent' })
         results.push({ registrationId: logBase.registrationId, status: 'sent' })
       } catch (error) {
+        logFunctionError(stage, error, { registrationId: logBase.registrationId })
+        stage = `write failed log ${logBase.registrationId}`
         await writeReminderLog(db, {
           ...logBase,
           status: 'failed',
@@ -278,6 +304,9 @@ export const handler = async (event) => {
       results,
     })
   } catch (error) {
-    return jsonResponse(500, { message: error.message || 'Gagal memproses pengingat trip.' })
+    logFunctionError(stage, error)
+    return jsonResponse(500, {
+      message: `Gagal memproses pengingat trip pada tahap "${stage}": ${getErrorMessage(error)}`,
+    })
   }
 }
