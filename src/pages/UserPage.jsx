@@ -1088,7 +1088,7 @@ function AuthShell({ children, navigate }) {
           </button>
           <div>
             <p className="eyebrow">Customer area</p>
-            <h2>Explor Vertical Caving Yogyakarta.</h2>
+            <h2>Explor Vertical Caving Yogyakarta</h2>
             <p>Login untuk merasakan indahnya goa di yogyakarta</p>
           </div>
         </aside>
