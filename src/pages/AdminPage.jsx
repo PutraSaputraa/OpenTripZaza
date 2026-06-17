@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { accounts, addonOptions, registrationStatuses, tripStatuses } from '../config/constants'
 import { formatCurrency, formatDate, tripName } from '../utils/formatters'
+import { localizedList, localizedText, multilingualLines, multilingualText, textToLines } from '../utils/localization'
+import { getPrivateDateRange, getRegistrationDate, getTripSchedules, getTripSessions, hasScheduleRegistrations, isSameScheduleRegistration, scheduleStatusLabel } from '../utils/schedules'
 import { AppModal, Badge, DataPanel, Metric, Sidebar } from './shared'
 
 const parseImageUrls = (value) => String(value || '')
@@ -8,7 +10,27 @@ const parseImageUrls = (value) => String(value || '')
   .map((item) => item.trim())
   .filter(Boolean)
 
+const adminText = (value) => localizedText(value, 'id') || '-'
+const adminListText = (value) => localizedList(value, 'id').join(', ')
+const newSchedule = (index, source = {}) => ({
+  id: source.id || `schedule_${index + 1}`,
+  date: source.date || '',
+  quota: Number(source.quota || 10),
+  bookedCount: Number(source.bookedCount || 0),
+  status: source.status || 'active',
+})
+const newSession = (index, source = {}) => ({
+  id: source.id || `session_${index + 1}`,
+  name: source.name || `Sesi ${index + 1}`,
+  startTime: source.startTime || '',
+  endTime: source.endTime || '',
+  status: source.status || 'active',
+})
+const resizeScheduleList = (items, count) => Array.from({ length: Math.max(1, Number(count) || 1) }, (_, index) => newSchedule(index, items[index]))
+const resizeSessionList = (items, count) => Array.from({ length: Math.max(1, Number(count) || 1) }, (_, index) => newSession(index, items[index]))
+
 const getActivityText = (trip) => {
+  if (trip?.activities) return localizedList(trip.activities, 'id').join('\n')
   if (trip?.activity) return trip.activity
   if (trip?.itinerary) return trip.itinerary
   if (!Array.isArray(trip?.itineraryDays)) return ''
@@ -19,9 +41,15 @@ const getActivityText = (trip) => {
 }
 
 const normalizeTripForm = (trip) => {
+  const description = multilingualText(trip?.description)
+  const destination = multilingualText(trip?.destination)
+  const activities = multilingualLines(trip?.activities ?? getActivityText(trip))
+  const facilities = multilingualLines(trip?.facilities)
+  const schedules = getTripSchedules(trip)
+  const sessions = Array.isArray(trip?.sessions) && trip.sessions.length ? getTripSessions(trip) : []
+
   return {
     name: '',
-    destination: '',
     date: '',
     price: 0,
     quota: 10,
@@ -33,11 +61,20 @@ const normalizeTripForm = (trip) => {
     isPrivateTrip: false,
     imageUrl: '',
     imageUrls: [],
-    description: '',
-    facilities: '',
     status: 'Tersedia',
     ...trip,
-    activity: getActivityText(trip),
+    availableStartDate: trip?.availableStartDate || trip?.privateStartDate || '',
+    availableEndDate: trip?.availableEndDate || trip?.privateEndDate || '',
+    schedules: schedules.length ? schedules.map((schedule, index) => newSchedule(index, schedule)) : [newSchedule(0, { date: trip?.date || '', quota: trip?.quota || 10, bookedCount: 0 })],
+    sessions: sessions.length ? sessions.map((session, index) => newSession(index, session)) : [newSession(0)],
+    descriptionId: description.id,
+    descriptionEn: description.en,
+    destinationId: destination.id,
+    destinationEn: destination.en,
+    activitiesId: activities.id,
+    activitiesEn: activities.en,
+    facilitiesId: facilities.id,
+    facilitiesEn: facilities.en,
     imageUrlsText: parseImageUrls(Array.isArray(trip?.imageUrls) && trip.imageUrls.length ? trip.imageUrls.join('\n') : trip?.imageUrl).join('\n'),
   }
 }
@@ -130,7 +167,7 @@ export function AdminTrips(props) {
     })
     .filter((trip) => {
       if (!searchTerm) return true
-      return [trip.name, trip.destination, trip.description]
+      return [trip.name, adminText(trip.destination), adminText(trip.description), adminListText(trip.activities), adminListText(trip.facilities)]
         .filter(Boolean)
         .join(' ')
         .toLowerCase()
@@ -175,11 +212,15 @@ export function AdminTrips(props) {
 
         <div className="admin-trip-grid">
           {filteredTrips.length ? filteredTrips.map((trip) => (
+            (() => {
+              const schedules = !trip.isPrivateTrip ? getTripSchedules(trip) : []
+              const remainingSlots = schedules.reduce((total, schedule) => total + Math.max(Number(schedule.quota || 0) - Number(schedule.bookedCount || 0), 0), 0)
+              return (
               <article className="admin-trip-card" key={trip.id}>
                 <div className="admin-trip-card-head">
                   <div>
                     <h3>{trip.name}</h3>
-                    <p className="icon-line"><span className="asset-icon icon-geo" aria-hidden="true" />{trip.destination}</p>
+                    <p className="icon-line"><span className="asset-icon icon-geo" aria-hidden="true" />{adminText(trip.destination)}</p>
                   </div>
                   <div className="card-badge-stack">
                     <span className="trip-type-chip">{trip.isPrivateTrip ? 'Private Trip' : 'Open Trip'}</span>
@@ -191,17 +232,28 @@ export function AdminTrips(props) {
                   <strong>{formatCurrency(trip.price)}</strong>
                 </div>
                 <dl className="admin-trip-meta">
-                  <div><dt><span className="asset-icon icon-calendar" aria-hidden="true" />Jadwal</dt><dd>{trip.isPrivateTrip ? 'Jadwal fleksibel' : formatDate(trip.date)}</dd></div>
-                  {!trip.isPrivateTrip && <div><dt><span className="asset-icon icon-people" aria-hidden="true" />Kuota / Slot</dt><dd>{trip.quota} / {trip.slots}</dd></div>}
+                  <div><dt><span className="asset-icon icon-calendar" aria-hidden="true" />Jadwal</dt><dd>{trip.isPrivateTrip ? 'Jadwal fleksibel' : `${schedules.length} jadwal`}</dd></div>
+                  {!trip.isPrivateTrip && <div><dt><span className="asset-icon icon-people" aria-hidden="true" />Kuota / Slot</dt><dd>{trip.quota} / {remainingSlots}</dd></div>}
                   {trip.isPrivateTrip && <div><dt><span className="asset-icon icon-people" aria-hidden="true" />Peserta</dt><dd>Min {trip.minParticipants || 2} - Max {trip.maxParticipants || trip.quota || 10}</dd></div>}
+                  {trip.isPrivateTrip && <div><dt>Periode booking</dt><dd>{trip.availableStartDate ? formatDate(trip.availableStartDate) : '-'} - {trip.availableEndDate ? formatDate(trip.availableEndDate) : '-'}</dd></div>}
                   <div><dt>Status</dt><dd>{trip.status}</dd></div>
                 </dl>
+                {!trip.isPrivateTrip && schedules.length > 0 && (
+                  <div className="admin-schedule-mini-list">
+                    {schedules.slice(0, 3).map((schedule) => (
+                      <span key={schedule.id}>{formatDate(schedule.date)} - {schedule.bookedCount || 0}/{schedule.quota}</span>
+                    ))}
+                    {schedules.length > 3 && <span>+{schedules.length - 3} jadwal lainnya</span>}
+                  </div>
+                )}
                 <div className="admin-trip-actions">
                   <button className="outline-btn" onClick={() => props.navigate(`/admin/jadwal/${trip.id}`)}>Detail</button>
                   <button className="outline-btn" onClick={() => props.navigate(`/admin/open-trip/edit/${trip.id}`)}>Edit</button>
                   <button className="outline-btn danger-btn" onClick={() => setTripToDelete(trip)}>Hapus</button>
                 </div>
               </article>
+              )
+            })()
           )) : <p className="empty-state">Belum ada paket trip untuk filter ini.</p>}
         </div>
         <AppModal
@@ -222,28 +274,113 @@ export function AdminTrips(props) {
 export function TripForm({ tripId, trips, saveTrip, navigate, ...props }) {
   const selected = trips.find((item) => item.id === tripId)
   const [form, setForm] = useState(normalizeTripForm(selected))
+  const [formError, setFormError] = useState('')
   const isPrivateTrip = Boolean(form.isPrivateTrip)
   const previewImage = parseImageUrls(form.imageUrlsText || form.imageUrl)[0]
+  const registrations = props.registrations || []
+
+  const updateScheduleCount = (value) => {
+    const nextCount = Math.max(1, Number(value) || 1)
+    if (selected && nextCount < form.schedules.length) {
+      const removedSchedules = form.schedules.slice(nextCount)
+      const hasBookedSchedule = removedSchedules.some((schedule) => hasScheduleRegistrations(registrations, selected.id, schedule))
+      if (hasBookedSchedule) {
+        setFormError('Jadwal yang sudah memiliki pendaftar tidak bisa dihapus.')
+        return
+      }
+    }
+    setFormError('')
+    setForm({ ...form, schedules: resizeScheduleList(form.schedules, nextCount) })
+  }
+
+  const updateSessionCount = (value) => {
+    const nextCount = Math.max(1, Number(value) || 1)
+    setForm({ ...form, sessions: resizeSessionList(form.sessions, nextCount) })
+  }
+
+  const updateSchedule = (index, field, value) => {
+    const currentSchedule = form.schedules[index]
+    if (selected && field === 'date' && currentSchedule?.date !== value && hasScheduleRegistrations(registrations, selected.id, currentSchedule)) {
+      setFormError('Tanggal jadwal yang sudah memiliki pendaftar tidak bisa diubah.')
+      return
+    }
+    const schedules = [...form.schedules]
+    schedules[index] = { ...schedules[index], [field]: value }
+    setFormError('')
+    setForm({ ...form, schedules })
+  }
+
+  const updateSession = (index, field, value) => {
+    const sessions = [...form.sessions]
+    sessions[index] = { ...sessions[index], [field]: value }
+    setForm({ ...form, sessions })
+  }
 
   const onSubmit = async (event) => {
     event.preventDefault()
+    if (!isPrivateTrip) {
+      const invalidSchedule = !form.schedules.length || form.schedules.some((schedule) => !schedule.date || Number(schedule.quota) <= 0)
+      if (invalidSchedule) {
+        setFormError('Open trip minimal punya 1 jadwal. Setiap jadwal wajib punya tanggal dan kuota.')
+        return
+      }
+    }
+    if (isPrivateTrip) {
+      const invalidSession = !form.sessions.length || form.sessions.some((session) => !session.startTime || !session.endTime || session.endTime <= session.startTime)
+      if (invalidSession) {
+        setFormError('Private trip minimal punya 1 sesi. Jam selesai harus lebih besar dari jam mulai.')
+        return
+      }
+      if (!form.availableStartDate || !form.availableEndDate || form.availableEndDate < form.availableStartDate) {
+        setFormError('Isi rentang tanggal private trip dengan benar. Tanggal selesai tidak boleh lebih awal dari tanggal mulai.')
+        return
+      }
+    }
     const imageUrls = parseImageUrls(form.imageUrlsText || form.imageUrl)
     const tripForm = { ...form }
     delete tripForm.imageUrlsText
     delete tripForm.durationDays
     delete tripForm.itineraryDays
     delete tripForm.itinerary
+    delete tripForm.descriptionId
+    delete tripForm.descriptionEn
+    delete tripForm.destinationId
+    delete tripForm.destinationEn
+    delete tripForm.activitiesId
+    delete tripForm.activitiesEn
+    delete tripForm.facilitiesId
+    delete tripForm.facilitiesEn
     await saveTrip({
       ...tripForm,
-      activity: form.activity.trim(),
+      description: {
+        id: form.descriptionId.trim(),
+        en: form.descriptionEn.trim(),
+      },
+      destination: {
+        id: form.destinationId.trim(),
+        en: form.destinationEn.trim(),
+      },
+      activities: {
+        id: textToLines(form.activitiesId),
+        en: textToLines(form.activitiesEn),
+      },
+      facilities: {
+        id: textToLines(form.facilitiesId),
+        en: textToLines(form.facilitiesEn),
+      },
+      activity: form.activitiesId.trim(),
       price: Number(form.price),
       quota: isPrivateTrip ? Number(form.maxParticipants || form.quota) : Number(form.quota),
       slots: isPrivateTrip ? Number(form.maxParticipants || form.slots || form.quota) : Number(form.slots),
       minParticipants: isPrivateTrip ? Number(form.minParticipants) || 1 : 1,
       maxParticipants: isPrivateTrip ? Number(form.maxParticipants) || Number(form.quota) || 1 : Number(form.quota),
       privateNotes: isPrivateTrip ? form.privateNotes || '' : '',
+      availableStartDate: isPrivateTrip ? form.availableStartDate : '',
+      availableEndDate: isPrivateTrip ? form.availableEndDate : '',
       flexibleSchedule: isPrivateTrip,
       isPrivateTrip,
+      schedules: isPrivateTrip ? [] : form.schedules.map((schedule, index) => newSchedule(index, schedule)),
+      sessions: isPrivateTrip ? form.sessions.map((session, index) => newSession(index, session)) : [],
       imageUrl: imageUrls[0] || '',
       imageUrls,
     })
@@ -260,6 +397,7 @@ export function TripForm({ tripId, trips, saveTrip, navigate, ...props }) {
           </div>
           <button className="outline-btn" onClick={() => navigate('/admin/open-trip')}>Kembali</button>
         </div>
+        {formError && <p className="form-error">{formError}</p>}
         <form className="trip-section-form" onSubmit={onSubmit}>
           <section className="form-section-card">
             <div className="form-section-title">
@@ -268,8 +406,9 @@ export function TripForm({ tripId, trips, saveTrip, navigate, ...props }) {
             </div>
             <div className="data-form section-fields">
               <label>{isPrivateTrip ? 'Nama private trip' : 'Nama trip'}<input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></label>
-              <label>Destinasi<input required value={form.destination} onChange={(e) => setForm({ ...form, destination: e.target.value })} /></label>
               <label>Jenis trip<select value={isPrivateTrip ? 'private' : 'open'} onChange={(e) => setForm({ ...form, isPrivateTrip: e.target.value === 'private' })}><option value="open">Open Trip</option><option value="private">Private Trip</option></select><small>{isPrivateTrip ? 'Private Trip menerima request tanggal dari customer.' : 'Open Trip memakai tanggal keberangkatan tetap.'}</small></label>
+              <label>Destinasi Indonesia<input required value={form.destinationId} onChange={(e) => setForm({ ...form, destinationId: e.target.value })} /></label>
+              <label>Destinasi English<input value={form.destinationEn} onChange={(e) => setForm({ ...form, destinationEn: e.target.value })} /></label>
               <label>Status<select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>{tripStatuses.map((status) => <option key={status}>{status}</option>)}</select></label>
             </div>
           </section>
@@ -282,10 +421,17 @@ export function TripForm({ tripId, trips, saveTrip, navigate, ...props }) {
             <div className="data-form section-fields">
               {!isPrivateTrip ? (
                 <>
-                  <label>Tanggal keberangkatan<input required type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} /><small>Gunakan tanggal tetap untuk Open Trip.</small></label>
                   <label>Harga per orang<input required type="number" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} /></label>
-                  <label>Kuota peserta<input required type="number" min="1" value={form.quota} onChange={(e) => setForm({ ...form, quota: e.target.value })} /></label>
-                  <label>Slot tersedia<input required type="number" min="0" value={form.slots} onChange={(e) => setForm({ ...form, slots: e.target.value })} /><small>Biasanya sama dengan kuota saat paket baru dibuat.</small></label>
+                  <label>Jumlah jadwal<input required type="number" min="1" value={form.schedules.length} onChange={(e) => updateScheduleCount(e.target.value)} /><small>Atur berapa tanggal keberangkatan untuk paket open trip ini.</small></label>
+                  {form.schedules.map((schedule, index) => (
+                    <div className="admin-nested-fields full" key={schedule.id}>
+                      <h4>Jadwal {index + 1}</h4>
+                      <label>Tanggal jadwal {index + 1}<input required type="date" value={schedule.date} onChange={(e) => updateSchedule(index, 'date', e.target.value)} /></label>
+                      <label>Kuota jadwal {index + 1}<input required type="number" min="1" value={schedule.quota} onChange={(e) => updateSchedule(index, 'quota', e.target.value)} /></label>
+                      <label>Status jadwal<select value={schedule.status} onChange={(e) => updateSchedule(index, 'status', e.target.value)}><option value="active">Active</option><option value="full">Full</option><option value="inactive">Inactive</option></select></label>
+                      {Number(schedule.bookedCount) > 0 && <small>Sudah ada {schedule.bookedCount} peserta disetujui pada jadwal ini.</small>}
+                    </div>
+                  ))}
                 </>
               ) : (
                 <>
@@ -293,6 +439,18 @@ export function TripForm({ tripId, trips, saveTrip, navigate, ...props }) {
                   <label>Harga mulai dari / harga paket<input required type="number" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} /></label>
                   <label>Minimal peserta<input required type="number" min="1" value={form.minParticipants} onChange={(e) => setForm({ ...form, minParticipants: e.target.value })} /></label>
                   <label>Maksimal peserta<input required type="number" min="1" value={form.maxParticipants} onChange={(e) => setForm({ ...form, maxParticipants: e.target.value, quota: e.target.value, slots: e.target.value })} /></label>
+                  <label>Private trip bisa dipesan dari tanggal<input required type="date" value={form.availableStartDate} onChange={(e) => setForm({ ...form, availableStartDate: e.target.value })} /></label>
+                  <label>Sampai tanggal<input required type="date" min={form.availableStartDate || undefined} value={form.availableEndDate} onChange={(e) => setForm({ ...form, availableEndDate: e.target.value })} /></label>
+                  <label>Jumlah sesi<input required type="number" min="1" value={form.sessions.length} onChange={(e) => updateSessionCount(e.target.value)} /><small>Customer akan memilih salah satu sesi setelah memilih tanggal.</small></label>
+                  {form.sessions.map((session, index) => (
+                    <div className="admin-nested-fields full" key={session.id}>
+                      <h4>Sesi {index + 1}</h4>
+                      <label>Nama sesi<input required value={session.name} onChange={(e) => updateSession(index, 'name', e.target.value)} /></label>
+                      <label>Jam mulai<input required type="time" value={session.startTime} onChange={(e) => updateSession(index, 'startTime', e.target.value)} /></label>
+                      <label>Jam selesai<input required type="time" value={session.endTime} onChange={(e) => updateSession(index, 'endTime', e.target.value)} /></label>
+                      <label>Status sesi<select value={session.status} onChange={(e) => updateSession(index, 'status', e.target.value)}><option value="active">Active</option><option value="inactive">Inactive</option></select></label>
+                    </div>
+                  ))}
                 </>
               )}
             </div>
@@ -315,9 +473,12 @@ export function TripForm({ tripId, trips, saveTrip, navigate, ...props }) {
               <div><h3>Detail Trip</h3><p>Isi narasi dan fasilitas yang membantu customer memahami pengalaman trip.</p></div>
             </div>
             <div className="data-form section-fields">
-              <label className="full">Deskripsi<textarea required value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></label>
-              <label className="full">Activity<textarea required placeholder="Contoh: briefing keselamatan, eksplor lorong goa, cave tubing, sesi foto, dan kembali ke meeting point." value={form.activity} onChange={(e) => setForm({ ...form, activity: e.target.value })} /></label>
-              <label className="full">Fasilitas<textarea required value={form.facilities} onChange={(e) => setForm({ ...form, facilities: e.target.value })} /></label>
+              <label className="full">Deskripsi Indonesia<textarea required value={form.descriptionId} onChange={(e) => setForm({ ...form, descriptionId: e.target.value })} /></label>
+              <label className="full">Deskripsi English<textarea value={form.descriptionEn} onChange={(e) => setForm({ ...form, descriptionEn: e.target.value })} /></label>
+              <label className="full">Aktivitas Indonesia<textarea required placeholder="Contoh: briefing keselamatan, eksplor lorong goa, cave tubing, sesi foto, dan kembali ke meeting point." value={form.activitiesId} onChange={(e) => setForm({ ...form, activitiesId: e.target.value })} /></label>
+              <label className="full">Aktivitas English<textarea placeholder="One activity per line." value={form.activitiesEn} onChange={(e) => setForm({ ...form, activitiesEn: e.target.value })} /></label>
+              <label className="full">Fasilitas Indonesia<textarea required value={form.facilitiesId} onChange={(e) => setForm({ ...form, facilitiesId: e.target.value })} /></label>
+              <label className="full">Fasilitas English<textarea value={form.facilitiesEn} onChange={(e) => setForm({ ...form, facilitiesEn: e.target.value })} /></label>
               {isPrivateTrip && <label className="full">Catatan khusus private trip<textarea placeholder="Contoh: itinerary bisa menyesuaikan request keluarga/perusahaan." value={form.privateNotes} onChange={(e) => setForm({ ...form, privateNotes: e.target.value })} /></label>}
             </div>
           </section>
@@ -354,10 +515,10 @@ function RegistrationTable({ registrations, trips, setRegistrationStatus, compac
   return (
     <div className="table-wrap">
       <table>
-        <thead><tr><th>Customer</th><th>Kontak</th><th>Peserta</th><th>Cave trip</th><th>Tanggal</th><th>Data utama</th><th>Add-on</th><th>Catatan</th><th>Status</th></tr></thead>
+        <thead><tr><th>Customer</th><th>Kontak</th><th>Peserta</th><th>Cave trip</th><th>Tanggal / sesi</th><th>Data utama</th><th>Add-on</th><th>Catatan</th><th>Status</th></tr></thead>
         <tbody>{rows.map((item) => (
           <tr key={item.id}>
-            <td>{item.name}</td><td>{item.whatsapp}<br />{item.email}</td><td>{item.participants}</td><td>{tripName(trips, item.tripId)}</td><td>{formatDate(item.requestedDate || trips.find((trip) => trip.id === item.tripId)?.date)}</td><td>{item.address || '-'}<br />{item.age ? `${item.age} tahun` : '-'} - {item.gender || '-'}<br />{item.healthNotes || '-'}</td><td>{getSelectedAddons(item).join(', ') || '-'}</td><td>{item.notes}</td>
+            <td>{item.name}</td><td>{item.whatsapp}<br />{item.email}</td><td>{item.participants}</td><td>{tripName(trips, item.tripId)}</td><td>{formatDate(getRegistrationDate(item) || trips.find((trip) => trip.id === item.tripId)?.date)}{item.sessionName ? <><br />{item.sessionName}{item.startTime && item.endTime ? ` (${item.startTime} - ${item.endTime})` : ''}</> : null}</td><td>{item.address || '-'}<br />{item.age ? `${item.age} tahun` : '-'} - {item.gender || '-'}<br />{item.healthNotes || '-'}</td><td>{getSelectedAddons(item).join(', ') || '-'}</td><td>{item.notes}</td>
             <td><select className="status-select" value={item.status} onChange={(e) => setRegistrationStatus(item.id, e.target.value)}>{registrationStatuses.map((status) => <option key={status}>{status}</option>)}</select></td>
           </tr>
         ))}</tbody>
@@ -367,43 +528,73 @@ function RegistrationTable({ registrations, trips, setRegistrationStatus, compac
 }
 
 export function AdminSchedule(props) {
-  const { trips, registrations, jobs, scheduleTripId, scheduleRegistrationId } = props
+  const { trips, registrations, jobs, scheduleTripId, scheduleId, scheduleRegistrationId, privateTripId } = props
   const [activeType, setActiveType] = useState('all')
   const [search, setSearch] = useState('')
   const selectedTrip = trips.find((trip) => trip.id === scheduleTripId)
+  const selectedPrivateTrip = trips.find((trip) => trip.id === privateTripId)
   const selectedRegistration = registrations.find((item) => item.id === scheduleRegistrationId)
-  if (scheduleTripId && selectedTrip) return <AdminScheduleDetail trip={selectedTrip} {...props} />
+  if (scheduleTripId && selectedTrip) return <AdminScheduleDetail trip={selectedTrip} scheduleId={scheduleId} {...props} />
+  if (privateTripId && selectedPrivateTrip) return <AdminPrivateTripScheduleDetail trip={selectedPrivateTrip} {...props} />
   if (scheduleRegistrationId && selectedRegistration) return <AdminPrivateScheduleDetail registration={selectedRegistration} {...props} />
   const openTrips = trips.filter((trip) => !trip.isPrivateTrip)
-  const privateSchedules = registrations
-    .map((item) => ({ registration: item, trip: trips.find((trip) => trip.id === item.tripId) }))
-    .filter(({ registration, trip }) => trip && (trip.isPrivateTrip || registration.isPrivateTour))
   const openScheduleItems = openTrips.map((trip) => {
-    const openTripRegistrations = registrations.filter((item) => item.tripId === trip.id && !item.isPrivateTrip && !item.isPrivateTour)
-    const approvedRegistrations = openTripRegistrations.filter((item) => item.status === 'Disetujui' || item.status === 'Selesai')
-    const waitingRegistrations = openTripRegistrations.filter(isPendingRegistration)
+    const schedules = getTripSchedules(trip)
+    const scheduleItems = schedules.map((schedule) => {
+      const scheduleRegistrations = registrations.filter((item) => Number(item.tripId) === Number(trip.id) && !item.isPrivateTrip && !item.isPrivateTour && item.tripType !== 'private' && isSameScheduleRegistration(item, schedule))
+      const approvedRegistrations = scheduleRegistrations.filter((item) => item.status === 'Disetujui' || item.status === 'Selesai')
+      const waitingRegistrations = scheduleRegistrations.filter(isPendingRegistration)
+      const approvedParticipants = countParticipants(approvedRegistrations)
+      const waitingParticipants = countParticipants(waitingRegistrations)
+      const relatedJobs = jobs.filter((job) => Number(job.tripId) === Number(trip.id) && (!job.registrationId || scheduleRegistrations.some((registration) => Number(registration.id) === Number(job.registrationId))))
+      const remaining = Math.max(Number(schedule.quota || 0) - approvedParticipants, 0)
+      return {
+        ...schedule,
+        approvedParticipants,
+        waitingParticipants,
+        remaining,
+        status: schedule.status === 'inactive' ? 'inactive' : remaining <= 0 ? 'full' : schedule.status,
+        scheduleRegistrations,
+        approvedRegistrations,
+        waitingRegistrations,
+        assignedWorkers: relatedJobs.filter((job) => job.worker).length,
+        workerTarget: relatedJobs.length,
+      }
+    })
     return {
       type: 'open',
       key: `open-${trip.id}`,
       trip,
-      approvedRegistrations,
-      approvedParticipants: countParticipants(approvedRegistrations),
-      waitingParticipants: countParticipants(waitingRegistrations),
-      searchValues: [trip.name, trip.destination, trip.description],
-      date: trip.date,
+      schedules: scheduleItems,
+      approvedParticipants: scheduleItems.reduce((total, schedule) => total + schedule.approvedParticipants, 0),
+      waitingParticipants: scheduleItems.reduce((total, schedule) => total + schedule.waitingParticipants, 0),
+      assignedWorkers: scheduleItems.reduce((total, schedule) => total + schedule.assignedWorkers, 0),
+      workerTarget: scheduleItems.reduce((total, schedule) => total + schedule.workerTarget, 0),
+      quota: scheduleItems.reduce((total, schedule) => total + Number(schedule.quota || 0), 0),
+      remaining: scheduleItems.reduce((total, schedule) => total + Number(schedule.remaining || 0), 0),
+      searchValues: [trip.name, adminText(trip.destination), ...scheduleItems.flatMap((schedule) => [schedule.date, formatDate(schedule.date), ...schedule.scheduleRegistrations.flatMap((item) => [item.name, item.whatsapp, item.email])])],
+      date: scheduleItems[0]?.date || trip.date,
     }
   })
-  const privateScheduleItems = privateSchedules.map(({ registration, trip }) => {
-    const participantDetails = Array.isArray(registration.participantDetails) ? registration.participantDetails : []
+  const privateScheduleItems = registrations
+    .map((registration) => ({ registration, trip: trips.find((trip) => Number(trip.id) === Number(registration.tripId)) }))
+    .filter(({ registration, trip }) => trip && (trip.isPrivateTrip || registration.isPrivateTrip || registration.isPrivateTour || registration.tripType === 'private'))
+    .map(({ registration, trip }) => {
+    const relatedJobs = jobs.filter((job) => Number(job.registrationId) === Number(registration.id))
+    const range = getPrivateDateRange(trip)
     return {
       type: 'private',
-      key: `private-${registration.id}`,
-      registration,
+      key: `private-booking-${registration.id}`,
       trip,
-      participantDetails,
-      waitingParticipants: isPendingRegistration(registration) ? Number(registration.participants || 0) : 0,
-      searchValues: [trip.name, trip.destination, registration.name, registration.whatsapp, registration.email],
-      date: registration.requestedDate || trip.date,
+      registration,
+      range,
+      bookingCount: 1,
+      pendingCount: isPendingRegistration(registration) ? 1 : 0,
+      waitingParticipants: isPendingRegistration(registration) ? Number(registration.participants || 1) : 0,
+      assignedWorkers: relatedJobs.filter((job) => job.worker).length,
+      workerTarget: relatedJobs.length || getSelectedAddons(registration).length || 0,
+      searchValues: [trip.name, adminText(trip.destination), range.startDate, range.endDate, registration.name, registration.whatsapp, registration.email, getRegistrationDate(registration), registration.sessionName],
+      date: getRegistrationDate(registration) || range.startDate || trip.date,
     }
   })
   const scheduleItems = [...openScheduleItems, ...privateScheduleItems]
@@ -432,9 +623,9 @@ export function AdminSchedule(props) {
     })
   const scheduleTabs = [
     ['all', 'Semua', scheduleItems.length],
-    ['open', 'Open Trip', openTrips.length],
-    ['private', 'Private Trip', privateSchedules.length],
-    ['waiting', 'Menunggu Approval', pendingParticipants],
+    ['open', 'Open Trip', openScheduleItems.length],
+    ['private', 'Private Trip', privateScheduleItems.length],
+    ['waiting', 'Menunggu Approval', pendingScheduleCount],
   ]
 
   return (
@@ -468,70 +659,82 @@ export function AdminSchedule(props) {
         <div className="schedule-list admin-card-grid">
           {visibleScheduleItems.map((item) => {
             if (item.type === 'open') {
-              const { trip, approvedRegistrations, approvedParticipants, waitingParticipants } = item
-              const tripJobs = jobs.filter((job) => job.tripId === trip.id)
-              const assignedJobs = tripJobs.filter((job) => job.worker).length
-              const workerTarget = tripJobs.length
+              const { trip, schedules, approvedParticipants, waitingParticipants, assignedWorkers, workerTarget, quota, remaining } = item
               return (
                 <article className={`schedule-card ${waitingParticipants > 0 ? 'needs-review' : ''}`} key={item.key}>
                 <div className="schedule-card-head">
                   <div>
                     <h3>{trip.name}</h3>
-                    <p className="icon-line"><span className="asset-icon icon-geo" aria-hidden="true" />{trip.destination}</p>
+                    <p className="icon-line"><span className="asset-icon icon-geo" aria-hidden="true" />{adminText(trip.destination)}</p>
                   </div>
                   <div className="card-badge-stack">
                     {waitingParticipants > 0 && <span className="review-badge">Ada Pendaftar Baru</span>}
-                    {trip.isPrivateTrip && <span className="trip-type-chip">Private cave tour</span>}
                     <Badge status={trip.status} />
                   </div>
                 </div>
                 <div className="schedule-date-row">
-                  <span><span className="asset-icon icon-calendar" aria-hidden="true" />Tanggal</span>
-                  <strong>{formatDate(trip.date)}</strong>
+                  <span><span className="asset-icon icon-calendar" aria-hidden="true" />Jadwal</span>
+                  <strong>{schedules.length} tanggal</strong>
+                </div>
+                <div className="admin-schedule-action-list">
+                  {schedules.map((schedule) => (
+                    <div className={`admin-schedule-action-row ${schedule.waitingParticipants > 0 ? 'needs-review' : ''}`} key={schedule.id}>
+                      <div>
+                        <strong>{formatDate(schedule.date)} - {schedule.approvedParticipants}/{schedule.quota} peserta, sisa {schedule.remaining}</strong>
+                        <small>Status: {scheduleStatusLabel(schedule.status)}{schedule.waitingParticipants > 0 ? ` - ${schedule.waitingParticipants} menunggu approval` : ''}</small>
+                      </div>
+                      <button className="outline-btn schedule-detail-btn" type="button" onClick={() => props.navigate(`/admin/jadwal/${trip.id}/${schedule.id}`)}>
+                        Detail jadwal
+                        {schedule.waitingParticipants > 0 && <span>{schedule.waitingParticipants}</span>}
+                      </button>
+                    </div>
+                  ))}
                 </div>
                 <dl className="schedule-metrics">
-                  <div><dt><span className="asset-icon icon-people" aria-hidden="true" />Peserta</dt><dd>{approvedParticipants}/{trip.quota}</dd></div>
+                  <div><dt><span className="asset-icon icon-people" aria-hidden="true" />Peserta</dt><dd>{approvedParticipants}/{quota}</dd></div>
+                  <div><dt>Sisa</dt><dd>{remaining}</dd></div>
                   <div className={waitingParticipants > 0 ? 'metric-highlight' : ''}><dt>Menunggu</dt><dd>{waitingParticipants}</dd></div>
-                  <div><dt><span className="asset-icon icon-people" aria-hidden="true" />Pekerja</dt><dd>{assignedJobs}/{workerTarget}</dd></div>
+                  <div><dt><span className="asset-icon icon-people" aria-hidden="true" />Pekerja</dt><dd>{assignedWorkers}/{workerTarget}</dd></div>
                 </dl>
                 
                 <div className="schedule-card-footer">
-                  <div className="participant-list">{approvedRegistrations.length ? approvedRegistrations.slice(0, 3).map((participant) => <span key={participant.id}>{participant.name} ({participant.participants})</span>) : <span>Belum ada peserta disetujui</span>}</div>
-                  <button className="outline-btn" onClick={() => props.navigate(`/admin/jadwal/${trip.id}`)}>{waitingParticipants > 0 ? 'Review Pendaftar' : 'Detail jadwal'}</button>
+                  <div className="participant-list">{schedules.some((schedule) => schedule.approvedRegistrations.length) ? schedules.flatMap((schedule) => schedule.approvedRegistrations).slice(0, 3).map((participant) => <span key={participant.id}>{participant.name} ({participant.participants})</span>) : <span>Belum ada peserta disetujui</span>}</div>
                 </div>
               </article>
               )
             }
 
-            const { registration, trip, participantDetails, waitingParticipants } = item
-            const tripJobs = jobs.filter((job) => Number(job.registrationId) === Number(registration.id))
-            const assignedJobs = tripJobs.filter((job) => job.worker).length
-            const workerTarget = tripJobs.length || getSelectedAddons(registration).length || 0
+            const { trip, registration, range, bookingCount, pendingCount, assignedWorkers, workerTarget } = item
+            const bookingDate = getRegistrationDate(registration)
             return (
-              <article className={`schedule-card ${waitingParticipants > 0 ? 'needs-review' : ''}`} key={item.key}>
+              <article className={`schedule-card ${pendingCount > 0 ? 'needs-review' : ''}`} key={item.key}>
                 <div className="schedule-card-head">
                   <div>
                     <h3>{trip.name}</h3>
-                    <p className="icon-line"><span className="asset-icon icon-geo" aria-hidden="true" />{trip.destination}</p>
+                    <p className="icon-line"><span className="asset-icon icon-geo" aria-hidden="true" />{adminText(trip.destination)}</p>
                   </div>
                   <div className="card-badge-stack">
-                    {waitingParticipants > 0 && <span className="review-badge">Butuh Review</span>}
-                    <span className="trip-type-chip">Private booking</span>
-                    <Badge status={registration.status} />
+                    {pendingCount > 0 && <span className="review-badge">Butuh Review</span>}
+                    <span className="trip-type-chip">Private Trip</span>
+                    <Badge status={trip.status} />
                   </div>
                 </div>
                 <div className="schedule-date-row">
-                  <span><span className="asset-icon icon-calendar" aria-hidden="true" />Tanggal request</span>
-                  <strong>{formatDate(registration.requestedDate || trip.date)}</strong>
+                  <span><span className="asset-icon icon-calendar" aria-hidden="true" />Tanggal booking</span>
+                  <strong>{bookingDate ? formatDate(bookingDate) : '-'}</strong>
+                </div>
+                <div className="admin-schedule-mini-list compact">
+                  <span>{registration.sessionName || 'Sesi'}: {registration.startTime || '-'} - {registration.endTime || '-'}</span>
+                  <span>Periode tersedia: {range.startDate ? formatDate(range.startDate) : '-'} - {range.endDate ? formatDate(range.endDate) : '-'}</span>
                 </div>
                 <dl className="schedule-metrics">
-                  <div><dt><span className="asset-icon icon-people" aria-hidden="true" />Peserta</dt><dd>{registration.participants}</dd></div>
-                  <div className={waitingParticipants > 0 ? 'metric-highlight' : ''}><dt>Menunggu</dt><dd>{waitingParticipants}</dd></div>
-                  <div><dt><span className="asset-icon icon-people" aria-hidden="true" />Pekerja</dt><dd>{assignedJobs}/{workerTarget}</dd></div>
+                  <div><dt>Booking</dt><dd>{bookingCount}</dd></div>
+                  <div className={pendingCount > 0 ? 'metric-highlight' : ''}><dt>Pending</dt><dd>{pendingCount}</dd></div>
+                  <div><dt><span className="asset-icon icon-people" aria-hidden="true" />Pekerja</dt><dd>{assignedWorkers}/{workerTarget}</dd></div>
                 </dl>
                 <div className="schedule-card-footer">
-                  <div className="participant-list">{participantDetails.length ? participantDetails.slice(0, 3).map((item, index) => <span key={`${registration.id}-${index}`}>{item.name}</span>) : <span>{registration.name} ({registration.participants})</span>}</div>
-                  <button className="outline-btn" onClick={() => props.navigate(`/admin/jadwal/private/${registration.id}`)}>{waitingParticipants > 0 ? 'Review Pendaftar' : 'Detail jadwal'}</button>
+                  <div className="participant-list"><span>{registration.name} ({registration.participants || 1})</span><span>{registration.status}</span></div>
+                  <button className="outline-btn" onClick={() => props.navigate(`/admin/jadwal/private/${registration.id}`)}>{pendingCount > 0 ? 'Review Booking' : 'Detail jadwal'}</button>
                 </div>
               </article>
             )
@@ -543,13 +746,51 @@ export function AdminSchedule(props) {
   )
 }
 
-function AdminPrivateScheduleDetail({ registration, trips, jobs, setRegistrationStatus, navigate, ...props }) {
+function AdminPrivateScheduleDetail({ registration, trips, jobs, setRegistrationStatus, navigate, showToast, ...props }) {
   const trip = trips.find((item) => item.id === registration.tripId)
   const tripJobs = jobs.filter((job) => Number(job.registrationId) === Number(registration.id))
   const assignedJobs = tripJobs.filter((job) => job.worker)
   const participantDetails = Array.isArray(registration.participantDetails) && registration.participantDetails.length
     ? registration.participantDetails
     : [{ name: registration.name, address: registration.address, age: registration.age, gender: registration.gender, healthNotes: registration.healthNotes }]
+  const registrationDate = getRegistrationDate(registration) || trip?.date
+  const [isReminderModalOpen, setIsReminderModalOpen] = useState(false)
+  const [isSendingReminder, setIsSendingReminder] = useState(false)
+  const canSendReminder = isReminderApprovedRegistration(registration) && Boolean(registration.email) && Boolean(trip)
+
+  const sendPrivateTripReminder = async () => {
+    if (isSendingReminder || !canSendReminder) return
+    setIsSendingReminder(true)
+    try {
+      const response = await fetch('/.netlify/functions/sendTripReminder', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          scheduleId: trip.id,
+          registrationId: registration.id,
+          selectedDate: registrationDate,
+        }),
+      })
+      const responseText = await response.text()
+      let result = {}
+      try {
+        result = responseText ? JSON.parse(responseText) : {}
+      } catch {
+        result = {}
+      }
+      if (!response.ok) {
+        throw new Error(result.message || responseText || 'Pengingat gagal dikirim.')
+      }
+      const sent = Number(result.sent || 0)
+      const failed = Number(result.failed || 0)
+      showToast?.(failed > 0 ? `${sent} berhasil, ${failed} gagal` : `Pengingat berhasil dikirim ke ${registration.name}`)
+      setIsReminderModalOpen(false)
+    } catch (error) {
+      showToast?.(error.message || 'Pengingat gagal dikirim.')
+    } finally {
+      setIsSendingReminder(false)
+    }
+  }
 
   return (
     <AdminShell title="Detail Jadwal Private" navigate={navigate} {...props}>
@@ -558,16 +799,30 @@ function AdminPrivateScheduleDetail({ registration, trips, jobs, setRegistration
           <div>
             <p className="eyebrow">Private booking</p>
             <h2>{trip?.name || 'Private cave tour'}</h2>
-            <p className="muted">{trip?.destination || '-'} - {formatDate(registration.requestedDate || trip?.date)} - {registration.name}</p>
+            <p className="muted">{adminText(trip?.destination)} - {formatDate(registrationDate)} - {registration.sessionName ? `${registration.sessionName} ` : ''}{registration.startTime && registration.endTime ? `(${registration.startTime} - ${registration.endTime}) - ` : ''}{registration.name}</p>
           </div>
-          <button className="outline-btn" onClick={() => navigate('/admin/jadwal')}>Kembali ke jadwal</button>
+          <div className="registration-management-actions">
+            <div className="reminder-action-wrap">
+              <button
+                className="primary-btn"
+                type="button"
+                disabled={!canSendReminder || isSendingReminder}
+                onClick={() => setIsReminderModalOpen(true)}
+              >
+                {isSendingReminder ? 'Mengirim...' : 'Kirim Pengingat'}
+              </button>
+              {!canSendReminder && <span>Booking harus disetujui dan punya email</span>}
+            </div>
+            <button className="outline-btn" onClick={() => navigate('/admin/jadwal')}>Kembali ke jadwal</button>
+          </div>
         </div>
 
         <section className="stat-grid dashboard-stats">
           <Metric label="Jumlah peserta" value={registration.participants} />
           <Metric label="Status" value={registration.status} />
           <Metric label="Pekerja terisi" value={`${assignedJobs.length}/${tripJobs.length || getSelectedAddons(registration).length || 0}`} />
-          <Metric label="Tanggal request" value={formatDate(registration.requestedDate || trip?.date)} />
+          <Metric label="Tanggal request" value={formatDate(registrationDate)} />
+          <Metric label="Sesi" value={registration.sessionName ? `${registration.sessionName}${registration.startTime && registration.endTime ? ` (${registration.startTime} - ${registration.endTime})` : ''}` : '-'} />
         </section>
 
         <section className="schedule-detail-grid">
@@ -599,19 +854,102 @@ function AdminPrivateScheduleDetail({ registration, trips, jobs, setRegistration
             <p className="muted">{registration.notes || '-'}</p>
           </DataPanel>
         </section>
+
+        <AppModal
+          isOpen={isReminderModalOpen}
+          title="Kirim Pengingat Private Trip?"
+          description="Pengingat akan dikirim hanya ke peserta pada booking private ini."
+          confirmText={isSendingReminder ? 'Mengirim...' : 'Kirim pengingat'}
+          cancelText="Batal"
+          variant="warning"
+          confirmDisabled={isSendingReminder}
+          cancelDisabled={isSendingReminder}
+          onConfirm={sendPrivateTripReminder}
+          onCancel={() => {
+            if (!isSendingReminder) setIsReminderModalOpen(false)
+          }}
+        >
+          <div className="reminder-modal-count">
+            <span>Penerima email</span>
+            <strong>{registration.email || '-'}</strong>
+          </div>
+        </AppModal>
       </section>
     </AdminShell>
   )
 }
 
-function AdminScheduleDetail({ trip, registrations, jobs, setRegistrationStatus, navigate, showToast, ...props }) {
-  const tripRegistrations = registrations.filter((item) => item.tripId === trip.id)
+function AdminPrivateTripScheduleDetail({ trip, registrations, jobs, setRegistrationStatus, navigate, ...props }) {
+  const tripRegistrations = registrations
+    .filter((item) => Number(item.tripId) === Number(trip.id))
+    .filter((item) => item.isPrivateTrip || item.isPrivateTour || item.tripType === 'private')
+    .sort((a, b) => String(getRegistrationDate(a)).localeCompare(String(getRegistrationDate(b))) || String(a.sessionName || '').localeCompare(String(b.sessionName || '')))
+  const pendingRegistrations = tripRegistrations.filter(isPendingRegistration)
+  const relatedJobs = jobs.filter((job) => Number(job.tripId) === Number(trip.id) && (!job.registrationId || tripRegistrations.some((registration) => Number(registration.id) === Number(job.registrationId))))
+  const assignedJobs = relatedJobs.filter((job) => job.worker)
+  const range = getPrivateDateRange(trip)
+  const sessions = getTripSessions(trip)
+
+  return (
+    <AdminShell title="Detail Jadwal Private" navigate={navigate} {...props}>
+      <section className="admin-page-stack registration-management-page">
+        <div className="admin-page-head registration-management-head">
+          <div>
+            <p className="eyebrow">Private trip</p>
+            <h2>{trip.name}</h2>
+            <p className="muted">{adminText(trip.destination)} - {range.startDate ? formatDate(range.startDate) : '-'} sampai {range.endDate ? formatDate(range.endDate) : '-'}</p>
+          </div>
+          <button className="outline-btn" onClick={() => navigate('/admin/jadwal')}>Kembali ke jadwal</button>
+        </div>
+
+        <section className="stat-grid dashboard-stats">
+          <Metric label="Booking masuk" value={tripRegistrations.length} />
+          <Metric label="Booking pending" value={pendingRegistrations.length} />
+          <Metric label="Pekerja terisi" value={`${assignedJobs.length}/${relatedJobs.length}`} />
+        </section>
+
+        <section className="schedule-detail-grid">
+          <DataPanel title="Sesi Private Trip">
+            <div className="selected-addon-list">
+              {sessions.map((session) => <span key={session.id}>{session.name}: {session.startTime || '-'} - {session.endTime || '-'}</span>)}
+            </div>
+          </DataPanel>
+
+          <DataPanel title="Booking Private">
+            <div className="registration-card-grid">
+              {tripRegistrations.length ? tripRegistrations.map((item) => (
+                <RegistrationApprovalCard
+                  item={item}
+                  key={item.id}
+                  onDetail={() => navigate(`/admin/jadwal/private/${item.id}`)}
+                  setRegistrationStatus={setRegistrationStatus}
+                />
+              )) : <p className="empty-column">Belum ada booking untuk private trip ini.</p>}
+            </div>
+          </DataPanel>
+        </section>
+      </section>
+    </AdminShell>
+  )
+}
+
+function AdminScheduleDetail({ trip, scheduleId, registrations, jobs, setRegistrationStatus, navigate, showToast, ...props }) {
+  const selectedSchedule = scheduleId ? getTripSchedules(trip).find((schedule) => schedule.id === scheduleId) : null
+  const tripRegistrations = registrations
+    .filter((item) => item.tripId === trip.id)
+    .filter((item) => !selectedSchedule || isSameScheduleRegistration(item, selectedSchedule))
   const approvedParticipants = tripRegistrations.filter((item) => item.status === 'Disetujui' || item.status === 'Selesai')
   const reminderRecipients = tripRegistrations.filter((item) => isReminderApprovedRegistration(item) && item.email)
   const hasApprovedReminderParticipant = tripRegistrations.some(isReminderApprovedRegistration)
   const waitingRegistrations = tripRegistrations.filter(isPendingRegistration)
   const rejectedRegistrations = tripRegistrations.filter((item) => item.status === 'Ditolak')
-  const tripJobs = jobs.filter((job) => job.tripId === trip.id)
+  const tripJobs = jobs.filter((job) => job.tripId === trip.id && (!selectedSchedule || !job.registrationId || tripRegistrations.some((registration) => Number(registration.id) === Number(job.registrationId))))
+  const tripSchedules = (selectedSchedule ? [selectedSchedule] : getTripSchedules(trip)).map((schedule) => {
+    const approvedCount = approvedParticipants
+      .filter((registration) => registration.scheduleId ? registration.scheduleId === schedule.id : getRegistrationDate(registration) === schedule.date)
+      .reduce((total, registration) => total + Number(registration.participants || 0), 0)
+    return { ...schedule, approvedCount, remaining: Math.max(Number(schedule.quota || 0) - approvedCount, 0) }
+  })
   const [activeStatus, setActiveStatus] = useState('Menunggu Approval')
   const [search, setSearch] = useState('')
   const [typeFilter, setTypeFilter] = useState('all')
@@ -651,7 +989,11 @@ function AdminScheduleDetail({ trip, registrations, jobs, setRegistrationStatus,
       const response = await fetch('/.netlify/functions/sendTripReminder', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ scheduleId: trip.id }),
+        body: JSON.stringify({
+          scheduleId: trip.id,
+          tripScheduleId: selectedSchedule?.id || '',
+          selectedDate: selectedSchedule?.date || '',
+        }),
       })
       const responseText = await response.text()
       let result = {}
@@ -681,7 +1023,7 @@ function AdminScheduleDetail({ trip, registrations, jobs, setRegistrationStatus,
           <div>
             <p className="eyebrow">Approval peserta</p>
             <h2>Manajemen Pendaftaran</h2>
-            <p className="muted">{trip.name} - {trip.destination} - {formatDate(trip.date)}</p>
+            <p className="muted">{trip.name} - {adminText(trip.destination)} - {selectedSchedule ? formatDate(selectedSchedule.date) : `${tripSchedules.length} jadwal`}</p>
           </div>
           <div className="registration-management-actions">
             <div className="reminder-action-wrap">
@@ -715,9 +1057,21 @@ function AdminScheduleDetail({ trip, registrations, jobs, setRegistrationStatus,
         </section>
 
         <section className="schedule-detail-grid">
-          <DataPanel title="Peserta Disetujui">
-            <div className="participant-list">
-              {approvedParticipants.length ? approvedParticipants.map((item) => <span key={item.id}>{item.name} ({item.participants})</span>) : <span>Belum ada peserta disetujui</span>}
+          <DataPanel title="Jadwal Open Trip">
+            <div className="registration-status-list">
+              {tripSchedules.map((schedule) => (
+                <article className="registration-status-card" key={schedule.id}>
+                  <div className="registration-card-main">
+                    <h4>{formatDate(schedule.date)}</h4>
+                    <dl>
+                      <div><dt>Kuota</dt><dd>{schedule.quota}</dd></div>
+                      <div><dt>Disetujui</dt><dd>{schedule.approvedCount}</dd></div>
+                      <div><dt>Sisa kuota</dt><dd>{schedule.remaining}</dd></div>
+                      <div><dt>Status</dt><dd>{schedule.status}</dd></div>
+                    </dl>
+                  </div>
+                </article>
+              ))}
             </div>
           </DataPanel>
 
@@ -812,6 +1166,8 @@ function RegistrationApprovalCard({ item, setRegistrationStatus, onDetail }) {
       </div>
       <dl>
         <div><dt>Jenis trip</dt><dd>{registrationTripType(item)}</dd></div>
+        <div><dt>Tanggal</dt><dd>{formatDate(getRegistrationDate(item))}</dd></div>
+        {item.sessionName && <div><dt>Sesi</dt><dd>{item.sessionName}{item.startTime && item.endTime ? ` (${item.startTime} - ${item.endTime})` : ''}</dd></div>}
         <div><dt>Peserta</dt><dd>{item.participants} orang</dd></div>
         <div><dt>Usia</dt><dd>{item.age ? `${item.age} tahun` : '-'}</dd></div>
         <div><dt>Domisili</dt><dd>{item.address || '-'}</dd></div>
@@ -834,6 +1190,7 @@ function RegistrationDetailModal({ item, trip, setRegistrationStatus, onClose })
   const participantDetails = Array.isArray(item.participantDetails) && item.participantDetails.length
     ? item.participantDetails
     : [{ name: item.name, address: item.address, age: item.age, gender: item.gender, healthNotes: item.healthNotes }]
+  const registrationDate = getRegistrationDate(item) || trip.date
 
   return (
     <div className="modal-backdrop" role="presentation" onClick={onClose}>
@@ -861,7 +1218,8 @@ function RegistrationDetailModal({ item, trip, setRegistrationStatus, onClose })
             <dl>
               <div><dt>Cave trip</dt><dd>{trip.name}</dd></div>
               <div><dt>Jenis</dt><dd>{registrationTripType(item)}</dd></div>
-              <div><dt>Tanggal</dt><dd>{formatDate(item.requestedDate || trip.date)}</dd></div>
+              <div><dt>Tanggal</dt><dd>{formatDate(registrationDate)}</dd></div>
+              {item.sessionName && <div><dt>Sesi</dt><dd>{item.sessionName}{item.startTime && item.endTime ? ` (${item.startTime} - ${item.endTime})` : ''}</dd></div>}
               <div><dt>Add-on</dt><dd>{getSelectedAddons(item).join(', ') || '-'}</dd></div>
             </dl>
           </section>
@@ -1013,7 +1371,7 @@ export function JobTable({ jobs, trips, compact }) {
         <thead><tr><th>Cave trip</th><th>Destinasi</th><th>Tanggal</th><th>Kebutuhan</th><th>Tugas</th><th>Status job</th><th>Pekerja</th></tr></thead>
         <tbody>{rows.map((job) => {
           const trip = trips.find((item) => item.id === job.tripId)
-          return <tr key={job.id}><td>{trip?.name}</td><td>{trip?.destination}</td><td>{formatDate(job.requestedDate || trip?.date)}</td><td>{job.addonLabel || 'Job trip'}</td><td>{job.task}</td><td><Badge status={job.status} /></td><td>{job.worker || '-'}</td></tr>
+          return <tr key={job.id}><td>{trip?.name}</td><td>{adminText(trip?.destination)}</td><td>{formatDate(job.requestedDate || trip?.date)}</td><td>{job.addonLabel || 'Job trip'}</td><td>{job.task}</td><td><Badge status={job.status} /></td><td>{job.worker || '-'}</td></tr>
         })}</tbody>
       </table>
     </div>

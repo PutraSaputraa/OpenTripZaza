@@ -144,14 +144,45 @@ const findTrip = async (db, scheduleId) => {
   return null
 }
 
-const findRegistrations = async (db, scheduleId) => {
-  const numericId = Number(scheduleId)
+const getRegistrationDate = (registration) => registration?.selectedDate || registration?.requestedDate || ''
+
+const getLocalizedText = (value) => {
+  if (value == null) return ''
+  if (typeof value === 'string') return value
+  if (Array.isArray(value)) return value.join(', ')
+  if (typeof value === 'object') return value.id || value.en || ''
+  return String(value)
+}
+
+const isPrivateRegistration = (registration) => (
+  registration?.isPrivateTrip ||
+  registration?.isPrivateTour ||
+  String(registration?.tripType || '').toLowerCase() === 'private'
+)
+
+const isSameScheduleRegistration = (registration, tripScheduleId, selectedDate) => {
+  if (!tripScheduleId && !selectedDate) return true
+  if (tripScheduleId && registration.scheduleId) return registration.scheduleId === tripScheduleId
+  if (selectedDate) return getRegistrationDate(registration) === selectedDate
+  return false
+}
+
+const isSameRegistrationId = (registration, registrationId = '') => {
+  if (!registrationId) return true
+  const targetId = String(registrationId)
+  return [registration.id, registration.docId]
+    .filter((value) => value !== undefined && value !== null)
+    .some((value) => String(value) === targetId)
+}
+
+const findRegistrations = async (db, tripId, tripScheduleId = '', selectedDate = '', registrationId = '') => {
+  const numericId = Number(tripId)
   const snapshots = []
 
   if (!Number.isNaN(numericId)) {
     snapshots.push(await db.collection('registrations').where('tripId', '==', numericId).get())
   }
-  snapshots.push(await db.collection('registrations').where('tripId', '==', String(scheduleId)).get())
+  snapshots.push(await db.collection('registrations').where('tripId', '==', String(tripId)).get())
 
   const byId = new Map()
   snapshots.forEach((snapshot) => {
@@ -160,19 +191,28 @@ const findRegistrations = async (db, scheduleId) => {
     })
   })
 
-  return [...byId.values()].filter((registration) => isApprovedStatus(registration.status) && registration.email)
+  return [...byId.values()]
+    .filter((registration) => isApprovedStatus(registration.status) && registration.email)
+    .filter((registration) => isSameRegistrationId(registration, registrationId))
+    .filter((registration) => isSameScheduleRegistration(registration, tripScheduleId, selectedDate))
 }
 
 const buildEmail = ({ registration, trip, tripDate }) => {
   const participantName = registration.name || 'Peserta'
   const participantCount = Number(registration.participants || 1)
-  const tripName = trip.name || 'Open Trip'
-  const destination = trip.destination || trip.location || '-'
-  const subject = `Pengingat Open Trip ${tripName} - ${tripDate}`
+  const privateTrip = isPrivateRegistration(registration)
+  const tripName = trip.name || (privateTrip ? 'Private Trip' : 'Open Trip')
+  const destination = getLocalizedText(trip.destination || trip.location) || '-'
+  const sessionText = registration.sessionName
+    ? `${registration.sessionName}${registration.startTime && registration.endTime ? ` (${registration.startTime} - ${registration.endTime})` : ''}`
+    : ''
+  const tripLabel = privateTrip ? 'Private Trip' : 'Open Trip'
+  const subject = `Pengingat ${tripLabel} ${tripName} - ${tripDate}`
   const safeParticipantName = escapeHtml(participantName)
   const safeTripName = escapeHtml(tripName)
   const safeDestination = escapeHtml(destination)
   const safeTripDate = escapeHtml(tripDate)
+  const safeSessionText = escapeHtml(sessionText)
   const text = [
     `Halo ${participantName},`,
     '',
@@ -180,10 +220,11 @@ const buildEmail = ({ registration, trip, tripDate }) => {
     `Nama trip: ${tripName}`,
     `Lokasi trip: ${destination}`,
     `Tanggal trip: ${tripDate}`,
+    sessionText ? `Sesi: ${sessionText}` : '',
     `Jumlah peserta: ${participantCount} orang`,
     '',
     'Mohon pastikan perlengkapan, kondisi kesehatan, dan waktu keberangkatan sudah siap. Sampai jumpa di trip.',
-  ].join('\n')
+  ].filter((line) => line !== '').join('\n')
   const html = `
     <p>Halo ${safeParticipantName},</p>
     <p>Ini pengingat singkat untuk jadwal trip kamu:</p>
@@ -191,6 +232,7 @@ const buildEmail = ({ registration, trip, tripDate }) => {
       <li><strong>Nama trip:</strong> ${safeTripName}</li>
       <li><strong>Lokasi trip:</strong> ${safeDestination}</li>
       <li><strong>Tanggal trip:</strong> ${safeTripDate}</li>
+      ${sessionText ? `<li><strong>Sesi:</strong> ${safeSessionText}</li>` : ''}
       <li><strong>Jumlah peserta:</strong> ${participantCount} orang</li>
     </ul>
     <p>Mohon pastikan perlengkapan, kondisi kesehatan, dan waktu keberangkatan sudah siap. Sampai jumpa di trip.</p>
@@ -251,8 +293,11 @@ export const handler = async (event) => {
   try {
     stage = 'parse request body'
     const body = JSON.parse(event.body || '{}')
-    const scheduleId = body.scheduleId || body.tripScheduleId
-    if (!scheduleId) return jsonResponse(400, { message: 'scheduleId atau tripScheduleId wajib dikirim.' })
+    const scheduleId = body.scheduleId || body.tripId
+    const tripScheduleId = body.tripScheduleId || body.scheduleItemId || ''
+    const selectedDate = body.selectedDate || body.scheduleDate || ''
+    const registrationId = body.registrationId || ''
+    if (!scheduleId) return jsonResponse(400, { message: 'scheduleId atau tripId wajib dikirim.' })
 
     stage = 'initialize firebase admin'
     const db = getAdminDb()
@@ -262,15 +307,17 @@ export const handler = async (event) => {
     if (!trip) return jsonResponse(404, { message: 'Jadwal trip tidak ditemukan.' })
 
     stage = 'find registrations'
-    const registrations = await findRegistrations(db, scheduleId)
-    const tripDate = formatTripDate(trip.date)
+    const registrations = await findRegistrations(db, scheduleId, tripScheduleId, selectedDate, registrationId)
+    const tripDate = formatTripDate(selectedDate || trip.date)
     const results = []
 
     for (const registration of registrations) {
-      const email = buildEmail({ registration, trip, tripDate })
+      const email = buildEmail({ registration, trip, tripDate: selectedDate ? tripDate : formatTripDate(getRegistrationDate(registration) || trip.date) })
       const participantName = registration.name || 'Peserta'
       const logBase = {
         scheduleId,
+        tripScheduleId,
+        selectedDate: selectedDate || getRegistrationDate(registration) || '',
         registrationId: registration.id || registration.docId,
         toEmail: registration.email,
         participantName,

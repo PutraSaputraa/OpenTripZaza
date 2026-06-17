@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import testimoni1 from '../assets/testimoni1.png'
 import testimoni2 from '../assets/testimoni2.png'
 import testimoni3 from '../assets/testimoni3.png'
@@ -7,13 +8,54 @@ import horizontalLogo from '../assets/desainHorizontal.png'
 import verticalLogo from '../assets/desainvertikal.png'
 import { addonOptions } from '../config/constants'
 import { formatCurrency, formatDate, tripName } from '../utils/formatters'
+import { localizedList, localizedText } from '../utils/localization'
+import { getOpenTripScheduleOptions, getPrivateDateRange, getPrivateSessionOptions, getRegistrationDate, getTripSchedules, isDateWithinPrivateRange } from '../utils/schedules'
 import { AppModal, Badge, InfoBlock, NotFound } from './shared'
 
+const useCustomerLanguage = () => {
+  const { t, i18n } = useTranslation()
+  const lang = i18n.resolvedLanguage?.startsWith('en') ? 'en' : 'id'
+  return {
+    t,
+    i18n,
+    lang,
+    dateLocale: lang === 'en' ? 'en-US' : 'id-ID',
+    statusLabel: (status) => t(`status.${status}`, { defaultValue: status }),
+  }
+}
+
+const getTripDestination = (trip, lang) => localizedText(trip?.destination, lang) || '-'
+const getTripDescription = (trip, lang) => localizedText(trip?.description, lang)
+const getTripActivities = (trip, lang) => localizedList(trip?.activities ?? trip?.activity ?? trip?.itinerary ?? trip?.itineraryDays, lang)
+const getTripFacilities = (trip, lang) => localizedList(trip?.facilities, lang)
+const getTripTypeLabel = (trip, registration, t) => {
+  if (trip?.isPrivateTrip || registration?.isPrivateTrip || registration?.isPrivateTour) return t('tripType.private')
+  return t('tripType.open')
+}
+const getScheduleLabel = (schedule, dateLocale, t) => {
+  const dateText = formatDate(schedule.date, dateLocale)
+  if (schedule.status === 'full' || schedule.remaining <= 0) return `${dateText} - ${t('schedule.full')}`
+  if (schedule.status === 'inactive') return `${dateText} - ${t('schedule.inactive')}`
+  return `${dateText} - ${t('schedule.remaining', { count: schedule.remaining ?? schedule.quota })}`
+}
+const getSessionLabel = (session, t) => {
+  const timeText = session.startTime && session.endTime ? `${session.startTime} - ${session.endTime}` : t('schedule.flexibleSession')
+  if (session.isBooked) return `${session.name} (${timeText}) - ${t('schedule.booked')}`
+  if (session.status === 'inactive') return `${session.name} (${timeText}) - ${t('schedule.inactive')}`
+  return `${session.name} (${timeText})`
+}
+
 export function PublicNav({ navigate, session, logout }) {
+  const { t, i18n, lang } = useCustomerLanguage()
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false)
   const isLoggedIn = Boolean(session)
+
+  const changeLanguage = (nextLang) => {
+    i18n.changeLanguage(nextLang)
+    localStorage.setItem('customerLanguage', nextLang)
+  }
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 28)
@@ -66,22 +108,26 @@ export function PublicNav({ navigate, session, logout }) {
           <img src={horizontalLogo} alt="MAUA" />
         </button>
 
-        <nav className="public-nav-menu" aria-label="Navigasi utama">
-          <button type="button" onClick={() => goToPage('/destinasi')}>Trip</button>
-          <button type="button" onClick={() => goToPage('/')}>Home</button>
-          <button type="button" onClick={() => goToSection('faq-list')}>FAQ</button>
+        <nav className="public-nav-menu" aria-label={t('nav.main')}>
+          <button type="button" onClick={() => goToPage('/destinasi')}>{t('nav.trip')}</button>
+          <button type="button" onClick={() => goToPage('/')}>{t('nav.home')}</button>
+          <button type="button" onClick={() => goToSection('faq-list')}>{t('nav.faq')}</button>
         </nav>
 
         <div className="public-nav-actions">
+          <div className="language-switcher" aria-label="Language">
+            <button className={lang === 'id' ? 'is-active' : ''} type="button" onClick={() => changeLanguage('id')}>ID</button>
+            <button className={lang === 'en' ? 'is-active' : ''} type="button" onClick={() => changeLanguage('en')}>EN</button>
+          </div>
           {isLoggedIn ? (
             <>
-              <button className="public-signup-btn" type="button" onClick={goToAccount}>Akun</button>
-              <button className="public-login-btn" type="button" onClick={handleLogout}>Logout</button>
+              <button className="public-signup-btn" type="button" onClick={goToAccount}>{t('nav.account')}</button>
+              <button className="public-login-btn" type="button" onClick={handleLogout}>{t('nav.logout')}</button>
             </>
           ) : (
             <>
-              <button className="public-login-btn" type="button" onClick={() => goToPage('/login')}>Login</button>
-              <button className="public-signup-btn" type="button" onClick={() => goToPage('/signup')}>Sign Up</button>
+              <button className="public-login-btn" type="button" onClick={() => goToPage('/login')}>{t('nav.login')}</button>
+              <button className="public-signup-btn" type="button" onClick={() => goToPage('/signup')}>{t('nav.signup')}</button>
             </>
           )}
         </div>
@@ -90,7 +136,7 @@ export function PublicNav({ navigate, session, logout }) {
           className={`public-menu-toggle ${isMenuOpen ? 'is-open' : ''}`}
           type="button"
           onClick={() => setIsMenuOpen((current) => !current)}
-          aria-label={isMenuOpen ? 'Tutup menu' : 'Buka menu'}
+          aria-label={isMenuOpen ? t('nav.closeMenu') : t('nav.openMenu')}
           aria-expanded={isMenuOpen}
         >
           <span />
@@ -99,28 +145,32 @@ export function PublicNav({ navigate, session, logout }) {
         </button>
 
         <div className={`public-mobile-menu ${isMenuOpen ? 'is-open' : ''}`}>
-          <button type="button" onClick={() => goToPage('/destinasi')}>Trip</button>
-          <button type="button" onClick={() => goToPage('/')}>Home</button>
-          <button type="button" onClick={() => goToSection('faq-list')}>FAQ</button>
+          <div className="language-switcher mobile-language-switcher" aria-label="Language">
+            <button className={lang === 'id' ? 'is-active' : ''} type="button" onClick={() => changeLanguage('id')}>ID</button>
+            <button className={lang === 'en' ? 'is-active' : ''} type="button" onClick={() => changeLanguage('en')}>EN</button>
+          </div>
+          <button type="button" onClick={() => goToPage('/destinasi')}>{t('nav.trip')}</button>
+          <button type="button" onClick={() => goToPage('/')}>{t('nav.home')}</button>
+          <button type="button" onClick={() => goToSection('faq-list')}>{t('nav.faq')}</button>
           {isLoggedIn ? (
             <>
-              <button type="button" onClick={goToAccount}>Akun</button>
-              <button type="button" onClick={handleLogout}>Logout</button>
+              <button type="button" onClick={goToAccount}>{t('nav.account')}</button>
+              <button type="button" onClick={handleLogout}>{t('nav.logout')}</button>
             </>
           ) : (
             <>
-              <button type="button" onClick={() => goToPage('/signup')}>Sign Up</button>
-              <button type="button" onClick={() => goToPage('/login')}>Login</button>
+              <button type="button" onClick={() => goToPage('/signup')}>{t('nav.signup')}</button>
+              <button type="button" onClick={() => goToPage('/login')}>{t('nav.login')}</button>
             </>
           )}
         </div>
       </header>
       <AppModal
         isOpen={isLogoutModalOpen}
-        title="Keluar dari akun?"
-        description="Kamu akan keluar dari akun ini dan perlu login kembali untuk mengakses fitur akun."
-        confirmText="Ya, Logout"
-        cancelText="Batal"
+        title={t('nav.logoutTitle')}
+        description={t('nav.logoutDescription')}
+        confirmText={t('nav.logoutConfirm')}
+        cancelText={t('nav.cancel')}
         variant="warning"
         onConfirm={confirmLogout}
         onCancel={() => setIsLogoutModalOpen(false)}
@@ -129,47 +179,40 @@ export function PublicNav({ navigate, session, logout }) {
   )
 }
 
-const tripTypeLabel = (trip, registration) => {
-  if (trip?.isPrivateTrip || registration?.isPrivateTrip) return 'Private cave tour'
-  if (registration?.isPrivateTour) return 'Private cave tour'
-  return 'Open trip goa'
-}
-
 const testimonials = [
   {
     name: 'Rakabumink',
     trip: 'Goa Pindul Cave Tubing',
     image: testimoni1,
-    quote: 'Trip goanya rapi, admin responsif, dan briefing keselamatannya jelas. Tinggal datang, pakai perlengkapan, lalu eksplor.',
+    quoteKey: 'testimonials.quote1',
   },
   {
     name: 'Anisa Azizah',
     trip: 'Goa Jomblang Vertical Cave',
     image: testimoni2,
-    quote: 'Suka banget karena detail peserta dan jadwalnya transparan. Rasanya lebih tenang untuk ikut trip goa yang medannya khusus.',
+    quoteKey: 'testimonials.quote2',
   },
   {
     name: 'Maya Lestari',
     trip: 'Private Cave Tour Pacitan',
     image: testimoni3,
-    quote: 'Private cave tournya nyaman untuk keluarga. Bisa lebih fleksibel tanpa campur rombongan lain, tapi tetap dipandu aman.',
+    quoteKey: 'testimonials.quote3',
   },
-]
-
-const faqs = [
-  ['Bagaimana cara daftar cave trip?', 'Pilih goa yang kamu mau, buka detailnya, lalu isi form pendaftaran. Status awal akan masuk sebagai menunggu approval admin.'],
-  ['Apa bedanya open trip dan private cave tour?', 'Open trip digabung dengan peserta lain sesuai kuota, sedangkan private cave tour hanya untuk satu rombongan kamu setelah disetujui admin.'],
-  ['Apakah pendaftaran langsung disetujui?', 'Belum. Admin akan mengecek data, slot, dan kebutuhan trip goa sebelum mengubah status menjadi disetujui atau ditolak.'],
-  ['Di mana melihat status pendaftaran?', 'Setelah login sebagai customer, buka halaman akun untuk melihat cave trip yang kamu daftar dan status terbarunya.'],
 ]
 
 const normalizeSearch = (value) => value.trim().toLowerCase()
 
-const filterTripsBySearch = (trips, search) => {
+const filterTripsBySearch = (trips, search, lang) => {
   const keyword = normalizeSearch(search)
   if (!keyword) return trips
   return trips.filter((trip) => {
-    const haystack = [trip.name, trip.destination, trip.description, trip.facilities]
+    const haystack = [
+      trip.name,
+      getTripDestination(trip, lang),
+      getTripDescription(trip, lang),
+      getTripActivities(trip, lang).join(' '),
+      getTripFacilities(trip, lang).join(' '),
+    ]
       .filter(Boolean)
       .join(' ')
       .toLowerCase()
@@ -178,6 +221,7 @@ const filterTripsBySearch = (trips, search) => {
 }
 
 function SearchTripForm({ navigate, initialValue = '', compact = false }) {
+  const { t } = useCustomerLanguage()
   const [search, setSearch] = useState(initialValue)
 
   const onSubmit = (event) => {
@@ -191,13 +235,13 @@ function SearchTripForm({ navigate, initialValue = '', compact = false }) {
       <span className="search-icon" aria-hidden="true" />
       <label>
         <input
-          aria-label="Cari destinasi cave trip"
-          placeholder="Cari Destinasi"
+          aria-label={t('search.aria')}
+          placeholder={t('search.placeholder')}
           value={search}
           onChange={(event) => setSearch(event.target.value)}
         />
       </label>
-      <button className="search-submit" type="submit" aria-label="Cari destinasi">
+      <button className="search-submit" type="submit" aria-label={t('search.submit')}>
         <span aria-hidden="true">→</span>
       </button>
     </form>
@@ -205,12 +249,13 @@ function SearchTripForm({ navigate, initialValue = '', compact = false }) {
 }
 
 function DestinationCarousel({ trips, navigate }) {
+  const { t, lang } = useCustomerLanguage()
   const featuredTrips = trips.slice(0, 8)
   const [activeIndex, setActiveIndex] = useState(0)
   const [slideDirection, setSlideDirection] = useState('next')
 
   if (!featuredTrips.length) {
-    return <p className="empty-state">Belum ada destinasi cave trip yang tersedia.</p>
+    return <p className="empty-state">{t('search.emptyFeatured')}</p>
   }
 
   const total = featuredTrips.length
@@ -226,7 +271,7 @@ function DestinationCarousel({ trips, navigate }) {
   }
 
   return (
-    <section className="destination-carousel" aria-label="Carousel destinasi wisata">
+    <section className="destination-carousel" aria-label={t('search.carousel')}>
       <div className={`destination-carousel-stage is-moving-${slideDirection}`} key={activeIndex}>
         {visibleItems.map(({ trip, offset }) => (
           <button
@@ -243,15 +288,15 @@ function DestinationCarousel({ trips, navigate }) {
             type="button"
           >
             <TripVisual trip={trip} />
-            <span className="trip-type-chip">{trip.isPrivateTrip ? 'Private cave tour' : 'Open trip goa'}</span>
+            <span className="trip-type-chip">{getTripTypeLabel(trip, null, t)}</span>
             <strong>{trip.name}</strong>
-            <small>{trip.destination}</small>
+            <small>{getTripDestination(trip, lang)}</small>
             <span className="destination-price">{formatCurrency(trip.price)}</span>
           </button>
         ))}
       </div>
       <div className="destination-carousel-controls" aria-label="Kontrol carousel destinasi">
-        <button onClick={goToPrevious} type="button" aria-label="Destinasi sebelumnya">‹</button>
+        <button onClick={goToPrevious} type="button" aria-label={t('search.previous')}>‹</button>
         <div className="destination-dots">
           {featuredTrips.map((trip, index) => (
             <button
@@ -259,17 +304,18 @@ function DestinationCarousel({ trips, navigate }) {
               key={trip.id}
               onClick={() => setActiveIndex(index)}
               type="button"
-              aria-label={`Tampilkan destinasi ${index + 1}`}
+              aria-label={t('search.show', { number: index + 1 })}
             />
           ))}
         </div>
-        <button onClick={goToNext} type="button" aria-label="Destinasi berikutnya">›</button>
+        <button onClick={goToNext} type="button" aria-label={t('search.next')}>›</button>
       </div>
     </section>
   )
 }
 
 function TestimonialCarousel() {
+  const { t } = useCustomerLanguage()
   const [activeIndex, setActiveIndex] = useState(0)
   const total = testimonials.length
   const visibleTestimonials = [
@@ -282,29 +328,31 @@ function TestimonialCarousel() {
   const goToNext = () => setActiveIndex((current) => (current + 1) % total)
 
   return (
-    <section className="testimonial-carousel reveal-on-scroll" aria-label="Carousel testimoni">
-      <button className="carousel-control carousel-control-prev" onClick={goToPrevious} aria-label="Testimoni sebelumnya">&lsaquo;</button>
+    <section className="testimonial-carousel reveal-on-scroll" aria-label={t('testimonials.carousel')}>
+      <button className="carousel-control carousel-control-prev" onClick={goToPrevious} aria-label={t('testimonials.previous')}>&lsaquo;</button>
       <div className="testimonial-carousel-track">
         {visibleTestimonials.map(({ item, position }) => (
           <article className={`testimonial-card testimonial-slide testimonial-slide-${position}`} key={`${position}-${item.name}`}>
             <img src={item.image} alt={`Testimoni ${item.name}`} />
             <div>
-              <p>{item.quote}</p>
+              <p>{t(item.quoteKey)}</p>
               <h3>{item.name}</h3>
               <span>{item.trip}</span>
             </div>
           </article>
         ))}
       </div>
-      <button className="carousel-control carousel-control-next" onClick={goToNext} aria-label="Testimoni berikutnya">&rsaquo;</button>
+      <button className="carousel-control carousel-control-next" onClick={goToNext} aria-label={t('testimonials.next')}>&rsaquo;</button>
     </section>
   )
 }
 
 export function CustomerCatalog({ trips, navigate, session, logout }) {
+  const { t } = useCustomerLanguage()
   const openTrips = trips.filter((trip) => !trip.isPrivateTrip)
   const privateTrips = trips.filter((trip) => trip.isPrivateTrip)
   const featuredTrips = [...openTrips, ...privateTrips]
+  const faqs = t('faqs', { returnObjects: true })
 
   useEffect(() => {
     const elements = document.querySelectorAll('.reveal-on-scroll')
@@ -328,8 +376,8 @@ export function CustomerCatalog({ trips, navigate, session, logout }) {
         <div className="hero-content">
           <div className="hero-brand">
             <img src={verticalLogo} alt="MAUA" />
-            <h1>Temukan Pengalaman Menjelajahi Goa</h1>
-            <p>Pilih jadwal, cek paket, dan daftar trip dalam satu tempat.</p>
+            <h1>{t('hero.title')}</h1>
+            <p>{t('hero.subtitle')}</p>
           </div>
           <SearchTripForm navigate={navigate} />
         </div>
@@ -338,30 +386,30 @@ export function CustomerCatalog({ trips, navigate, session, logout }) {
 
       <section className="section-head" id="open-trip-list">
         <div>
-          <p className="eyebrow">Eksplor goa dengan peserta baru</p>
-          <h2>Open trip goa</h2>
+          <p className="eyebrow">{t('catalog.openEyebrow')}</p>
+          <h2>{t('catalog.openTitle')}</h2>
         </div>
       </section>
 
       <section className="trip-grid">
-        {openTrips.length ? openTrips.map((trip) => <TripCard key={trip.id} trip={trip} navigate={navigate} />) : <p className="empty-state">Belum ada open trip goa yang tersedia.</p>}
+        {openTrips.length ? openTrips.map((trip) => <TripCard key={trip.id} trip={trip} navigate={navigate} />) : <p className="empty-state">{t('catalog.openEmpty')}</p>}
       </section>
 
       <section className="section-head compact-section-head">
         <div>
-          <p className="eyebrow">Masuk goa bersama rombongan sendiri</p>
-          <h2>Private cave tour</h2>
+          <p className="eyebrow">{t('catalog.privateEyebrow')}</p>
+          <h2>{t('catalog.privateTitle')}</h2>
         </div>
       </section>
 
       <section className="trip-grid">
-        {privateTrips.length ? privateTrips.map((trip) => <TripCard key={trip.id} trip={trip} navigate={navigate} />) : <p className="empty-state">Belum ada private cave tour yang tersedia.</p>}
+        {privateTrips.length ? privateTrips.map((trip) => <TripCard key={trip.id} trip={trip} navigate={navigate} />) : <p className="empty-state">{t('catalog.privateEmpty')}</p>}
       </section>
 
       <section className="section-head compact-section-head" id="testimoni-list">
         <div>
-          <p className="eyebrow">Cerita perjalanan</p>
-          <h2>Testimoni</h2>
+          <p className="eyebrow">{t('catalog.testimonialEyebrow')}</p>
+          <h2>{t('catalog.testimonialTitle')}</h2>
         </div>
       </section>
 
@@ -369,8 +417,8 @@ export function CustomerCatalog({ trips, navigate, session, logout }) {
 
       <section className="faq-section" id="faq-list">
         <div className="faq-head">
-          <p className="eyebrow">Pertanyaan umum</p>
-          <h2>FAQ</h2>
+          <p className="eyebrow">{t('catalog.faqEyebrow')}</p>
+          <h2>{t('catalog.faqTitle')}</h2>
         </div>
         <div className="faq-list">
           {faqs.map(([question, answer]) => (
@@ -384,8 +432,8 @@ export function CustomerCatalog({ trips, navigate, session, logout }) {
 
       <footer className="public-footer reveal-on-scroll">
         <div>
-          <h2>Open Cave Trip</h2>
-          <p>Siap bantu rencana open trip goa dan private cave tour kamu.</p>
+          <h2>{t('catalog.footerTitle')}</h2>
+          <p>{t('catalog.footerCopy')}</p>
         </div>
         <div className="footer-contact">
           <a href="https://www.instagram.com/mauaproject/" target="_blank" rel="noreferrer">Instagram</a>
@@ -397,7 +445,12 @@ export function CustomerCatalog({ trips, navigate, session, logout }) {
 }
 
 function TripCard({ trip, navigate }) {
-  const typeLabel = trip.isPrivateTrip ? 'Private cave tour' : 'Open trip goa'
+  const { t, lang, dateLocale } = useCustomerLanguage()
+  const typeLabel = getTripTypeLabel(trip, null, t)
+  const schedules = !trip.isPrivateTrip ? getTripSchedules(trip) : []
+  const totalSlots = schedules.length
+    ? schedules.reduce((total, schedule) => total + Math.max(Number(schedule.quota || 0) - Number(schedule.bookedCount || 0), 0), 0)
+    : Number(trip.slots || 0)
 
   return (
     <article className="trip-card reveal-on-scroll">
@@ -409,14 +462,14 @@ function TripCard({ trip, navigate }) {
             <span className="trip-type-chip">{typeLabel}</span>
           </div>
         </div>
-        <p className="icon-line"><span className="asset-icon icon-geo" aria-hidden="true" />{trip.destination}</p>
+        <p className="icon-line"><span className="asset-icon icon-geo" aria-hidden="true" />{getTripDestination(trip, lang)}</p>
         <dl>
-          <div><dt><span className="asset-icon icon-calendar" aria-hidden="true" />Tanggal</dt><dd>{formatDate(trip.date)}</dd></div>
-          {!trip.isPrivateTrip && <div><dt><span className="asset-icon icon-ticket" aria-hidden="true" />Slot</dt><dd>{trip.slots} tersedia</dd></div>}
+          <div><dt><span className="asset-icon icon-calendar" aria-hidden="true" />{t('common.date')}</dt><dd>{!trip.isPrivateTrip && schedules.length > 1 ? t('schedule.optionCount', { count: schedules.length }) : formatDate(trip.date, dateLocale)}</dd></div>
+          {!trip.isPrivateTrip && <div><dt><span className="asset-icon icon-ticket" aria-hidden="true" />{t('common.availableSlots')}</dt><dd>{t('common.participantCount', { count: totalSlots })}</dd></div>}
         </dl>
         <div className="trip-card-footer">
-          <div className="trip-start-price"><span>Mulai dari</span><strong>{formatCurrency(trip.price)}</strong></div>
-          <button className="text-link-btn" onClick={() => navigate(`/open-trip/${trip.id}`)}>Lihat detail <span aria-hidden="true">&rarr;</span></button>
+          <div className="trip-start-price"><span>{t('common.from')}</span><strong>{formatCurrency(trip.price)}</strong></div>
+          <button className="text-link-btn" onClick={() => navigate(`/open-trip/${trip.id}`)}>{t('common.details')} <span aria-hidden="true">&rarr;</span></button>
         </div>
       </div>
     </article>
@@ -440,9 +493,10 @@ function TripVisual({ trip, large }) {
 }
 
 export function DestinationPage({ path, trips, navigate, session, logout }) {
+  const { t, lang } = useCustomerLanguage()
   const searchParams = new URLSearchParams(path.split('?')[1] || '')
   const initialSearch = searchParams.get('search') || ''
-  const visibleTrips = filterTripsBySearch(trips, initialSearch)
+  const visibleTrips = filterTripsBySearch(trips, initialSearch, lang)
 
   useEffect(() => {
     const elements = document.querySelectorAll('.reveal-on-scroll')
@@ -465,14 +519,14 @@ export function DestinationPage({ path, trips, navigate, session, logout }) {
       <section className="destination-page">
         <div className="destination-page-head">
           <div>
-            <p className="eyebrow">Semua destinasi</p>
-            <h1>Destinasi cave trip</h1>
+            <p className="eyebrow">{t('destination.eyebrow')}</p>
+            <h1>{t('destination.title')}</h1>
           </div>
           <SearchTripForm key={initialSearch} navigate={navigate} initialValue={initialSearch} />
         </div>
 
         <section className="trip-grid destination-grid">
-          {visibleTrips.length ? visibleTrips.map((trip) => <TripCard key={trip.id} trip={trip} navigate={navigate} />) : <p className="empty-state">Destinasi tidak ditemukan. Coba kata kunci lain.</p>}
+          {visibleTrips.length ? visibleTrips.map((trip) => <TripCard key={trip.id} trip={trip} navigate={navigate} />) : <p className="empty-state">{t('destination.notFound')}</p>}
         </section>
       </section>
     </main>
@@ -480,6 +534,7 @@ export function DestinationPage({ path, trips, navigate, session, logout }) {
 }
 
 function TripGallery({ trip }) {
+  const { t } = useCustomerLanguage()
   const images = getTripImages(trip)
   const [activeIndex, setActiveIndex] = useState(0)
   const activeImage = images[activeIndex]
@@ -487,14 +542,14 @@ function TripGallery({ trip }) {
   if (!images.length) return <TripVisual trip={trip} />
 
   return (
-    <section className="trip-gallery" aria-label={`Galeri ${trip.name}`}>
+    <section className="trip-gallery" aria-label={t('detail.gallery', { name: trip.name })}>
       <div className="trip-gallery-main">
-        <img src={activeImage} alt={`Preview ${trip.name}`} />
+        <img src={activeImage} alt={t('detail.preview', { name: trip.name })} />
       </div>
       {images.length > 1 && (
         <div className="trip-gallery-thumbs">
           {images.map((image, index) => (
-            <button className={index === activeIndex ? 'is-active' : ''} key={image} onClick={() => setActiveIndex(index)} type="button" aria-label={`Tampilkan gambar ${index + 1}`}>
+            <button className={index === activeIndex ? 'is-active' : ''} key={image} onClick={() => setActiveIndex(index)} type="button" aria-label={t('detail.showImage', { number: index + 1 })}>
               <img src={image} alt="" loading="lazy" />
             </button>
           ))}
@@ -505,27 +560,20 @@ function TripGallery({ trip }) {
 }
 
 function TripBreadcrumb({ trip, navigate, checkout }) {
+  const { t } = useCustomerLanguage()
   return (
     <div className="trip-breadcrumb">
-      <button onClick={() => navigate('/')} type="button">Home</button>
+      <button onClick={() => navigate('/')} type="button">{t('common.home')}</button>
       <span>-</span>
       {checkout ? <button onClick={() => navigate(`/open-trip/${trip.id}`)} type="button">{trip.name}</button> : <span>{trip.name}</span>}
     </div>
   )
 }
 
-const getActivityText = (trip) => {
-  if (trip?.activity) return trip.activity
-  if (trip?.itinerary) return trip.itinerary
-  if (!Array.isArray(trip?.itineraryDays)) return ''
-  return trip.itineraryDays
-    .map((item) => (typeof item === 'string' ? item : item?.text))
-    .filter(Boolean)
-    .join('\n')
-}
-
 function ActivityBlock({ trip }) {
-  return <InfoBlock title="Activity" text={getActivityText(trip) || 'Activity belum tersedia.'} />
+  const { t, lang } = useCustomerLanguage()
+  const activities = getTripActivities(trip, lang)
+  return <InfoBlock title={t('detail.activity')} text={activities.join('\n') || t('detail.activityEmpty')} />
 }
 
 const emptyParticipant = {
@@ -559,11 +607,16 @@ const getSelectedAddons = (registration) => {
     }))
 }
 
-export function TripDetail({ tripId, trips, navigate, session, logout }) {
+export function TripDetail({ tripId, trips, registrations, navigate, session, logout }) {
+  const { t, lang, dateLocale } = useCustomerLanguage()
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false)
   const trip = trips.find((item) => item.id === tripId)
   if (!trip) return <NotFound navigate={navigate} />
-  const isOpen = trip.slots > 0 && trip.status === 'Tersedia'
+  const scheduleOptions = trip.isPrivateTrip ? [] : getOpenTripScheduleOptions(trip, registrations)
+  const privateRange = getPrivateDateRange(trip)
+  const isOpen = trip.isPrivateTrip
+    ? trip.status === 'Tersedia'
+    : trip.status === 'Tersedia' && scheduleOptions.some((schedule) => schedule.isSelectable)
   const startCheckout = () => {
     if (session?.role !== 'customer') {
       setIsLoginModalOpen(true)
@@ -580,32 +633,42 @@ export function TripDetail({ tripId, trips, navigate, session, logout }) {
           <article className="trip-detail-main">
             <div className="trip-detail-topline">
               <TripBreadcrumb trip={trip} navigate={navigate} />
-              <span className="trip-type-chip">{trip.isPrivateTrip ? 'Private cave tour' : 'Open trip goa'}</span>
+              <span className="trip-type-chip">{getTripTypeLabel(trip, null, t)}</span>
             </div>
             <h1>{trip.name}</h1>
-            <p className="detail-destination">{trip.destination}</p>
+            <p className="detail-destination">{getTripDestination(trip, lang)}</p>
             <TripGallery trip={trip} />
-            <InfoBlock title="Deskripsi" text={trip.description} />
-            <InfoBlock title="Destinasi" text={trip.destination} />
+            <InfoBlock title={t('detail.description')} text={getTripDescription(trip, lang)} />
+            <InfoBlock title={t('detail.destination')} text={getTripDestination(trip, lang)} />
             <ActivityBlock trip={trip} />
-            <InfoBlock title="Fasilitas" text={trip.facilities} />
+            <InfoBlock title={t('detail.facilities')} text={getTripFacilities(trip, lang).join('\n')} />
           </article>
 
           <aside className="trip-detail-sidebar">
             <section className="detail-side-card">
-              <h2>Detail Tur</h2>
+              <h2>{t('detail.tourDetails')}</h2>
               <dl className="tour-detail-list">
-                <div><dt>Tanggal</dt><dd>{formatDate(trip.date)}</dd></div>
-                <div><dt>Jenis</dt><dd>{trip.isPrivateTrip ? 'Private cave tour' : 'Open trip goa'}</dd></div>
-                {!trip.isPrivateTrip && <div><dt>Kuota</dt><dd>{trip.quota} peserta</dd></div>}
-                {!trip.isPrivateTrip && <div><dt>Slot tersedia</dt><dd>{trip.slots} peserta</dd></div>}
+                <div><dt>{t('common.date')}</dt><dd>{!trip.isPrivateTrip && scheduleOptions.length > 1 ? t('schedule.optionCount', { count: scheduleOptions.length }) : formatDate(trip.date, dateLocale)}</dd></div>
+                {trip.isPrivateTrip && (privateRange.startDate || privateRange.endDate) && (
+                  <div><dt>{t('schedule.availableRange')}</dt><dd>{privateRange.startDate ? formatDate(privateRange.startDate, dateLocale) : '-'} - {privateRange.endDate ? formatDate(privateRange.endDate, dateLocale) : '-'}</dd></div>
+                )}
+                <div><dt>{t('common.type')}</dt><dd>{getTripTypeLabel(trip, null, t)}</dd></div>
+                {!trip.isPrivateTrip && <div><dt>{t('common.quota')}</dt><dd>{t('common.participantCount', { count: trip.quota })}</dd></div>}
+                {!trip.isPrivateTrip && <div><dt>{t('common.availableSlots')}</dt><dd>{t('common.participantCount', { count: scheduleOptions.reduce((total, schedule) => total + schedule.remaining, 0) })}</dd></div>}
               </dl>
+              {!trip.isPrivateTrip && scheduleOptions.length > 0 && (
+                <div className="schedule-option-list">
+                  {scheduleOptions.map((schedule) => (
+                    <span className={!schedule.isSelectable ? 'is-disabled' : ''} key={schedule.id}>{getScheduleLabel(schedule, dateLocale, t)}</span>
+                  ))}
+                </div>
+              )}
             </section>
             <section className="detail-side-card checkout-card">
-              <span>Mulai dari</span>
-              <div className="checkout-price"><strong>{formatCurrency(trip.price)}</strong><small>/ orang</small></div>
+              <span>{t('common.from')}</span>
+              <div className="checkout-price"><strong>{formatCurrency(trip.price)}</strong><small>{t('common.perPerson')}</small></div>
               <button className="primary-btn wide" disabled={!isOpen} onClick={startCheckout}>
-                {isOpen ? 'Checkout' : 'Pendaftaran ditutup'}
+                {isOpen ? t('common.checkout') : t('common.closed')}
               </button>
             </section>
           </aside>
@@ -613,10 +676,10 @@ export function TripDetail({ tripId, trips, navigate, session, logout }) {
       </section>
       <AppModal
         isOpen={isLoginModalOpen}
-        title="Login terlebih dahulu"
-        description="Silakan login atau buat akun terlebih dahulu sebelum melanjutkan checkout dan mengirim pendaftaran trip."
-        confirmText="Login"
-        cancelText="Sign Up"
+        title={t('detail.loginTitle')}
+        description={t('detail.loginDescription')}
+        confirmText={t('nav.login')}
+        cancelText={t('nav.signup')}
         variant="default"
         onConfirm={() => navigate('/login')}
         onCancel={() => navigate('/signup')}
@@ -626,7 +689,8 @@ export function TripDetail({ tripId, trips, navigate, session, logout }) {
   )
 }
 
-export function RegistrationPage({ tripId, trips, submitRegistration, navigate, session, logout, customerAccounts }) {
+export function RegistrationPage({ tripId, trips, submitRegistration, navigate, session, logout, customerAccounts, registrations }) {
+  const { t, lang, dateLocale, statusLabel } = useCustomerLanguage()
   const trip = trips.find((item) => item.id === tripId)
   const customerProfile = customerAccounts.find((item) => item.email === session?.email) || session || {}
   const [form, setForm] = useState({
@@ -635,6 +699,8 @@ export function RegistrationPage({ tripId, trips, submitRegistration, navigate, 
     email: session?.role === 'customer' ? session.email : '',
     participants: trip?.isPrivateTrip ? 2 : 1,
     requestedDate: '',
+    scheduleId: '',
+    sessionId: '',
     tripId,
     notes: '',
     isPrivateTour: Boolean(trip?.isPrivateTrip),
@@ -645,6 +711,12 @@ export function RegistrationPage({ tripId, trips, submitRegistration, navigate, 
   const [error, setError] = useState('')
   const [pendingSubmission, setPendingSubmission] = useState(null)
   const selectedTrip = trips.find((item) => item.id === Number(form.tripId)) || trip
+  const scheduleOptions = selectedTrip && !selectedTrip.isPrivateTrip ? getOpenTripScheduleOptions(selectedTrip, registrations) : []
+  const selectedSchedule = scheduleOptions.find((schedule) => schedule.id === form.scheduleId)
+  const privateRange = selectedTrip?.isPrivateTrip ? getPrivateDateRange(selectedTrip) : { startDate: '', endDate: '' }
+  const isPrivateDateInRange = selectedTrip?.isPrivateTrip && form.requestedDate ? isDateWithinPrivateRange(selectedTrip, form.requestedDate) : true
+  const sessionOptions = selectedTrip?.isPrivateTrip && isPrivateDateInRange ? getPrivateSessionOptions(selectedTrip, registrations, form.requestedDate) : []
+  const selectedSession = sessionOptions.find((sessionItem) => sessionItem.id === form.sessionId)
   const participants = Number(form.participants) || 1
   const estimatedTotal = selectedTrip ? selectedTrip.price * participants : 0
   const isPrivateTrip = Boolean(selectedTrip?.isPrivateTrip)
@@ -657,29 +729,56 @@ export function RegistrationPage({ tripId, trips, submitRegistration, navigate, 
     const participantDetails = resizeParticipants(form.participantDetails, participants, { name: form.name })
     const hasIncompleteParticipant = participantDetails.some((item) => !item.name || !item.address || !item.age || !item.gender)
     if (!form.name || !form.whatsapp || !form.email || hasIncompleteParticipant) {
-      setError('Lengkapi data pemesan dan data setiap peserta.')
+      setError(t('error.checkoutRequired'))
       return
     }
     if (isPrivateBooking && !form.requestedDate) {
-      setError('Pilih tanggal private cave tour yang kamu inginkan.')
+      setError(t('error.privateDateRequired'))
       return
     }
-    if (!isPrivateBooking && Number(form.participants) > selectedTrip.slots) {
-      setError('Jumlah peserta melebihi slot tersedia.')
+    if (isPrivateBooking && !isDateWithinPrivateRange(selectedTrip, form.requestedDate)) {
+      setError(t('error.privateDateOutOfRange'))
+      return
+    }
+    if (!isPrivateBooking && !selectedSchedule) {
+      setError(t('error.scheduleRequired'))
+      return
+    }
+    if (!isPrivateBooking && (!selectedSchedule.isSelectable || Number(form.participants) > selectedSchedule.remaining)) {
+      setError(t('error.slotsExceeded'))
+      return
+    }
+    if (isPrivateBooking && !selectedSession) {
+      setError(t('error.sessionRequired'))
+      return
+    }
+    if (isPrivateBooking && !selectedSession.isSelectable) {
+      setError(t('error.sessionUnavailable'))
       return
     }
     if (form.addons.includes('transport') && !form.transportFrom.trim()) {
-      setError('Isi titik jemput atau asal transportasi.')
+      setError(t('error.pickupRequired'))
       return
     }
-    setPendingSubmission({ ...form, participantDetails, participants: isPrivateBooking ? participants : 1, isPrivateTour: isPrivateBooking })
+    setPendingSubmission({
+      ...form,
+      participantDetails,
+      participants: isPrivateBooking ? participants : 1,
+      isPrivateTour: isPrivateBooking,
+      selectedDate: isPrivateBooking ? form.requestedDate : selectedSchedule.date,
+      scheduleId: isPrivateBooking ? '' : selectedSchedule.id,
+      sessionId: isPrivateBooking ? selectedSession.id : '',
+      sessionName: isPrivateBooking ? selectedSession.name : '',
+      startTime: isPrivateBooking ? selectedSession.startTime : '',
+      endTime: isPrivateBooking ? selectedSession.endTime : '',
+    })
     setError('')
   }
 
   const confirmSubmitRegistration = async () => {
     if (!pendingSubmission) return
     const isSubmitted = await submitRegistration(pendingSubmission)
-    if (!isSubmitted) setError('Pendaftaran gagal dikirim. Cek slot dan koneksi Firebase.')
+    if (!isSubmitted) setError(t('error.submitFailed'))
     setPendingSubmission(null)
   }
 
@@ -713,25 +812,26 @@ export function RegistrationPage({ tripId, trips, submitRegistration, navigate, 
         <div className="registration-hero">
           <div>
             <TripBreadcrumb trip={trip} navigate={navigate} checkout />
-            <h1>Lengkapi data untuk ikut {trip.name}</h1>
-            <p className="muted">Data kamu akan dikirim ke dashboard admin dan masuk sebagai Menunggu Approval sebelum keberangkatan.</p>
+            <h1>{t('checkout.title', { name: trip.name })}</h1>
+            <p className="muted">{t('checkout.subtitle')}</p>
           </div>
-          <span className="trip-type-chip">{trip.isPrivateTrip ? 'Private cave tour' : 'Open trip goa'}</span>
+          <span className="trip-type-chip">{getTripTypeLabel(trip, null, t)}</span>
         </div>
 
         <div className="registration-layout">
           <aside className="registration-summary">
             <TripVisual trip={selectedTrip} />
             <div className="summary-body">
-              <Badge status={selectedTrip.status} />
+              <Badge status={selectedTrip.status} label={statusLabel(selectedTrip.status)} />
               <h2>{selectedTrip.name}</h2>
-              <p>{selectedTrip.destination}</p>
+              <p>{getTripDestination(selectedTrip, lang)}</p>
               <dl className="summary-list">
-                <div><dt><span className="asset-icon icon-calendar" aria-hidden="true" />Tanggal</dt><dd>{isPrivateBooking ? form.requestedDate ? formatDate(form.requestedDate) : 'Pilih tanggal' : formatDate(selectedTrip.date)}</dd></div>
-                <div><dt><span className="asset-icon icon-currency" aria-hidden="true" />Harga</dt><dd>{formatCurrency(selectedTrip.price)} / orang</dd></div>
-                {!isPrivateBooking && <div><dt><span className="asset-icon icon-ticket" aria-hidden="true" />Slot</dt><dd>{selectedTrip.slots} peserta tersedia</dd></div>}
-                <div><dt>Jenis</dt><dd>{tripTypeLabel(selectedTrip, { isPrivateTour: isPrivateBooking })}</dd></div>
-                <div><dt>Total estimasi</dt><dd>{formatCurrency(estimatedTotal)}</dd></div>
+                <div><dt><span className="asset-icon icon-calendar" aria-hidden="true" />{t('common.date')}</dt><dd>{isPrivateBooking ? form.requestedDate ? formatDate(form.requestedDate, dateLocale) : t('common.chooseDate') : selectedSchedule ? formatDate(selectedSchedule.date, dateLocale) : t('schedule.chooseSchedule')}</dd></div>
+                {isPrivateBooking && selectedSession && <div><dt>{t('schedule.session')}</dt><dd>{getSessionLabel(selectedSession, t)}</dd></div>}
+                <div><dt><span className="asset-icon icon-currency" aria-hidden="true" />{t('common.price')}</dt><dd>{formatCurrency(selectedTrip.price)} {t('common.perPerson')}</dd></div>
+                {!isPrivateBooking && <div><dt><span className="asset-icon icon-ticket" aria-hidden="true" />{t('common.availableSlots')}</dt><dd>{selectedSchedule ? t('common.participantCount', { count: selectedSchedule.remaining }) : '-'}</dd></div>}
+                <div><dt>{t('common.type')}</dt><dd>{getTripTypeLabel(selectedTrip, { isPrivateTour: isPrivateBooking }, t)}</dd></div>
+                <div><dt>{t('common.totalEstimate')}</dt><dd>{formatCurrency(estimatedTotal)}</dd></div>
               </dl>
             </div>
           </aside>
@@ -740,39 +840,53 @@ export function RegistrationPage({ tripId, trips, submitRegistration, navigate, 
             <div className="form-section-head">
               <span>1</span>
               <div>
-                <h2>Data pemesan</h2>
-                <p>Pastikan kontak aktif supaya admin mudah menghubungi kamu.</p>
+                <h2>{t('checkout.booker')}</h2>
+                <p>{t('checkout.bookerHelp')}</p>
               </div>
             </div>
             {error && <p className="form-error">{error}</p>}
             <div className="registration-fields">
-              <label>Nama lengkap<input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></label>
-              <label>Nomor WhatsApp<input value={form.whatsapp} onChange={(e) => setForm({ ...form, whatsapp: e.target.value })} /></label>
+              <label>{t('checkout.fullName')}<input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></label>
+              <label>{t('checkout.whatsapp')}<input value={form.whatsapp} onChange={(e) => setForm({ ...form, whatsapp: e.target.value })} /></label>
               <label className="full">Email<input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></label>
             </div>
 
             <div className="form-section-head">
               <span>2</span>
               <div>
-                <h2>Detail peserta</h2>
-                <p>{isPrivateBooking ? 'Tentukan tanggal, jumlah peserta, lalu lengkapi data setiap peserta.' : 'Satu akun hanya dapat mendaftarkan satu peserta untuk open trip.'}</p>
+                <h2>{t('checkout.participantDetails')}</h2>
+                <p>{isPrivateBooking ? t('checkout.privateHelp') : t('checkout.openHelp')}</p>
               </div>
             </div>
             <div className="registration-fields">
+              {!isPrivateBooking && (
+                <label className="full">{t('schedule.departureSchedule')}<select required value={form.scheduleId} onChange={(e) => setForm({ ...form, scheduleId: e.target.value })}>
+                  <option value="">{t('schedule.chooseSchedule')}</option>
+                  {scheduleOptions.map((schedule) => (
+                    <option disabled={!schedule.isSelectable} key={schedule.id} value={schedule.id}>{getScheduleLabel(schedule, dateLocale, t)}</option>
+                  ))}
+                </select></label>
+              )}
               {isPrivateBooking && (
                 <>
-                  <label>Jumlah peserta<input type="number" min="1" value={form.participants} onChange={(e) => updateParticipantCount(e.target.value)} /></label>
-                  <label>Tanggal private tour<input type="date" value={form.requestedDate} onChange={(e) => setForm({ ...form, requestedDate: e.target.value })} /></label>
+                  <label>{t('checkout.participantTotal')}<input type="number" min="1" value={form.participants} onChange={(e) => updateParticipantCount(e.target.value)} /></label>
+                  <label>{t('checkout.privateDate')}<input type="date" min={privateRange.startDate || undefined} max={privateRange.endDate || undefined} value={form.requestedDate} onChange={(e) => setForm({ ...form, requestedDate: e.target.value, sessionId: '' })} />{(privateRange.startDate || privateRange.endDate) && <small>{t('schedule.availableRange')}: {privateRange.startDate ? formatDate(privateRange.startDate, dateLocale) : '-'} - {privateRange.endDate ? formatDate(privateRange.endDate, dateLocale) : '-'}</small>}</label>
+                  <label className="full">{t('schedule.session')}<select required value={form.sessionId} disabled={!form.requestedDate || !isPrivateDateInRange} onChange={(e) => setForm({ ...form, sessionId: e.target.value })}>
+                    <option value="">{!form.requestedDate ? t('schedule.chooseDateFirst') : !isPrivateDateInRange ? t('schedule.dateUnavailable') : t('schedule.chooseSession')}</option>
+                    {sessionOptions.map((sessionItem) => (
+                      <option disabled={!sessionItem.isSelectable} key={sessionItem.id} value={sessionItem.id}>{getSessionLabel(sessionItem, t)}</option>
+                    ))}
+                  </select></label>
                 </>
               )}
-              <label className="full">Catatan tambahan<textarea placeholder="Contoh: request pickup, alergi makanan, atau catatan rombongan." value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></label>
+              <label className="full">{t('checkout.notes')}<textarea placeholder={t('checkout.notesPlaceholder')} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></label>
             </div>
 
             <div className="form-section-head">
               <span>3</span>
               <div>
-                <h2>Add-on trip</h2>
-                <p>Pilih kebutuhan tambahan. Jika disetujui admin, kebutuhan ini akan muncul sebagai job untuk pekerja.</p>
+                <h2>{t('checkout.addons')}</h2>
+                <p>{t('checkout.addonsHelp')}</p>
               </div>
             </div>
             <section className="addon-option-grid">
@@ -780,15 +894,15 @@ export function RegistrationPage({ tripId, trips, submitRegistration, navigate, 
                 <label className="addon-option-card" key={option.id}>
                   <input type="checkbox" checked={form.addons.includes(option.id)} onChange={() => toggleAddon(option.id)} />
                   <span>
-                    <strong>{option.label}</strong>
-                    <small>{option.description}</small>
+                    <strong>{t(`addons.${option.id}.label`, { defaultValue: option.label })}</strong>
+                    <small>{t(`addons.${option.id}.description`, { defaultValue: option.description })}</small>
                   </span>
                 </label>
               ))}
             </section>
             {form.addons.includes('transport') && (
               <div className="registration-fields">
-                <label className="full">Titik jemput / asal transportasi<input placeholder="Contoh: Stasiun Yogyakarta, Hotel area Malioboro, atau alamat lengkap." value={form.transportFrom} onChange={(e) => setForm({ ...form, transportFrom: e.target.value })} /></label>
+                <label className="full">{t('checkout.pickupPoint')}<input placeholder={t('checkout.pickupPlaceholder')} value={form.transportFrom} onChange={(e) => setForm({ ...form, transportFrom: e.target.value })} /></label>
               </div>
             )}
 
@@ -798,16 +912,16 @@ export function RegistrationPage({ tripId, trips, submitRegistration, navigate, 
                   <div className="form-section-head compact-form-section-head">
                     <span>{index + 1}</span>
                     <div>
-                      <h2>{isPrivateBooking ? `Peserta ${index + 1}` : 'Data peserta'}</h2>
-                      <p>Data ini membantu admin mengecek kesiapan peserta sebelum trip.</p>
+                      <h2>{isPrivateBooking ? t('checkout.participant', { number: index + 1 }) : t('checkout.participantData')}</h2>
+                      <p>{t('checkout.participantHelp')}</p>
                     </div>
                   </div>
                   <div className="registration-fields">
-                    <label>Nama peserta<input value={participant.name} onChange={(e) => updateParticipant(index, 'name', e.target.value)} /></label>
-                    <label>Usia peserta<input type="number" min="1" value={participant.age} onChange={(e) => updateParticipant(index, 'age', e.target.value)} /></label>
-                    <label>Jenis kelamin<select value={participant.gender} onChange={(e) => updateParticipant(index, 'gender', e.target.value)}><option value="">Pilih jenis kelamin</option><option value="Laki-laki">Laki-laki</option><option value="Perempuan">Perempuan</option></select></label>
-                    <label>Alamat domisili<input value={participant.address} onChange={(e) => updateParticipant(index, 'address', e.target.value)} /></label>
-                    <label className="full">Riwayat penyakit atau kondisi kesehatan penting<textarea placeholder="Isi '-' jika tidak ada." value={participant.healthNotes} onChange={(e) => updateParticipant(index, 'healthNotes', e.target.value)} /></label>
+                    <label>{t('checkout.participantName')}<input value={participant.name} onChange={(e) => updateParticipant(index, 'name', e.target.value)} /></label>
+                    <label>{t('checkout.age')}<input type="number" min="1" value={participant.age} onChange={(e) => updateParticipant(index, 'age', e.target.value)} /></label>
+                    <label>{t('checkout.gender')}<select value={participant.gender} onChange={(e) => updateParticipant(index, 'gender', e.target.value)}><option value="">{t('checkout.selectGender')}</option><option value="Laki-laki">{t('checkout.male')}</option><option value="Perempuan">{t('checkout.female')}</option></select></label>
+                    <label>{t('checkout.address')}<input value={participant.address} onChange={(e) => updateParticipant(index, 'address', e.target.value)} /></label>
+                    <label className="full">{t('checkout.healthNotes')}<textarea placeholder={t('checkout.healthPlaceholder')} value={participant.healthNotes} onChange={(e) => updateParticipant(index, 'healthNotes', e.target.value)} /></label>
                   </div>
                 </section>
               ))}
@@ -815,20 +929,20 @@ export function RegistrationPage({ tripId, trips, submitRegistration, navigate, 
 
             <div className="registration-submit">
               <div>
-                <span>Total estimasi</span>
+                <span>{t('common.totalEstimate')}</span>
                 <strong>{formatCurrency(estimatedTotal)}</strong>
               </div>
-              <button className="primary-btn" type="submit">Kirim pendaftaran</button>
+              <button className="primary-btn" type="submit">{t('checkout.submit')}</button>
             </div>
           </form>
         </div>
       </section>
       <AppModal
         isOpen={Boolean(pendingSubmission)}
-        title="Kirim pendaftaran trip?"
-        description="Pastikan data diri, jumlah peserta, addon, dan bukti pembayaran sudah benar sebelum dikirim ke admin."
-        confirmText="Kirim Pendaftaran"
-        cancelText="Periksa Lagi"
+        title={t('checkout.confirmTitle')}
+        description={t('checkout.confirmDescription')}
+        confirmText={t('checkout.confirmSubmit')}
+        cancelText={t('checkout.reviewAgain')}
         variant="warning"
         onConfirm={confirmSubmitRegistration}
         onCancel={() => setPendingSubmission(null)}
@@ -838,6 +952,7 @@ export function RegistrationPage({ tripId, trips, submitRegistration, navigate, 
 }
 
 export function CustomerAccountPage({ registrations, trips, navigate, session, logout }) {
+  const { t, lang, dateLocale, statusLabel } = useCustomerLanguage()
   const [activeFilter, setActiveFilter] = useState('Semua')
   const [selectedOrder, setSelectedOrder] = useState(null)
 
@@ -851,10 +966,10 @@ export function CustomerAccountPage({ registrations, trips, navigate, session, l
   const approvedCount = myRegistrations.filter((item) => item.status === 'Disetujui' || item.status === 'Selesai').length
   const rejectedCount = myRegistrations.filter((item) => item.status === 'Ditolak').length
   const filterOptions = [
-    ['Semua', myRegistrations.length],
-    ['Menunggu', waitingCount],
-    ['Disetujui', approvedCount],
-    ['Ditolak', rejectedCount],
+    ['Semua', t('account.all'), myRegistrations.length],
+    ['Menunggu', t('account.waiting'), waitingCount],
+    ['Disetujui', t('account.approved'), approvedCount],
+    ['Ditolak', t('account.rejected'), rejectedCount],
   ]
   const visibleRegistrations = myRegistrations.filter((item) => {
     if (activeFilter === 'Semua') return true
@@ -871,30 +986,30 @@ export function CustomerAccountPage({ registrations, trips, navigate, session, l
       <section className="account-page">
         <div className="account-hero">
           <div>
-            <p className="eyebrow">Akun customer</p>
-            <h1>Pemesanan Saya</h1>
-            <p className="account-greeting">Halo, {session.name}</p>
-            <p className="muted">Pantau semua pemesanan trip kamu di sini, termasuk status approval dari admin.</p>
+            <p className="eyebrow">{t('account.eyebrow')}</p>
+            <h1>{t('account.title')}</h1>
+            <p className="account-greeting">{t('account.greeting', { name: session.name })}</p>
+            <p className="muted">{t('account.subtitle')}</p>
           </div>
-          <button className="primary-btn" onClick={() => navigate('/open-trip')}>Pesan Trip Lagi</button>
+          <button className="primary-btn" onClick={() => navigate('/open-trip')}>{t('account.bookAgain')}</button>
         </div>
 
         <section className="account-summary-grid">
-          <div className="metric account-metric"><span>Total Pemesanan</span><strong>{myRegistrations.length}</strong></div>
-          <div className="metric account-metric"><span>Menunggu Approval</span><strong>{waitingCount}</strong></div>
-          <div className="metric account-metric"><span>Disetujui</span><strong>{approvedCount}</strong></div>
-          <div className="metric account-metric"><span>Ditolak</span><strong>{rejectedCount}</strong></div>
+          <div className="metric account-metric"><span>{t('account.totalOrders')}</span><strong>{myRegistrations.length}</strong></div>
+          <div className="metric account-metric"><span>{t('account.waitingApproval')}</span><strong>{waitingCount}</strong></div>
+          <div className="metric account-metric"><span>{t('account.approved')}</span><strong>{approvedCount}</strong></div>
+          <div className="metric account-metric"><span>{t('account.rejected')}</span><strong>{rejectedCount}</strong></div>
         </section>
 
-        <div className="account-filter-tabs" role="tablist" aria-label="Filter status pemesanan">
-          {filterOptions.map(([label, count]) => (
+        <div className="account-filter-tabs" role="tablist" aria-label={t('account.filterLabel')}>
+          {filterOptions.map(([value, label, count]) => (
             <button
-              className={activeFilter === label ? 'is-active' : ''}
-              key={label}
-              onClick={() => setActiveFilter(label)}
+              className={activeFilter === value ? 'is-active' : ''}
+              key={value}
+              onClick={() => setActiveFilter(value)}
               type="button"
               role="tab"
-              aria-selected={activeFilter === label}
+              aria-selected={activeFilter === value}
             >
               {label}<span>{count}</span>
             </button>
@@ -905,86 +1020,89 @@ export function CustomerAccountPage({ registrations, trips, navigate, session, l
           {visibleRegistrations.length ? visibleRegistrations.map((item) => {
             const trip = trips.find((tripItem) => tripItem.id === item.tripId)
             const totalPrice = trip ? Number(trip.price || 0) * Number(item.participants || 1) : 0
+            const registrationDate = getRegistrationDate(item)
             return (
               <article className="account-registration-card" key={item.id}>
                 <div className="account-registration-head">
                   <div>
                     <h2>{tripName(trips, item.tripId)}</h2>
-                    <p className="icon-line"><span className="asset-icon icon-geo" aria-hidden="true" />{trip?.destination || 'Destinasi belum tersedia'}</p>
+                    <p className="icon-line"><span className="asset-icon icon-geo" aria-hidden="true" />{trip ? getTripDestination(trip, lang) : t('common.unavailableDestination')}</p>
                   </div>
-                  <Badge status={item.status} />
+                  <Badge status={item.status} label={statusLabel(item.status)} />
                 </div>
                 <dl className="account-order-meta">
-                  <div><dt><span className="asset-icon icon-calendar" aria-hidden="true" />Tanggal</dt><dd>{item.requestedDate ? formatDate(item.requestedDate) : trip ? formatDate(trip.date) : '-'}</dd></div>
-                  <div><dt>Jenis</dt><dd>{tripTypeLabel(trip, item)}</dd></div>
-                  <div><dt><span className="asset-icon icon-people" aria-hidden="true" />Peserta</dt><dd>{item.participants} orang</dd></div>
-                  <div><dt>Harga total</dt><dd>{trip ? formatCurrency(totalPrice) : '-'}</dd></div>
-                  <div><dt>Kode booking</dt><dd>MAUA-{item.id}</dd></div>
+                  <div><dt><span className="asset-icon icon-calendar" aria-hidden="true" />{t('common.date')}</dt><dd>{registrationDate ? formatDate(registrationDate, dateLocale) : trip ? formatDate(trip.date, dateLocale) : '-'}</dd></div>
+                  {(item.tripType === 'private' || item.isPrivateTrip || item.isPrivateTour) && item.sessionName && <div><dt>{t('schedule.session')}</dt><dd>{item.sessionName}{item.startTime && item.endTime ? ` (${item.startTime} - ${item.endTime})` : ''}</dd></div>}
+                  <div><dt>{t('common.type')}</dt><dd>{getTripTypeLabel(trip, item, t)}</dd></div>
+                  <div><dt><span className="asset-icon icon-people" aria-hidden="true" />{t('common.participants')}</dt><dd>{t('common.participantCount', { count: item.participants })}</dd></div>
+                  <div><dt>{t('common.totalPrice')}</dt><dd>{trip ? formatCurrency(totalPrice) : '-'}</dd></div>
+                  <div><dt>{t('common.bookingCode')}</dt><dd>MAUA-{item.id}</dd></div>
                 </dl>
                 <div className="account-card-actions">
-                  <button className="outline-btn" onClick={() => setSelectedOrder(item)} type="button">Lihat Detail</button>
-                  <a className="outline-btn" href="https://wa.me/62882005881248" target="_blank" rel="noreferrer">Hubungi Admin</a>
-                  <button className="text-link-btn" onClick={() => navigate(`/open-trip/${item.tripId}`)} type="button">Lihat Trip</button>
+                  <button className="outline-btn" onClick={() => setSelectedOrder(item)} type="button">{t('account.viewDetail')}</button>
+                  <a className="outline-btn" href="https://wa.me/62882005881248" target="_blank" rel="noreferrer">{t('common.contactAdmin')}</a>
+                  <button className="text-link-btn" onClick={() => navigate(`/open-trip/${item.tripId}`)} type="button">{t('common.viewTrip')}</button>
                 </div>
               </article>
             )
           }) : (
             <div className="account-empty-state">
               <span className="account-empty-icon"><span className="asset-icon icon-ticket" aria-hidden="true" /></span>
-              <h2>Belum ada pemesanan trip</h2>
-              <p>{myRegistrations.length ? 'Tidak ada pemesanan dengan status ini.' : 'Pilih open trip atau private trip favoritmu, lalu pantau status approval-nya di sini.'}</p>
-              <button className="primary-btn" onClick={() => navigate('/open-trip')} type="button">Lihat Trip</button>
+              <h2>{t('account.noOrders')}</h2>
+              <p>{myRegistrations.length ? t('account.noStatusOrders') : t('account.emptyCopy')}</p>
+              <button className="primary-btn" onClick={() => navigate('/open-trip')} type="button">{t('common.viewTrip')}</button>
             </div>
           )}
         </section>
       </section>
       {selectedOrder && (
         <div className="modal-backdrop" role="presentation" onClick={() => setSelectedOrder(null)}>
-          <section className="modal-panel account-detail-modal" role="dialog" aria-modal="true" aria-label="Detail pemesanan" onClick={(event) => event.stopPropagation()}>
+          <section className="modal-panel account-detail-modal" role="dialog" aria-modal="true" aria-label={t('account.orderDetail')} onClick={(event) => event.stopPropagation()}>
             <div className="modal-head">
               <div>
-                <p className="eyebrow">Detail pemesanan</p>
+                <p className="eyebrow">{t('account.orderDetail')}</p>
                 <h2>{tripName(trips, selectedOrder.tripId)}</h2>
               </div>
-              <button className="outline-btn" onClick={() => setSelectedOrder(null)} type="button">Tutup</button>
+              <button className="outline-btn" onClick={() => setSelectedOrder(null)} type="button">{t('common.close')}</button>
             </div>
             <div className="account-detail-grid">
               <section>
-                <h3>Data pemesan</h3>
+                <h3>{t('account.bookerData')}</h3>
                 <dl>
-                  <div><dt>Nama pemesan</dt><dd>{selectedOrder.name || '-'}</dd></div>
-                  <div><dt>Nomor WhatsApp</dt><dd>{selectedOrder.whatsapp || '-'}</dd></div>
+                  <div><dt>{t('account.bookerName')}</dt><dd>{selectedOrder.name || '-'}</dd></div>
+                  <div><dt>{t('checkout.whatsapp')}</dt><dd>{selectedOrder.whatsapp || '-'}</dd></div>
                   <div><dt>Email</dt><dd>{selectedOrder.email || '-'}</dd></div>
-                  <div><dt>Catatan tambahan</dt><dd>{selectedOrder.notes || '-'}</dd></div>
-                  <div><dt>Kode booking</dt><dd>MAUA-{selectedOrder.id}</dd></div>
+                  <div><dt>{t('account.extraNotes')}</dt><dd>{selectedOrder.notes || '-'}</dd></div>
+                  <div><dt>{t('common.bookingCode')}</dt><dd>MAUA-{selectedOrder.id}</dd></div>
                 </dl>
               </section>
               <section>
-                <h3>Ringkasan trip</h3>
+                <h3>{t('account.tripSummary')}</h3>
                 <dl>
-                  <div><dt>Lokasi</dt><dd>{selectedTrip?.destination || '-'}</dd></div>
-                  <div><dt>Jenis trip</dt><dd>{tripTypeLabel(selectedTrip, selectedOrder)}</dd></div>
-                  <div><dt>Tanggal</dt><dd>{selectedOrder.requestedDate ? formatDate(selectedOrder.requestedDate) : selectedTrip ? formatDate(selectedTrip.date) : '-'}</dd></div>
-                  <div><dt>Jumlah peserta</dt><dd>{selectedOrder.participants || 1} orang</dd></div>
-                  <div><dt>Status approval</dt><dd><Badge status={selectedOrder.status} /></dd></div>
+                  <div><dt>{t('common.location')}</dt><dd>{selectedTrip ? getTripDestination(selectedTrip, lang) : '-'}</dd></div>
+                  <div><dt>{t('account.tripType')}</dt><dd>{getTripTypeLabel(selectedTrip, selectedOrder, t)}</dd></div>
+                  <div><dt>{t('common.date')}</dt><dd>{getRegistrationDate(selectedOrder) ? formatDate(getRegistrationDate(selectedOrder), dateLocale) : selectedTrip ? formatDate(selectedTrip.date, dateLocale) : '-'}</dd></div>
+                  {(selectedOrder.tripType === 'private' || selectedOrder.isPrivateTrip || selectedOrder.isPrivateTour) && selectedOrder.sessionName && <div><dt>{t('schedule.session')}</dt><dd>{selectedOrder.sessionName}{selectedOrder.startTime && selectedOrder.endTime ? ` (${selectedOrder.startTime} - ${selectedOrder.endTime})` : ''}</dd></div>}
+                  <div><dt>{t('checkout.participantTotal')}</dt><dd>{t('common.participantCount', { count: selectedOrder.participants || 1 })}</dd></div>
+                  <div><dt>{t('account.approvalStatus')}</dt><dd><Badge status={selectedOrder.status} label={statusLabel(selectedOrder.status)} /></dd></div>
                 </dl>
               </section>
             </div>
             {selectedAddons.length > 0 && (
               <div className="selected-addon-list account-addon-list">
                 {selectedAddons.map((addon) => (
-                  <span key={addon.id}>{addon.label}{addon.detail ? ` dari ${addon.detail}` : ''}</span>
+                  <span key={addon.id}>{t(`addons.${addon.id}.label`, { defaultValue: addon.label })}{addon.detail ? t('account.addonFrom', { detail: addon.detail }) : ''}</span>
                 ))}
               </div>
             )}
             <section className="account-participant-section">
-              <h3>Data peserta</h3>
+              <h3>{t('account.participantData')}</h3>
               <div className="participant-detail-list">
                 {(Array.isArray(selectedOrder.participantDetails) && selectedOrder.participantDetails.length ? selectedOrder.participantDetails : [selectedOrder]).map((participant, index) => (
                   <div key={`${selectedOrder.id}-${index}`}>
-                    <strong>{selectedOrder.participants > 1 ? `Peserta ${index + 1}: ` : ''}{participant.name || '-'}</strong>
-                    <span>{participant.gender || '-'} - {participant.age || '-'} tahun - {participant.address || '-'}</span>
-                    <span>Kondisi kesehatan: {participant.healthNotes || '-'}</span>
+                    <strong>{selectedOrder.participants > 1 ? t('account.participant', { number: index + 1 }) : ''}{participant.name || '-'}</strong>
+                    <span>{participant.gender || '-'} - {participant.age || '-'} {t('account.yearsOld')} - {participant.address || '-'}</span>
+                    <span>{t('account.healthCondition')}: {participant.healthNotes || '-'}</span>
                   </div>
                 ))}
               </div>
@@ -997,88 +1115,91 @@ export function CustomerAccountPage({ registrations, trips, navigate, session, l
 }
 
 export function CustomerLoginPage({ loginCustomer, navigate, afterLoginPath = '/open-trip' }) {
+  const { t } = useCustomerLanguage()
   const [form, setForm] = useState({ email: '', password: '' })
   const [error, setError] = useState('')
 
   const onSubmit = async (event) => {
     event.preventDefault()
     if (!form.email || !form.password) {
-      setError('Email dan password wajib diisi.')
+      setError(t('error.loginRequired'))
       return
     }
-    if (!loginCustomer(form, afterLoginPath)) setError('Akun customer tidak ditemukan atau password salah.')
+    if (!loginCustomer(form, afterLoginPath)) setError(t('error.loginFailed'))
   }
 
   return (
     <AuthShell navigate={navigate}>
       <section className="auth-panel">
         <div className="auth-panel-head">
-          <p className="eyebrow">Login customer</p>
-          <h1>Masuk Customer</h1>
-          <p className="muted">Gunakan akun yang sudah terdaftar untuk lanjut memilih dan mendaftar cave trip.</p>
+          <p className="eyebrow">{t('auth.loginEyebrow')}</p>
+          <h1>{t('auth.loginTitle')}</h1>
+          <p className="muted">{t('auth.loginCopy')}</p>
         </div>
         <form className="auth-form" onSubmit={onSubmit}>
           {error && <p className="form-error">{error}</p>}
-          <label>Email<input type="email" placeholder="nama@email.com" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></label>
-          <label>Password<input type="password" placeholder="Masukkan password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} /></label>
-          <button className="primary-btn" type="submit">Masuk</button>
+          <label>Email<input type="email" placeholder={t('auth.emailPlaceholder')} value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></label>
+          <label>Password<input type="password" placeholder={t('auth.passwordPlaceholder')} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} /></label>
+          <button className="primary-btn" type="submit">{t('auth.loginButton')}</button>
         </form>
-        <p className="auth-switch">Belum punya akun? <button onClick={() => navigate('/signup')}>Buat akun</button></p>
+        <p className="auth-switch">{t('auth.noAccount')} <button onClick={() => navigate('/signup')}>{t('auth.createAccount')}</button></p>
       </section>
     </AuthShell>
   )
 }
 
 export function CustomerSignupPage({ signupCustomer, navigate }) {
+  const { t } = useCustomerLanguage()
   const [form, setForm] = useState({ name: '', whatsapp: '', email: '', address: '', age: '', gender: '', healthNotes: '', password: '', confirmPassword: '' })
   const [error, setError] = useState('')
 
   const onSubmit = async (event) => {
     event.preventDefault()
     if (!form.name || !form.whatsapp || !form.email || !form.password) {
-      setError('Lengkapi nama, WhatsApp, email, dan password.')
+      setError(t('error.signupRequired'))
       return
     }
     if (form.password.length < 6) {
-      setError('Password minimal 6 karakter.')
+      setError(t('error.passwordMin'))
       return
     }
     if (form.password !== form.confirmPassword) {
-      setError('Konfirmasi password belum sama.')
+      setError(t('error.passwordMismatch'))
       return
     }
     const isCreated = await signupCustomer(form)
-    if (!isCreated) setError('Email sudah terdaftar. Silakan login.')
+    if (!isCreated) setError(t('error.emailExists'))
   }
 
   return (
     <AuthShell navigate={navigate}>
       <section className="auth-panel auth-panel-wide">
         <div className="auth-panel-head">
-          <p className="eyebrow">Signup customer</p>
-          <h1>Buat Akun</h1>
-          <p className="muted">Simpan data kontak sekali, lalu gunakan lagi saat mendaftar open trip goa berikutnya.</p>
+          <p className="eyebrow">{t('auth.signupEyebrow')}</p>
+          <h1>{t('auth.signupTitle')}</h1>
+          <p className="muted">{t('auth.signupCopy')}</p>
         </div>
         <form className="auth-form auth-form-grid" onSubmit={onSubmit}>
           {error && <p className="form-error">{error}</p>}
-          <label>Nama lengkap<input placeholder="Nama sesuai identitas" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></label>
-          <label>Nomor WhatsApp<input placeholder="08xxxxxxxxxx" value={form.whatsapp} onChange={(e) => setForm({ ...form, whatsapp: e.target.value })} /></label>
-          <label className="full">Email<input type="email" placeholder="nama@email.com" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></label>
-          <label>Alamat domisili<input placeholder="Kota domisili" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} /></label>
-          <label>Usia peserta<input type="number" min="1" placeholder="Usia" value={form.age} onChange={(e) => setForm({ ...form, age: e.target.value })} /></label>
-          <label>Jenis kelamin<select value={form.gender} onChange={(e) => setForm({ ...form, gender: e.target.value })}><option value="">Pilih jenis kelamin</option><option value="Laki-laki">Laki-laki</option><option value="Perempuan">Perempuan</option></select></label>
-          <label className="full">Riwayat penyakit atau kondisi kesehatan penting<textarea placeholder="Isi '-' jika tidak ada." value={form.healthNotes} onChange={(e) => setForm({ ...form, healthNotes: e.target.value })} /></label>
-          <label>Password<input type="password" placeholder="Minimal 6 karakter" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} /></label>
-          <label>Konfirmasi password<input type="password" placeholder="Ulangi password" value={form.confirmPassword} onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })} /></label>
-          <button className="primary-btn full" type="submit">Buat akun</button>
+          <label>{t('checkout.fullName')}<input placeholder={t('auth.namePlaceholder')} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></label>
+          <label>{t('checkout.whatsapp')}<input placeholder={t('auth.whatsappPlaceholder')} value={form.whatsapp} onChange={(e) => setForm({ ...form, whatsapp: e.target.value })} /></label>
+          <label className="full">Email<input type="email" placeholder={t('auth.emailPlaceholder')} value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></label>
+          <label>{t('checkout.address')}<input placeholder={t('auth.addressPlaceholder')} value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} /></label>
+          <label>{t('checkout.age')}<input type="number" min="1" placeholder={t('auth.agePlaceholder')} value={form.age} onChange={(e) => setForm({ ...form, age: e.target.value })} /></label>
+          <label>{t('checkout.gender')}<select value={form.gender} onChange={(e) => setForm({ ...form, gender: e.target.value })}><option value="">{t('checkout.selectGender')}</option><option value="Laki-laki">{t('checkout.male')}</option><option value="Perempuan">{t('checkout.female')}</option></select></label>
+          <label className="full">{t('checkout.healthNotes')}<textarea placeholder={t('checkout.healthPlaceholder')} value={form.healthNotes} onChange={(e) => setForm({ ...form, healthNotes: e.target.value })} /></label>
+          <label>Password<input type="password" placeholder={t('auth.passwordMinPlaceholder')} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} /></label>
+          <label>{t('auth.confirmPassword')}<input type="password" placeholder={t('auth.confirmPasswordPlaceholder')} value={form.confirmPassword} onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })} /></label>
+          <button className="primary-btn full" type="submit">{t('auth.createAccount')}</button>
         </form>
-        <p className="auth-switch">Sudah punya akun? <button onClick={() => navigate('/login')}>Masuk customer</button></p>
+        <p className="auth-switch">{t('auth.haveAccount')} <button onClick={() => navigate('/login')}>{t('auth.customerLogin')}</button></p>
       </section>
     </AuthShell>
   )
 }
 
 function AuthShell({ children, navigate }) {
+  const { t } = useCustomerLanguage()
   return (
     <main className="login-page">
       <section className="auth-shell">
@@ -1087,9 +1208,9 @@ function AuthShell({ children, navigate }) {
             <img src={horizontalLogo} alt="Open Cave Trip" />
           </button>
           <div>
-            <p className="eyebrow">Customer area</p>
-            <h2>Explor Vertical Caving Yogyakarta</h2>
-            <p>Login untuk merasakan indahnya goa di yogyakarta</p>
+            <p className="eyebrow">{t('auth.customerArea')}</p>
+            <h2>{t('auth.sideTitle')}</h2>
+            <p>{t('auth.sideCopy')}</p>
           </div>
         </aside>
         {children}

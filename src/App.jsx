@@ -1,12 +1,22 @@
 import { useEffect, useMemo, useState } from 'react'
 import { collection, deleteDoc, doc, onSnapshot, orderBy, query, setDoc, updateDoc } from 'firebase/firestore'
 import './App.css'
+import i18n from './i18n'
 import { accounts, addonOptions } from './config/constants'
 import { db } from './firebase'
 import { AdminDashboard, AdminSchedule, AdminTrips, AdminWorkers, TripForm } from './pages/AdminPage'
 import { CustomerAccountPage, CustomerCatalog, CustomerLoginPage, CustomerSignupPage, DestinationPage, RegistrationPage, TripDetail } from './pages/UserPage'
 import { MyJobs, WorkerDashboard, WorkerJobDetail, WorkerJobs } from './pages/WorkerPage'
 import { LoginPage, NotFound } from './pages/shared'
+import {
+  getOpenTripScheduleOptions,
+  getPrivateSessionOptions,
+  isDateWithinPrivateRange,
+  getRegistrationDate,
+  getScheduleBookedCount,
+  getTripSchedules,
+  isPrivateSessionBooked,
+} from './utils/schedules'
 
 const collections = {
   trips: 'trips',
@@ -112,7 +122,7 @@ function App() {
     await setDoc(doc(db, collections.customers, form.email), nextAccount)
     setSession({ role: 'customer', name: form.name, email: form.email, whatsapp: form.whatsapp, address: form.address || '', age: form.age || '', gender: form.gender || '', healthNotes: form.healthNotes || '' })
     navigate('/open-trip')
-    showToast('Akun customer berhasil dibuat.')
+    showToast(i18n.t('toast.signupSuccess'))
     return true
   }
 
@@ -148,13 +158,6 @@ function App() {
   }, [registrations])
 
   const updateTripSlots = async (tripId, nextRegistrations = registrations) => {
-    const approvedRegistrations = nextRegistrations
-      .filter((item) => item.tripId === tripId && (item.status === 'Disetujui' || item.status === 'Selesai'))
-    const hasApprovedPrivateTour = approvedRegistrations.some((item) => item.isPrivateTour)
-    const approvedCount = nextRegistrations
-      .filter((item) => item.tripId === tripId && (item.status === 'Disetujui' || item.status === 'Selesai'))
-      .reduce((total, item) => total + Number(item.participants), 0)
-
     const trip = trips.find((item) => item.id === tripId)
     if (!trip) return
     if (trip.isPrivateTrip) {
@@ -162,9 +165,20 @@ function App() {
       return
     }
 
-    const slots = hasApprovedPrivateTour ? 0 : Math.max(trip.quota - approvedCount, 0)
+    const schedules = getTripSchedules(trip).map((schedule) => {
+      const bookedCount = getScheduleBookedCount(nextRegistrations, tripId, schedule)
+      const remaining = Math.max(Number(schedule.quota || 0) - bookedCount, 0)
+      return {
+        ...schedule,
+        bookedCount,
+        status: schedule.status === 'inactive' ? 'inactive' : remaining <= 0 ? 'full' : 'active',
+      }
+    })
+    const slots = schedules.reduce((total, schedule) => total + Math.max(Number(schedule.quota || 0) - Number(schedule.bookedCount || 0), 0), 0)
+    const quota = schedules.reduce((total, schedule) => total + Number(schedule.quota || 0), 0) || Number(trip.quota || 0)
     const status = trip.status === 'Selesai' ? 'Selesai' : slots === 0 ? 'Penuh' : 'Tersedia'
-    await updateDoc(doc(db, collections.trips, String(tripId)), { slots, status })
+    const firstSchedule = schedules[0]
+    await updateDoc(doc(db, collections.trips, String(tripId)), { schedules, slots, quota, date: firstSchedule?.date || trip.date || '', status })
   }
 
   const submitRegistration = async (form) => {
@@ -172,9 +186,26 @@ function App() {
     if (!trip || trip.status !== 'Tersedia') return false
     const approvedRegistrations = registrations.filter((item) => item.tripId === Number(form.tripId) && (item.status === 'Disetujui' || item.status === 'Selesai'))
     const isPrivateTour = Boolean(form.isPrivateTour || trip.isPrivateTrip)
-    if (!isPrivateTour && trip.slots < Number(form.participants)) return false
+    const participantCount = isPrivateTour ? Number(form.participants) : Number(form.participants || 1)
+    let selectedSchedule = null
+    let selectedSession = null
+    let selectedDate = form.selectedDate || form.requestedDate || ''
+    if (!isPrivateTour) {
+      const scheduleOptions = getOpenTripScheduleOptions(trip, registrations)
+      selectedSchedule = scheduleOptions.find((schedule) => schedule.id === form.scheduleId)
+      if (!selectedSchedule || !selectedSchedule.isSelectable || selectedSchedule.remaining < participantCount) return false
+      selectedDate = selectedSchedule.date
+    }
     const privateTourTaken = approvedRegistrations.some((item) => item.isPrivateTour)
     if (!trip.isPrivateTrip && (privateTourTaken || (isPrivateTour && approvedRegistrations.length))) return false
+    if (isPrivateTour) {
+      if (!selectedDate || !form.sessionId) return false
+      if (!isDateWithinPrivateRange(trip, selectedDate)) return false
+      const sessionOptions = getPrivateSessionOptions(trip, registrations, selectedDate)
+      selectedSession = sessionOptions.find((session) => session.id === form.sessionId)
+      if (!selectedSession || !selectedSession.isSelectable) return false
+      if (!selectedSession.isLegacy && isPrivateSessionBooked(registrations, trip.id, selectedDate, selectedSession.id)) return false
+    }
     const participantDetails = Array.isArray(form.participantDetails) && form.participantDetails.length
       ? form.participantDetails
       : [{ name: form.name, address: form.address || '', age: form.age || '', gender: form.gender || '', healthNotes: form.healthNotes || '' }]
@@ -188,12 +219,20 @@ function App() {
       name: form.name,
       whatsapp: form.whatsapp,
       email: form.email,
-      participants: isPrivateTour ? Number(form.participants) : 1,
+      participants: isPrivateTour ? participantCount : 1,
+      participantCount: isPrivateTour ? participantCount : 1,
       tripId: Number(form.tripId),
+      tripType: isPrivateTour ? 'private' : 'open',
       notes: form.notes || '-',
       isPrivateTour,
       isPrivateTrip: Boolean(trip.isPrivateTrip),
-      requestedDate: isPrivateTour ? form.requestedDate || '' : '',
+      scheduleId: isPrivateTour ? '' : selectedSchedule.id,
+      selectedDate,
+      requestedDate: selectedDate,
+      sessionId: isPrivateTour ? selectedSession.id : '',
+      sessionName: isPrivateTour ? selectedSession.name : '',
+      startTime: isPrivateTour ? selectedSession.startTime : '',
+      endTime: isPrivateTour ? selectedSession.endTime : '',
       address: primaryParticipant.address || '',
       age: primaryParticipant.age || '',
       gender: primaryParticipant.gender || '',
@@ -225,7 +264,8 @@ function App() {
       gender: primaryParticipant.gender || '',
       healthNotes: primaryParticipant.healthNotes || '',
     } : current)
-    showToast('Pendaftaran berhasil dikirim. Status awal: Menunggu Approval.')
+    if (!isPrivateTour) await updateTripSlots(trip.id, [...registrations, nextItem])
+    showToast(i18n.t('toast.registrationSuccess'))
     navigate('/open-trip')
     return true
   }
@@ -237,7 +277,7 @@ function App() {
     addonId: addon.id,
     addonLabel: addon.label,
     customerName: registration.name,
-    requestedDate: registration.requestedDate || trip?.date || '',
+    requestedDate: getRegistrationDate(registration) || trip?.date || '',
     slot,
     totalWorkers,
     task: addon.id === 'transport' && registration.transportFrom
@@ -285,10 +325,37 @@ function App() {
   }
 
   const saveTrip = async (trip) => {
+    const schedules = Array.isArray(trip.schedules)
+      ? trip.schedules.map((schedule, index) => ({
+        id: schedule.id || `schedule_${index + 1}`,
+        date: schedule.date || '',
+        quota: Number(schedule.quota || 0),
+        bookedCount: Number(schedule.bookedCount || 0),
+        status: schedule.status || 'active',
+      }))
+      : []
+    const sessions = Array.isArray(trip.sessions)
+      ? trip.sessions.map((sessionItem, index) => ({
+        id: sessionItem.id || `session_${index + 1}`,
+        name: sessionItem.name || `Sesi ${index + 1}`,
+        startTime: sessionItem.startTime || '',
+        endTime: sessionItem.endTime || '',
+        status: sessionItem.status || 'active',
+      }))
+      : []
+    const isPrivateTrip = Boolean(trip.isPrivateTrip)
+    const aggregateQuota = schedules.reduce((total, schedule) => total + Number(schedule.quota || 0), 0)
+    const aggregateSlots = schedules.reduce((total, schedule) => total + Math.max(Number(schedule.quota || 0) - Number(schedule.bookedCount || 0), 0), 0)
     const normalizedTrip = {
       ...trip,
-      slots: Number(trip.slots),
-      quota: Number(trip.quota),
+      type: isPrivateTrip ? 'private' : 'open',
+      schedules: isPrivateTrip ? [] : schedules,
+      sessions: isPrivateTrip ? sessions : [],
+      availableStartDate: isPrivateTrip ? trip.availableStartDate || '' : '',
+      availableEndDate: isPrivateTrip ? trip.availableEndDate || '' : '',
+      date: !isPrivateTrip ? schedules[0]?.date || trip.date || '' : trip.date || '',
+      slots: !isPrivateTrip && schedules.length ? aggregateSlots : Number(trip.slots),
+      quota: !isPrivateTrip && schedules.length ? aggregateQuota : Number(trip.quota),
       price: Number(trip.price),
       minParticipants: Number(trip.minParticipants || 1),
       maxParticipants: Number(trip.maxParticipants || trip.quota || 1),
@@ -394,8 +461,9 @@ function RouteRenderer(props) {
   if (parts[0] === 'admin' && parts[1] === 'open-trip' && parts[2] === 'edit') return <TripForm tripId={Number(parts[3])} {...props} />
   if (path === '/admin/pendaftaran') return <AdminSchedule {...props} />
   if (path === '/admin/jadwal') return <AdminSchedule {...props} />
+  if (parts[0] === 'admin' && parts[1] === 'jadwal' && parts[2] === 'private-trip' && Number(parts[3])) return <AdminSchedule privateTripId={Number(parts[3])} {...props} />
   if (parts[0] === 'admin' && parts[1] === 'jadwal' && parts[2] === 'private' && Number(parts[3])) return <AdminSchedule scheduleRegistrationId={Number(parts[3])} {...props} />
-  if (parts[0] === 'admin' && parts[1] === 'jadwal' && Number(parts[2])) return <AdminSchedule scheduleTripId={Number(parts[2])} {...props} />
+  if (parts[0] === 'admin' && parts[1] === 'jadwal' && Number(parts[2])) return <AdminSchedule scheduleTripId={Number(parts[2])} scheduleId={parts[3] || ''} {...props} />
   if (path === '/admin/pekerja') return <AdminWorkers {...props} />
   if (path === '/pekerja/login') return <LoginPage role="pekerja" {...props} />
   if (path === '/pekerja/dashboard') return <WorkerDashboard {...props} />

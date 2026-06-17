@@ -1,11 +1,14 @@
 import { useState } from 'react'
 import { jobStatuses } from '../config/constants'
 import { formatDate } from '../utils/formatters'
+import { localizedText } from '../utils/localization'
+import { getRegistrationDate } from '../utils/schedules'
 import { AppModal, Badge, InfoBlock, Metric, NotFound, Sidebar } from './shared'
 
 const getJobScope = (job) => job.registrationId ? `registration-${job.registrationId}` : `trip-${job.tripId}`
 const completionStatusOptions = jobStatuses.filter((status) => status !== 'Tersedia' && status !== 'Selesai')
 const mediaAddonIds = ['drone', 'camera360', 'documentation']
+const workerText = (value) => localizedText(value, 'id') || '-'
 
 const getCompletionType = (job) => {
   const typeText = [job.addonId, job.addonLabel, job.jobType, job.addonType, job.category]
@@ -84,7 +87,7 @@ export function WorkerJobDetail({ jobId, jobs, trips, takeJob, updateJobStatus, 
       <article className="detail-panel standalone">
         <Badge status={job.status} />
         <h2>{job.addonLabel || 'Job trip'} - {trip?.name || 'Cave trip'}</h2>
-        <p className="muted">{trip?.destination || '-'} - {formatDate(job.requestedDate || trip?.date)}</p>
+        <p className="muted">{workerText(trip?.destination)} - {formatDate(job.requestedDate || getRegistrationDate(registration) || trip?.date)}</p>
         <div className="metric-row">
           <Metric label="Customer" value={registration?.name || job.customerName || '-'} />
           <Metric label="Peserta" value={registration?.participants || (trip ? trip.quota - trip.slots : 0)} />
@@ -106,10 +109,10 @@ function JobCard({ job, trips, registrations, navigate, takeJob, mine, updateJob
   const registration = registrations?.find((item) => item.id === job.registrationId)
   return (
     <article className="job-card">
-      <div><h3>{job.addonLabel || 'Job trip'}</h3><p>{trip?.name} - {trip?.destination}</p></div>
+      <div><h3>{job.addonLabel || 'Job trip'}</h3><p>{trip?.name} - {workerText(trip?.destination)}</p></div>
       <Badge status={job.status} />
       <p className="job-slot-label">{job.addonLabel ? `Kebutuhan ${job.addonLabel}` : `Slot pekerja ${job.slot || 1} dari ${job.totalWorkers || trip?.workerCount || 1}`}</p>
-      <p>{formatDate(job.requestedDate || trip?.date)} - {registration?.name || job.customerName || 'Customer'} ({registration?.participants || (trip ? trip.quota - trip.slots : 0)} peserta)</p>
+      <p>{formatDate(job.requestedDate || getRegistrationDate(registration) || trip?.date)} - {registration?.name || job.customerName || 'Customer'} ({registration?.participants || (trip ? trip.quota - trip.slots : 0)} peserta)</p>
       <p className="muted">{job.task}</p>
       {job.status === 'Tersedia' && !mine && <button className="primary-btn" onClick={() => takeJob(job.id)}>Ambil job</button>}
       {mine && <select className="status-select" value={job.status === 'Selesai' ? 'Selesai' : job.status} disabled={job.status === 'Selesai'} onChange={(e) => updateJobStatus(job.id, e.target.value)}>{job.status === 'Selesai' && <option>Selesai</option>}{completionStatusOptions.map((status) => <option key={status}>{status}</option>)}</select>}

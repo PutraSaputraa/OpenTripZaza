@@ -120,9 +120,9 @@ export function InfoBlock({ title, text }) {
   return <section className="info-block"><h3>{title}</h3><p>{text}</p></section>
 }
 
-export function Badge({ status }) {
+export function Badge({ status, label }) {
   const className = `badge badge-${status.toLowerCase().replaceAll(' ', '-')}`
-  return <span className={className}>{status}</span>
+  return <span className={className}>{label || status}</span>
 }
 
 export function AppModal({

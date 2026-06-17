@@ -224,6 +224,34 @@ button:disabled {
   gap: 8px;
   justify-self: end;
 }
+.language-switcher {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  border: 1px solid rgba(184, 132, 43, 0.32);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.72);
+  padding: 3px;
+}
+.language-switcher button {
+  min-width: 38px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: #6f511f;
+  padding: 7px 9px;
+  font-size: 13px;
+  font-weight: 800;
+}
+.language-switcher button.is-active {
+  background: #241a08;
+  color: #fff8e9;
+}
+.mobile-language-switcher {
+  width: 100%;
+  justify-content: center;
+  box-sizing: border-box;
+}
 .public-signup-btn {
   border: 1px solid rgba(184, 132, 43, 0.42);
   border-radius: 999px;
@@ -299,7 +327,7 @@ button:disabled {
     border-color 180ms ease;
 }
 .public-mobile-menu.is-open {
-  max-height: 340px;
+  max-height: 420px;
   border-color: rgba(184, 132, 43, 0.22);
   padding: 10px;
   opacity: 1;
@@ -2107,6 +2135,101 @@ button:disabled {
   padding: 12px;
   font-weight: 500;
 }
+.admin-nested-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  border: 1px solid #e6cfa8;
+  border-radius: 18px;
+  background: #fffdf8;
+  padding: 14px;
+}
+.admin-nested-fields h4,
+.admin-nested-fields small {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+.admin-nested-fields h4 {
+  color: #241a08;
+  font-size: 15px;
+}
+.admin-schedule-mini-list,
+.schedule-option-list {
+  display: grid;
+  gap: 8px;
+}
+.admin-schedule-action-list {
+  display: grid;
+  gap: 10px;
+}
+.admin-schedule-action-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid rgba(184, 132, 43, 0.24);
+  border-radius: 14px;
+  background: #fffaf0;
+  padding: 10px 12px;
+}
+.admin-schedule-action-row.needs-review {
+  border-color: rgba(192, 138, 46, 0.58);
+  background: #fff4d6;
+}
+.admin-schedule-action-row strong,
+.admin-schedule-action-row small {
+  display: block;
+}
+.admin-schedule-action-row strong {
+  color: #241a08;
+  font-size: 14px;
+  line-height: 1.35;
+}
+.admin-schedule-action-row small {
+  margin-top: 4px;
+  color: #7d6938;
+  font-weight: 700;
+  line-height: 1.35;
+}
+.schedule-detail-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+.schedule-detail-btn span {
+  display: inline-grid;
+  min-width: 22px;
+  height: 22px;
+  place-items: center;
+  border-radius: 999px;
+  background: #f1c65f;
+  color: #241a08;
+  font-size: 12px;
+  font-weight: 900;
+}
+.admin-schedule-mini-list {
+  margin: 12px 0 0;
+}
+.admin-schedule-mini-list span,
+.schedule-option-list span {
+  border: 1px solid rgba(184, 132, 43, 0.22);
+  border-radius: 12px;
+  background: #fffaf0;
+  color: #4b3514;
+  padding: 9px 11px;
+  font-size: 13px;
+  font-weight: 700;
+}
+.schedule-option-list {
+  margin-top: 14px;
+}
+.schedule-option-list span.is-disabled {
+  background: #f7f1e8;
+  color: #8a7a5f;
+  text-decoration: line-through;
+}
 .data-form,
 .data-form.section-fields,
 .registration-fields,
@@ -2667,6 +2790,9 @@ button:disabled {
 .admin-card-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
+.schedule-list.admin-card-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
 .schedule-card-head {
   display: flex;
   align-items: start;
@@ -2675,8 +2801,8 @@ button:disabled {
   margin-bottom: 8px;
 }
 .schedule-card {
-  gap: 20px;
-  padding: 20px;
+  gap: 14px;
+  padding: 18px;
 }
 .schedule-card.needs-review {
   border-color: rgba(192, 138, 46, 0.52);
@@ -2696,7 +2822,7 @@ button:disabled {
   justify-content: space-between;
   gap: 12px;
   border: 1px solid var(--color-line);
-  border-radius: 28px;
+  border-radius: 18px;
   background: var(--color-lifted);
   color: var(--color-ink);
   padding: 12px;
@@ -2720,7 +2846,7 @@ button:disabled {
 }
 .schedule-metrics {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
   margin: 10px 0 0;
 }
@@ -2728,7 +2854,7 @@ button:disabled {
   display: grid;
   gap: 5px;
   border: 1px solid var(--color-line);
-  border-radius: 28px;
+  border-radius: 18px;
   background: var(--color-lifted);
   color: var(--color-ink);
   padding: 12px;
@@ -2746,10 +2872,10 @@ button:disabled {
 }
 .schedule-card-footer {
   display: grid;
-  gap: 14px;
+  gap: 12px;
   border-top: 1px solid var(--color-line);
   margin-top: 10px;
-  padding-top: 24px;
+  padding-top: 16px;
 }
 .schedule-card-footer .outline-btn {
   justify-self: end;
@@ -3874,6 +4000,9 @@ td {
   .admin-trip-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+  .schedule-list.admin-card-grid {
+    grid-template-columns: 1fr;
+  }
   .admin-list-toolbar {
     grid-template-columns: 1fr;
   }
@@ -3912,6 +4041,10 @@ td {
     position: static;
     display: grid;
   }
+  .schedule-list.admin-card-grid,
+  .schedule-metrics {
+    grid-template-columns: 1fr;
+  }
 }
 @media (max-width: 1080px) {
   .trip-grid,
@@ -3931,6 +4064,9 @@ td {
   .registration-summary-cards,
   .registration-filter-row,
   .registration-detail-sections {
+    grid-template-columns: 1fr;
+  }
+  .schedule-list.admin-card-grid {
     grid-template-columns: 1fr;
   }
   .trip-detail-sidebar,
