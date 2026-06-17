@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { jobStatuses } from '../config/constants'
 import { formatDate } from '../utils/formatters'
+import { getJobResultLink } from '../utils/jobResults'
 import { localizedText } from '../utils/localization'
 import { getRegistrationDate } from '../utils/schedules'
 import { AppModal, Badge, InfoBlock, Metric, NotFound, Sidebar } from './shared'
@@ -98,13 +99,13 @@ export function WorkerJobDetail({ jobId, jobs, trips, takeJob, updateJobStatus, 
         {job.status === 'Tersedia' ? <button className="primary-btn" disabled={alreadyTookScope} onClick={() => takeJob(job.id)}>{alreadyTookScope ? 'Sudah ambil booking ini' : 'Ambil job'}</button> : (
           <label className="status-control">Update status<select value={job.status === 'Selesai' ? 'Selesai' : job.status} disabled={job.status === 'Selesai'} onChange={(e) => updateJobStatus(job.id, e.target.value)}>{job.status === 'Selesai' && <option>Selesai</option>}{completionStatusOptions.map((status) => <option key={status}>{status}</option>)}</select></label>
         )}
-        {showCompletionChecklist && <JobCompletionChecklist key={`${job.id}-${job.status}-${job.driveLink || job.completionLink || ''}-${job.proofPhotoName || ''}`} job={job} updateJobStatus={updateJobStatus} />}
+        {showCompletionChecklist && <JobCompletionChecklist key={`${job.id}-${job.status}-${getJobResultLink(job)}-${job.proofPhotoName || ''}`} job={job} updateJobStatus={updateJobStatus} session={props.session} />}
       </article>
     </WorkerShell>
   )
 }
 
-function JobCard({ job, trips, registrations, navigate, takeJob, mine, updateJobStatus }) {
+function JobCard({ job, trips, registrations, navigate, takeJob, mine, updateJobStatus, session }) {
   const trip = trips.find((item) => item.id === job.tripId)
   const registration = registrations?.find((item) => item.id === job.registrationId)
   return (
@@ -116,17 +117,17 @@ function JobCard({ job, trips, registrations, navigate, takeJob, mine, updateJob
       <p className="muted">{job.task}</p>
       {job.status === 'Tersedia' && !mine && <button className="primary-btn" onClick={() => takeJob(job.id)}>Ambil job</button>}
       {mine && <select className="status-select" value={job.status === 'Selesai' ? 'Selesai' : job.status} disabled={job.status === 'Selesai'} onChange={(e) => updateJobStatus(job.id, e.target.value)}>{job.status === 'Selesai' && <option>Selesai</option>}{completionStatusOptions.map((status) => <option key={status}>{status}</option>)}</select>}
-      {mine && <JobCompletionChecklist key={`${job.id}-${job.status}-${job.driveLink || job.completionLink || ''}-${job.proofPhotoName || ''}`} job={job} updateJobStatus={updateJobStatus} compact />}
+      {mine && <JobCompletionChecklist key={`${job.id}-${job.status}-${getJobResultLink(job)}-${job.proofPhotoName || ''}`} job={job} updateJobStatus={updateJobStatus} session={session} compact />}
       <button className="outline-btn" onClick={() => navigate(`/pekerja/job/${job.id}`)}>Detail</button>
     </article>
   )
 }
 
-function JobCompletionChecklist({ job, updateJobStatus, compact = false }) {
+function JobCompletionChecklist({ job, updateJobStatus, session, compact = false }) {
   const completionType = getCompletionType(job)
   const isDone = job.status === 'Selesai'
   const initialChecked = isDone || Boolean(job.completionChecked || job.transportCompleted)
-  const initialDriveLink = job.driveLink || job.completionLink || ''
+  const initialDriveLink = getJobResultLink(job)
   const [checked, setChecked] = useState(initialChecked)
   const [driveLink, setDriveLink] = useState(initialDriveLink)
   const [photoName, setPhotoName] = useState(job.proofPhotoName || '')
@@ -141,8 +142,16 @@ function JobCompletionChecklist({ job, updateJobStatus, compact = false }) {
       return
     }
     if (completionType === 'drive' && !driveLink.trim()) {
-      setError('Lengkapi checklist dan bukti pekerjaan terlebih dahulu.')
+      setError('Link hasil pekerjaan wajib diisi.')
       return
+    }
+    if (driveLink.trim()) {
+      try {
+        new URL(driveLink.trim())
+      } catch {
+        setError('Link hasil pekerjaan harus berupa URL yang valid.')
+        return
+      }
     }
     if (completionType === 'transport' && !photoName.trim()) {
       setError('Lengkapi checklist dan bukti pekerjaan terlebih dahulu.')
@@ -154,9 +163,31 @@ function JobCompletionChecklist({ job, updateJobStatus, compact = false }) {
   }
 
   const completeJob = () => {
+    const completedAt = new Date().toISOString()
     const completionFields = completionType === 'drive'
-      ? { completionChecked: true, driveLink: driveLink.trim(), completionLink: driveLink.trim() }
-      : { completionChecked: true, transportCompleted: true, proofPhotoName: photoName }
+      ? {
+        completionChecked: true,
+        resultStatus: 'completed',
+        resultLink: driveLink.trim(),
+        driveLink: driveLink.trim(),
+        completionLink: driveLink.trim(),
+        completedAt,
+        completedByName: session?.name || job.worker || '',
+        completedById: session?.email || job.workerId || '',
+        bookingId: job.bookingId || job.registrationId || '',
+        addonType: job.addonType || job.addonId || '',
+      }
+      : {
+        completionChecked: true,
+        resultStatus: 'completed',
+        transportCompleted: true,
+        proofPhotoName: photoName,
+        completedAt,
+        completedByName: session?.name || job.worker || '',
+        completedById: session?.email || job.workerId || '',
+        bookingId: job.bookingId || job.registrationId || '',
+        addonType: job.addonType || job.addonId || '',
+      }
     updateJobStatus(job.id, 'Selesai', completionFields)
     setIsConfirmModalOpen(false)
     setError('')
@@ -170,12 +201,12 @@ function JobCompletionChecklist({ job, updateJobStatus, compact = false }) {
       </div>
       <label className="completion-check">
         <input type="checkbox" checked={checked} disabled={isDone} onChange={(event) => setChecked(event.target.checked)} />
-        <span>{completionType === 'transport' ? 'Selesai mengantar customer' : 'Upload foto/video ke Google Drive'}</span>
+        <span>{completionType === 'transport' ? 'Selesai mengantar customer' : 'Pekerjaan selesai dan link hasil siap dibagikan'}</span>
       </label>
 
       {completionType === 'drive' ? (
-        <label className="completion-field">Link Google Drive
-          <input type="url" placeholder="Tempel link Google Drive di sini" value={driveLink} disabled={isDone} onChange={(event) => setDriveLink(event.target.value)} />
+        <label className="completion-field">Link hasil pekerjaan
+          <input type="url" placeholder="Tempel link Google Drive hasil dokumentasi di sini" value={driveLink} disabled={isDone} onChange={(event) => setDriveLink(event.target.value)} />
         </label>
       ) : (
         <div className="completion-field">

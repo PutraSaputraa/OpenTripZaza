@@ -8,6 +8,7 @@ import horizontalLogo from '../assets/desainHorizontal.png'
 import verticalLogo from '../assets/desainvertikal.png'
 import { addonOptions } from '../config/constants'
 import { formatCurrency, formatDate, tripName } from '../utils/formatters'
+import { getCustomerJobStatusLabel, getJobAddonLabel, getJobCompletedAt, getJobResultLink, getJobWorkerName, getNormalizedJobStatus, getRegistrationResultJobs } from '../utils/jobResults'
 import { localizedList, localizedText } from '../utils/localization'
 import { getOpenTripScheduleOptions, getPrivateDateRange, getPrivateSessionOptions, getRegistrationDate, getTripSchedules, isDateWithinPrivateRange } from '../utils/schedules'
 import { AppModal, Badge, InfoBlock, NotFound } from './shared'
@@ -607,6 +608,44 @@ const getSelectedAddons = (registration) => {
     }))
 }
 
+function CustomerWorkResults({ jobs = [], t, dateLocale, compact = false }) {
+  const visibleJobs = jobs.filter((job) => job)
+
+  return (
+    <section className={`account-work-results ${compact ? 'is-compact' : ''}`}>
+      <h3>{t('workResult.title')}</h3>
+      {visibleJobs.length ? (
+        <div className="account-work-result-list">
+          {visibleJobs.map((job) => {
+            const status = getNormalizedJobStatus(job)
+            const resultLink = getJobResultLink(job)
+            const completedAt = getJobCompletedAt(job)
+            const workerName = getJobWorkerName(job)
+            return (
+              <article className="account-work-result-item" key={job.id}>
+                <div>
+                  <strong>{getJobAddonLabel(job)}</strong>
+                  <span>{t('workResult.statusLabel')}: {getCustomerJobStatusLabel(job, t)}</span>
+                  {workerName && <span>{t('workResult.worker')}: {workerName}</span>}
+                  {completedAt && <span>{t('workResult.completedAt')}: {formatDate(completedAt, dateLocale)}</span>}
+                  {status === 'pending' && <span>{t('workResult.pendingMessage')}</span>}
+                  {status === 'in_progress' && <span>{t('workResult.processingMessage')}</span>}
+                  {status === 'completed' && !resultLink && <span>{t('workResult.completedNoLink')}</span>}
+                </div>
+                {status === 'completed' && resultLink && (
+                  <a className="outline-btn" href={resultLink} target="_blank" rel="noreferrer">{t('workResult.openLink')}</a>
+                )}
+              </article>
+            )
+          })}
+        </div>
+      ) : (
+        <p className="muted">{t('workResult.unavailable')}</p>
+      )}
+    </section>
+  )
+}
+
 export function TripDetail({ tripId, trips, registrations, navigate, session, logout }) {
   const { t, lang, dateLocale } = useCustomerLanguage()
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false)
@@ -951,7 +990,7 @@ export function RegistrationPage({ tripId, trips, submitRegistration, navigate, 
   )
 }
 
-export function CustomerAccountPage({ registrations, trips, navigate, session, logout }) {
+export function CustomerAccountPage({ registrations, trips, jobs = [], navigate, session, logout }) {
   const { t, lang, dateLocale, statusLabel } = useCustomerLanguage()
   const [activeFilter, setActiveFilter] = useState('Semua')
   const [selectedOrder, setSelectedOrder] = useState(null)
@@ -961,7 +1000,11 @@ export function CustomerAccountPage({ registrations, trips, navigate, session, l
     return null
   }
 
-  const myRegistrations = registrations.filter((item) => item.email === session.email)
+  const myRegistrations = registrations.filter((item) => {
+    if (item.email === session.email) return true
+    const participants = Array.isArray(item.participantDetails) ? item.participantDetails : []
+    return participants.some((participant) => participant.email === session.email || (session.whatsapp && participant.whatsapp === session.whatsapp))
+  })
   const waitingCount = myRegistrations.filter((item) => item.status === 'Menunggu Approval').length
   const approvedCount = myRegistrations.filter((item) => item.status === 'Disetujui' || item.status === 'Selesai').length
   const rejectedCount = myRegistrations.filter((item) => item.status === 'Ditolak').length
@@ -979,6 +1022,7 @@ export function CustomerAccountPage({ registrations, trips, navigate, session, l
   })
   const selectedTrip = selectedOrder ? trips.find((tripItem) => tripItem.id === selectedOrder.tripId) : null
   const selectedAddons = selectedOrder ? getSelectedAddons(selectedOrder) : []
+  const selectedWorkResults = selectedOrder ? getRegistrationResultJobs(jobs, selectedOrder) : []
 
   return (
     <main className="public-page">
@@ -1021,6 +1065,7 @@ export function CustomerAccountPage({ registrations, trips, navigate, session, l
             const trip = trips.find((tripItem) => tripItem.id === item.tripId)
             const totalPrice = trip ? Number(trip.price || 0) * Number(item.participants || 1) : 0
             const registrationDate = getRegistrationDate(item)
+            const workResults = getRegistrationResultJobs(jobs, item)
             return (
               <article className="account-registration-card" key={item.id}>
                 <div className="account-registration-head">
@@ -1038,6 +1083,7 @@ export function CustomerAccountPage({ registrations, trips, navigate, session, l
                   <div><dt>{t('common.totalPrice')}</dt><dd>{trip ? formatCurrency(totalPrice) : '-'}</dd></div>
                   <div><dt>{t('common.bookingCode')}</dt><dd>MAUA-{item.id}</dd></div>
                 </dl>
+                <CustomerWorkResults jobs={workResults} t={t} dateLocale={dateLocale} compact />
                 <div className="account-card-actions">
                   <button className="outline-btn" onClick={() => setSelectedOrder(item)} type="button">{t('account.viewDetail')}</button>
                   <a className="outline-btn" href="https://wa.me/62882005881248" target="_blank" rel="noreferrer">{t('common.contactAdmin')}</a>
@@ -1095,6 +1141,7 @@ export function CustomerAccountPage({ registrations, trips, navigate, session, l
                 ))}
               </div>
             )}
+            <CustomerWorkResults jobs={selectedWorkResults} t={t} dateLocale={dateLocale} />
             <section className="account-participant-section">
               <h3>{t('account.participantData')}</h3>
               <div className="participant-detail-list">

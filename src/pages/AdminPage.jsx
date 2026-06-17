@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { accounts, addonOptions, registrationStatuses, tripStatuses } from '../config/constants'
 import { formatCurrency, formatDate, tripName } from '../utils/formatters'
+import { getCustomerJobStatusLabel, getJobAddonLabel, getJobCompletedAt, getJobResultLink, getJobWorkerName, getRegistrationResultJobs } from '../utils/jobResults'
 import { localizedList, localizedText, multilingualLines, multilingualText, textToLines } from '../utils/localization'
 import { getPrivateDateRange, getRegistrationDate, getTripSchedules, getTripSessions, hasScheduleRegistrations, isSameScheduleRegistration, scheduleStatusLabel } from '../utils/schedules'
 import { AppModal, Badge, DataPanel, Metric, Sidebar } from './shared'
@@ -527,6 +528,29 @@ function RegistrationTable({ registrations, trips, setRegistrationStatus, compac
   )
 }
 
+function AdminJobResultsPanel({ jobs = [], emptyText = 'Belum ada hasil pekerjaan worker.' }) {
+  return (
+    <div className="table-wrap compact-table">
+      <table>
+        <thead><tr><th>Jenis pekerjaan</th><th>Worker</th><th>Status</th><th>Link hasil</th><th>Waktu selesai</th></tr></thead>
+        <tbody>{jobs.length ? jobs.map((job) => {
+          const resultLink = getJobResultLink(job)
+          const completedAt = getJobCompletedAt(job)
+          return (
+            <tr key={job.id}>
+              <td>{getJobAddonLabel(job)}</td>
+              <td>{getJobWorkerName(job) || '-'}</td>
+              <td>{getCustomerJobStatusLabel(job)}</td>
+              <td>{resultLink ? <a href={resultLink} target="_blank" rel="noreferrer">Buka link</a> : 'Belum tersedia'}</td>
+              <td>{completedAt ? formatDate(completedAt) : '-'}</td>
+            </tr>
+          )
+        }) : <tr><td colSpan="5">{emptyText}</td></tr>}</tbody>
+      </table>
+    </div>
+  )
+}
+
 export function AdminSchedule(props) {
   const { trips, registrations, jobs, scheduleTripId, scheduleId, scheduleRegistrationId, privateTripId } = props
   const [activeType, setActiveType] = useState('all')
@@ -853,6 +877,10 @@ function AdminPrivateScheduleDetail({ registration, trips, jobs, setRegistration
             </div>
             <p className="muted">{registration.notes || '-'}</p>
           </DataPanel>
+
+          <DataPanel title="Hasil Pekerjaan Worker">
+            <AdminJobResultsPanel jobs={tripJobs} />
+          </DataPanel>
         </section>
 
         <AppModal
@@ -1076,14 +1104,7 @@ function AdminScheduleDetail({ trip, scheduleId, registrations, jobs, setRegistr
           </DataPanel>
 
           <DataPanel title="Pekerja Trip">
-            <div className="table-wrap compact-table">
-              <table>
-                <thead><tr><th>Kebutuhan</th><th>Booking</th><th>Pekerja</th><th>Status</th></tr></thead>
-                <tbody>{tripJobs.length ? tripJobs.map((job) => (
-                  <tr key={job.id}><td>{job.addonLabel || 'Job trip'}</td><td>{job.customerName || '-'}</td><td>{job.worker || '-'}</td><td><Badge status={job.status} /></td></tr>
-                )) : <tr><td colSpan="4">Belum ada job add-on untuk trip ini.</td></tr>}</tbody>
-              </table>
-            </div>
+            <AdminJobResultsPanel jobs={tripJobs} emptyText="Belum ada job add-on untuk trip ini." />
           </DataPanel>
         </section>
 
@@ -1129,6 +1150,7 @@ function AdminScheduleDetail({ trip, scheduleId, registrations, jobs, setRegistr
           <RegistrationDetailModal
             item={selectedRegistration}
             trip={trip}
+            jobs={jobs}
             setRegistrationStatus={setRegistrationStatus}
             onClose={() => setSelectedRegistration(null)}
           />
@@ -1186,11 +1208,12 @@ function RegistrationApprovalCard({ item, setRegistrationStatus, onDetail }) {
   )
 }
 
-function RegistrationDetailModal({ item, trip, setRegistrationStatus, onClose }) {
+function RegistrationDetailModal({ item, trip, jobs = [], setRegistrationStatus, onClose }) {
   const participantDetails = Array.isArray(item.participantDetails) && item.participantDetails.length
     ? item.participantDetails
     : [{ name: item.name, address: item.address, age: item.age, gender: item.gender, healthNotes: item.healthNotes }]
   const registrationDate = getRegistrationDate(item) || trip.date
+  const resultJobs = getRegistrationResultJobs(jobs, item)
 
   return (
     <div className="modal-backdrop" role="presentation" onClick={onClose}>
@@ -1242,6 +1265,11 @@ function RegistrationDetailModal({ item, trip, setRegistrationStatus, onClose })
               <div><dt>Kondisi kesehatan</dt><dd>{item.healthNotes || '-'}</dd></div>
               <div><dt>Catatan</dt><dd>{item.notes || '-'}</dd></div>
             </dl>
+          </section>
+
+          <section>
+            <h3>Hasil Pekerjaan Worker</h3>
+            <AdminJobResultsPanel jobs={resultJobs} />
           </section>
         </div>
 

@@ -3866,6 +3866,53 @@ td {
   margin: 0;
   font-size: 13px;
 }
+.account-work-results {
+  display: grid;
+  gap: 12px;
+  border-top: 1px solid rgba(184, 132, 43, 0.22);
+  padding-top: 16px;
+}
+.account-work-results.is-compact {
+  margin-top: 14px;
+}
+.account-work-results h3 {
+  margin: 0;
+  color: #241a08;
+  font-size: 18px;
+  line-height: 1.2;
+}
+.account-work-result-list {
+  display: grid;
+  gap: 10px;
+}
+.account-work-result-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid rgba(184, 132, 43, 0.24);
+  border-radius: 16px;
+  background: #fffdf8;
+  padding: 12px;
+}
+.account-work-result-item div {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+.account-work-result-item strong,
+.account-work-result-item span {
+  overflow-wrap: anywhere;
+}
+.account-work-result-item span {
+  color: #6b4710;
+  font-size: 14px;
+  line-height: 1.4;
+}
+.account-work-result-item .outline-btn {
+  min-height: 38px;
+  white-space: nowrap;
+}
 .app-shell,
 .workspace,
 .admin-page-stack,
