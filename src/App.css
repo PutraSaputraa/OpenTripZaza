@@ -155,6 +155,11 @@ button:disabled {
   background: rgba(255, 253, 248, 0.96);
   box-shadow: 0 16px 34px rgba(36, 26, 8, 0.1);
 }
+.public-nav.is-menu-open {
+  border-color: rgba(184, 132, 43, 0.34);
+  background: #fffdf8;
+  box-shadow: 0 18px 44px rgba(36, 26, 8, 0.16);
+}
 .public-nav-logo {
   justify-self: start;
   display: inline-flex;
@@ -237,20 +242,24 @@ button:disabled {
   min-width: 38px;
   border: 0;
   border-radius: 999px;
-  background: transparent;
+  background: transparent !important;
   color: #6f511f;
   padding: 7px 9px;
   font-size: 13px;
   font-weight: 800;
+  box-shadow: none;
 }
 .language-switcher button.is-active {
-  background: #241a08;
+  background: #241a08 !important;
   color: #fff8e9;
 }
 .mobile-language-switcher {
   width: 100%;
   justify-content: center;
   box-sizing: border-box;
+}
+.mobile-language-switcher button {
+  flex: 1;
 }
 .public-signup-btn {
   border: 1px solid rgba(184, 132, 43, 0.42);
@@ -304,44 +313,81 @@ button:disabled {
 .public-menu-toggle.is-open span:last-child {
   transform: rotate(-45deg);
 }
+.public-menu-backdrop {
+  position: fixed;
+  z-index: 55;
+  inset: 0;
+  display: none;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  border-radius: 0;
+  background: rgba(21, 17, 10, 0.42);
+  padding: 0;
+  backdrop-filter: blur(3px);
+  cursor: default;
+}
 .public-mobile-menu {
   position: absolute;
-  top: calc(100% + 10px);
+  top: calc(100% + 12px);
   right: 0;
-  left: 0;
+  left: auto;
   overflow: hidden;
   display: grid;
-  gap: 4px;
+  gap: 5px;
+  width: min(360px, calc(100vw - 24px));
   max-height: 0;
   border: 1px solid transparent;
-  border-radius: 24px;
-  background: rgba(255, 253, 248, 0.98);
-  padding: 0 8px;
-  box-shadow: 0 18px 40px rgba(36, 26, 8, 0.12);
+  border-radius: 22px;
+  background: #fffdf8;
+  padding: 0 10px;
+  box-shadow: 0 24px 60px rgba(20, 15, 7, 0.24);
   opacity: 0;
   pointer-events: none;
+  transform: translateY(-8px) scale(0.98);
+  transform-origin: top right;
   transition:
     max-height 220ms ease,
     opacity 180ms ease,
     padding 180ms ease,
-    border-color 180ms ease;
+    border-color 180ms ease,
+    transform 180ms ease;
 }
 .public-mobile-menu.is-open {
-  max-height: 420px;
-  border-color: rgba(184, 132, 43, 0.22);
-  padding: 10px;
+  max-height: 460px;
+  border-color: rgba(184, 132, 43, 0.28);
+  padding: 12px;
   opacity: 1;
   pointer-events: auto;
+  transform: translateY(0) scale(1);
 }
 .public-mobile-menu button {
   width: 100%;
-  border-radius: 16px;
-  padding: 12px 14px;
+  min-height: 44px;
+  border-radius: 13px;
+  padding: 11px 14px;
   text-align: left;
 }
-.public-mobile-menu button:nth-last-child(2) {
-  background: #f4e5bf;
+.public-mobile-menu > button:hover,
+.public-mobile-menu > button:focus-visible {
+  background: #f8efd9;
+}
+.public-mobile-menu .mobile-signup-link,
+.public-mobile-menu .mobile-account-link {
+  margin-top: 4px;
+  background: linear-gradient(135deg, #f7e3ad, #e9c66d);
   color: #4b3514;
+  box-shadow: inset 0 0 0 1px rgba(184, 132, 43, 0.18);
+}
+.public-mobile-menu .mobile-signup-link:hover,
+.public-mobile-menu .mobile-signup-link:focus-visible,
+.public-mobile-menu .mobile-account-link:hover,
+.public-mobile-menu .mobile-account-link:focus-visible {
+  background: linear-gradient(135deg, #f9e9bd, #dfb956);
+}
+.public-mobile-menu .mobile-login-link {
+  border: 1px solid rgba(184, 132, 43, 0.26);
+  background: #fffaf0;
 }
 .metric-row {
   display: flex;
@@ -1713,6 +1759,21 @@ button:disabled {
   color: var(--color-muted);
   font-size: 13px;
   font-weight: 400;
+}
+.private-price-range {
+  align-items: flex-end;
+  row-gap: 3px;
+}
+.private-price-range strong {
+  font-size: clamp(20px, 1.8vw, 26px);
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+}
+.price-range-note {
+  margin: -10px 0 0;
+  color: var(--color-muted);
+  font-size: 13px;
+  line-height: 1.4;
 }
 
 /* Registration / checkout page */
@@ -4168,21 +4229,68 @@ td {
 }
 .admin-trip-page .admin-page-head {
   align-items: center;
-  border: 0;
-  border-bottom: 1px solid rgba(184, 132, 43, 0.18);
-  background: transparent;
-  padding: 4px 0 18px;
+  min-height: 0;
+  border: 1px solid rgba(184, 132, 43, 0.2);
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at 88% 18%, rgba(242, 199, 92, 0.16), transparent 25%),
+    #fffdf8;
+  padding: 20px 22px;
+  box-shadow: 0 8px 24px rgba(36, 26, 8, 0.05);
+}
+.admin-trip-page .admin-page-head > div {
+  display: grid;
+  gap: 4px;
 }
 .admin-trip-page .admin-page-head h2 {
-  font-size: clamp(24px, 2.4vw, 32px);
+  font-size: clamp(28px, 2.4vw, 36px);
+  line-height: 1.08;
 }
 .admin-trip-page .admin-page-head .muted {
-  margin: 6px 0 0;
+  margin: 2px 0 0;
+  font-size: 15px;
+  line-height: 1.5;
+}
+.admin-trip-heading-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.admin-trip-heading-meta .eyebrow {
+  margin: 0;
+}
+.admin-trip-heading-meta > span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 25px;
+  border: 1px solid rgba(184, 132, 43, 0.24);
+  border-radius: 999px;
+  background: #fff7e3;
+  color: #7a5418;
+  padding: 3px 9px;
+  font-size: 11px;
+  font-weight: 800;
 }
 .admin-add-trip-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   min-height: 42px;
-  padding: 10px 17px;
+  padding: 10px 18px 10px 13px;
   white-space: nowrap;
+  box-shadow: 0 8px 18px rgba(184, 132, 43, 0.18);
+}
+.admin-add-trip-btn > span {
+  display: grid;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  border-radius: 999px;
+  background: rgba(255, 253, 248, 0.62);
+  font-size: 19px;
+  font-weight: 500;
+  line-height: 1;
 }
 .admin-trip-page .admin-list-toolbar {
   grid-template-columns: minmax(240px, 1fr) auto;
@@ -4432,6 +4540,9 @@ td {
   }
 }
 @media (max-width: 760px) {
+  .public-menu-backdrop {
+    display: block;
+  }
   .public-nav {
     top: 10px;
     grid-template-columns: minmax(0, 1fr) auto;
@@ -4453,6 +4564,10 @@ td {
   .public-menu-toggle {
     display: grid;
   }
+  .public-menu-toggle.is-open {
+    border-color: rgba(184, 132, 43, 0.48);
+    background: #fff8e9;
+  }
   .workspace h1 {
     font-size: 34px;
   }
@@ -4468,6 +4583,13 @@ td {
   .schedule-list.admin-card-grid,
   .schedule-metrics {
     grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 420px) {
+  .public-mobile-menu {
+    right: 0;
+    left: 0;
+    width: auto;
   }
 }
 @media (max-width: 1080px) {
@@ -4867,6 +4989,7 @@ td {
 @media (max-width: 620px) {
   .admin-trip-page .admin-page-head {
     align-items: stretch;
+    padding: 18px;
   }
   .admin-trip-page .admin-add-trip-btn {
     width: 100%;

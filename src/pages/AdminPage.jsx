@@ -3,6 +3,7 @@ import { accounts, addonOptions, registrationStatuses, tripStatuses } from '../c
 import { formatCurrency, formatDate, tripName } from '../utils/formatters'
 import { getCustomerJobStatusLabel, getJobAddonLabel, getJobCompletedAt, getJobResultLink, getJobWorkerName, getRegistrationResultJobs } from '../utils/jobResults'
 import { localizedList, localizedText, multilingualLines, multilingualText, textToLines } from '../utils/localization'
+import { ABOVE_MAX_PAX_RULE, normalizePricePerPersonTiers } from '../utils/pricing'
 import { getPrivateDateRange, getRegistrationDate, getTripSchedules, getTripSessions, hasScheduleRegistrations, isSameScheduleRegistration, scheduleStatusLabel } from '../utils/schedules'
 import { AppModal, Badge, DataPanel, Metric, Sidebar } from './shared'
 
@@ -54,6 +55,8 @@ const normalizeTripForm = (trip) => {
   const facilities = multilingualLines(trip?.facilities)
   const schedules = getTripSchedules(trip)
   const sessions = Array.isArray(trip?.sessions) && trip.sessions.length ? getTripSessions(trip) : []
+  const maxCustomPax = Math.max(1, Number(trip?.maxCustomPax) || Math.min(Number(trip?.maxParticipants) || 4, 4))
+  const pricePerPersonTiers = normalizePricePerPersonTiers(trip?.pricePerPersonTiers, trip?.price, maxCustomPax)
 
   return {
     name: '',
@@ -71,6 +74,9 @@ const normalizeTripForm = (trip) => {
     imageUrls: [],
     status: 'Tersedia',
     ...trip,
+    maxCustomPax,
+    pricePerPersonTiers,
+    aboveMaxPaxRule: ABOVE_MAX_PAX_RULE,
     availableStartDate: trip?.availableStartDate || trip?.privateStartDate || '',
     availableEndDate: trip?.availableEndDate || trip?.privateEndDate || '',
     schedules: schedules.length ? schedules.map((schedule, index) => newSchedule(index, schedule)) : [newSchedule(0, { date: trip?.date || '', quota: trip?.quota || 10, bookedCount: 0 })],
@@ -124,7 +130,7 @@ function AdminShell({ title, children, navigate, logout, path, registrations = [
         ['/admin/pekerja', 'Akun Pekerja'],
       ]} navigate={navigate} logout={logout} path={path} />
       <section className="workspace">
-        <h1>{title}</h1>
+        {title && <h1>{title}</h1>}
         {children}
       </section>
     </main>
@@ -202,15 +208,21 @@ export function AdminTrips(props) {
   }
 
   return (
-    <AdminShell title="Paket Trip" {...props}>
+    <AdminShell title="" {...props}>
       <section className="admin-page-stack admin-trip-page">
         <div className="admin-page-head">
           <div>
-            <p className="eyebrow">Katalog trip</p>
-            <h2>Kelola Paket Trip</h2>
+            <div className="admin-trip-heading-meta">
+              <p className="eyebrow">Katalog trip</p>
+              <span>{props.trips.length} paket</span>
+            </div>
+            <h2>Paket Trip</h2>
             <p className="muted">Kelola paket Open Trip dan Private Trip yang tampil untuk customer.</p>
           </div>
-          <button className="primary-btn admin-add-trip-btn" onClick={() => props.navigate('/admin/open-trip/tambah')}>Tambah Paket</button>
+          <button className="primary-btn admin-add-trip-btn" onClick={() => props.navigate('/admin/open-trip/tambah')}>
+            <span aria-hidden="true">+</span>
+            Tambah Paket
+          </button>
         </div>
 
         <section className="admin-list-toolbar">
@@ -336,6 +348,52 @@ export function TripForm({ tripId, trips, saveTrip, navigate, ...props }) {
     setForm({ ...form, sessions: resizeSessionList(form.sessions, nextCount) })
   }
 
+  const updatePriceTierCount = (value) => {
+    const maxParticipants = Math.max(1, Number(form.maxParticipants) || 1)
+    const nextCount = Math.min(Math.max(1, Number(value) || 1), maxParticipants)
+    const nextTiers = Object.fromEntries(
+      Array.from({ length: nextCount }, (_, index) => {
+        const pax = index + 1
+        return [pax, form.pricePerPersonTiers?.[pax] ?? '']
+      }),
+    )
+    setForm({
+      ...form,
+      maxCustomPax: nextCount,
+      pricePerPersonTiers: nextTiers,
+      aboveMaxPaxRule: ABOVE_MAX_PAX_RULE,
+    })
+  }
+
+  const updatePriceTier = (pax, value) => {
+    setForm({
+      ...form,
+      pricePerPersonTiers: {
+        ...form.pricePerPersonTiers,
+        [pax]: value,
+      },
+    })
+  }
+
+  const updateMaxParticipants = (value) => {
+    const maxParticipants = Math.max(1, Number(value) || 1)
+    const maxCustomPax = Math.min(Math.max(1, Number(form.maxCustomPax) || 1), maxParticipants)
+    const nextTiers = Object.fromEntries(
+      Array.from({ length: maxCustomPax }, (_, index) => {
+        const pax = index + 1
+        return [pax, form.pricePerPersonTiers?.[pax] ?? '']
+      }),
+    )
+    setForm({
+      ...form,
+      maxParticipants: value,
+      quota: value,
+      slots: value,
+      maxCustomPax,
+      pricePerPersonTiers: nextTiers,
+    })
+  }
+
   const updateSchedule = (index, field, value) => {
     const currentSchedule = form.schedules[index]
     if (selected && field === 'date' && currentSchedule?.date !== value && hasScheduleRegistrations(registrations, selected.id, currentSchedule)) {
@@ -373,6 +431,14 @@ export function TripForm({ tripId, trips, saveTrip, navigate, ...props }) {
         setFormError('Isi rentang tanggal private trip dengan benar. Tanggal selesai tidak boleh lebih awal dari tanggal mulai.')
         return
       }
+      const prices = Array.from(
+        { length: Math.max(1, Number(form.maxCustomPax) || 1) },
+        (_, index) => Number(form.pricePerPersonTiers?.[index + 1]),
+      )
+      if (prices.some((price) => !Number.isFinite(price) || price <= 0)) {
+        setFormError('Semua harga per orang berdasarkan jumlah peserta wajib diisi dan harus lebih dari 0.')
+        return
+      }
     }
     const imageUrls = parseImageUrls(form.imageUrlsText || form.imageUrl)
     const tripForm = { ...form }
@@ -388,6 +454,8 @@ export function TripForm({ tripId, trips, saveTrip, navigate, ...props }) {
     delete tripForm.activitiesEn
     delete tripForm.facilitiesId
     delete tripForm.facilitiesEn
+    const normalizedPriceTiers = normalizePricePerPersonTiers(form.pricePerPersonTiers, form.price, form.maxCustomPax)
+    const privateStartingPrice = Math.min(...Object.values(normalizedPriceTiers).map(Number))
     await saveTrip({
       ...tripForm,
       description: {
@@ -407,7 +475,10 @@ export function TripForm({ tripId, trips, saveTrip, navigate, ...props }) {
         en: textToLines(form.facilitiesEn),
       },
       activity: form.activitiesId.trim(),
-      price: Number(form.price),
+      price: isPrivateTrip ? privateStartingPrice : Number(form.price),
+      pricePerPersonTiers: isPrivateTrip ? normalizedPriceTiers : {},
+      maxCustomPax: isPrivateTrip ? Number(form.maxCustomPax) : 0,
+      aboveMaxPaxRule: isPrivateTrip ? ABOVE_MAX_PAX_RULE : '',
       quota: isPrivateTrip ? Number(form.maxParticipants || form.quota) : Number(form.quota),
       slots: isPrivateTrip ? Number(form.maxParticipants || form.slots || form.quota) : Number(form.slots),
       minParticipants: isPrivateTrip ? Number(form.minParticipants) || 1 : 1,
@@ -475,9 +546,20 @@ export function TripForm({ tripId, trips, saveTrip, navigate, ...props }) {
               ) : (
                 <>
                   <label>Jadwal fleksibel<input disabled value="Customer memilih tanggal saat checkout" /><small>Gunakan jadwal fleksibel karena customer dapat request tanggal sendiri.</small></label>
-                  <label>Harga mulai dari / harga paket<input required type="number" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} /></label>
                   <label>Minimal peserta<input required type="number" min="1" value={form.minParticipants} onChange={(e) => setForm({ ...form, minParticipants: e.target.value })} /></label>
-                  <label>Maksimal peserta<input required type="number" min="1" value={form.maxParticipants} onChange={(e) => setForm({ ...form, maxParticipants: e.target.value, quota: e.target.value, slots: e.target.value })} /></label>
+                  <label>Maksimal peserta<input required type="number" min="1" value={form.maxParticipants} onChange={(e) => updateMaxParticipants(e.target.value)} /></label>
+                  <div className="admin-nested-fields price-tier-editor full">
+                    <h4>Harga per Orang Berdasarkan Jumlah Peserta</h4>
+                    <label className="full">Atur harga sampai berapa peserta?
+                      <input required type="number" min="1" max={Math.max(1, Number(form.maxParticipants) || 1)} value={form.maxCustomPax} onChange={(e) => updatePriceTierCount(e.target.value)} />
+                      <small>Jika jumlah peserta melebihi batas ini, sistem menggunakan harga per orang terakhir.</small>
+                    </label>
+                    {Array.from({ length: Math.max(1, Number(form.maxCustomPax) || 1) }, (_, index) => index + 1).map((pax) => (
+                      <label key={pax}>Jika {pax} peserta, harga per orang
+                        <input required type="number" min="1" value={form.pricePerPersonTiers?.[pax] ?? ''} onChange={(e) => updatePriceTier(pax, e.target.value)} />
+                      </label>
+                    ))}
+                  </div>
                   <label>Private trip bisa dipesan dari tanggal<input required type="date" value={form.availableStartDate} onChange={(e) => setForm({ ...form, availableStartDate: e.target.value })} /></label>
                   <label>Sampai tanggal<input required type="date" min={form.availableStartDate || undefined} value={form.availableEndDate} onChange={(e) => setForm({ ...form, availableEndDate: e.target.value })} /></label>
                   <label>Jumlah sesi<input required type="number" min="1" value={form.sessions.length} onChange={(e) => updateSessionCount(e.target.value)} /><small>Customer akan memilih salah satu sesi setelah memilih tanggal.</small></label>

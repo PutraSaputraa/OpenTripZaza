@@ -8,6 +8,7 @@ import { AdminDashboard, AdminSchedule, AdminTrips, AdminWorkers, TripForm } fro
 import { CustomerAccountPage, CustomerCatalog, CustomerLoginPage, CustomerSignupPage, DestinationPage, RegistrationPage, TripDetail } from './pages/UserPage'
 import { MyJobs, WorkerDashboard, WorkerJobDetail, WorkerJobs } from './pages/WorkerPage'
 import { LoginPage, NotFound } from './pages/shared'
+import { ABOVE_MAX_PAX_RULE, getPrivatePricePerPerson, normalizePricePerPersonTiers } from './utils/pricing'
 import {
   getOpenTripScheduleOptions,
   getPrivateSessionOptions,
@@ -187,6 +188,9 @@ function App() {
     const approvedRegistrations = registrations.filter((item) => item.tripId === Number(form.tripId) && (item.status === 'Disetujui' || item.status === 'Selesai'))
     const isPrivateTour = Boolean(form.isPrivateTour || trip.isPrivateTrip)
     const participantCount = isPrivateTour ? Number(form.participants) : Number(form.participants || 1)
+    if (!Number.isFinite(participantCount) || participantCount < 1) return false
+    if (isPrivateTour && participantCount < Number(trip.minParticipants || 1)) return false
+    if (isPrivateTour && participantCount > Number(trip.maxParticipants || trip.quota || participantCount)) return false
     let selectedSchedule = null
     let selectedSession = null
     let selectedDate = form.selectedDate || form.requestedDate || ''
@@ -214,6 +218,10 @@ function App() {
       ? form.addons.filter((addonId) => addonOptions.some((option) => option.id === addonId))
       : []
     const id = Date.now()
+    const hargaPerOrang = isPrivateTour
+      ? getPrivatePricePerPerson(trip, participantCount)
+      : Number(trip.price || 0)
+    const totalHarga = participantCount * hargaPerOrang
     const nextItem = {
       id,
       name: form.name,
@@ -241,6 +249,10 @@ function App() {
       participantDetails,
       addons,
       transportFrom: addons.includes('transport') ? form.transportFrom || '' : '',
+      hargaPerOrang,
+      totalHarga,
+      pricePerPerson: hargaPerOrang,
+      totalPrice: totalHarga,
       status: 'Menunggu Approval',
     }
     await Promise.all([
@@ -354,6 +366,10 @@ function App() {
       }))
       : []
     const isPrivateTrip = Boolean(trip.isPrivateTrip)
+    const maxParticipants = Number(trip.maxParticipants || trip.quota || 1)
+    const maxCustomPax = isPrivateTrip
+      ? Math.min(Math.max(1, Number(trip.maxCustomPax) || 1), Math.max(1, maxParticipants))
+      : 0
     const aggregateQuota = schedules.reduce((total, schedule) => total + Number(schedule.quota || 0), 0)
     const aggregateSlots = schedules.reduce((total, schedule) => total + Math.max(Number(schedule.quota || 0) - Number(schedule.bookedCount || 0), 0), 0)
     const normalizedTrip = {
@@ -368,8 +384,13 @@ function App() {
       slots: !isPrivateTrip && schedules.length ? aggregateSlots : Number(trip.slots),
       quota: !isPrivateTrip && schedules.length ? aggregateQuota : Number(trip.quota),
       price: Number(trip.price),
+      pricePerPersonTiers: isPrivateTrip
+        ? normalizePricePerPersonTiers(trip.pricePerPersonTiers, trip.price, maxCustomPax)
+        : {},
+      maxCustomPax,
+      aboveMaxPaxRule: isPrivateTrip ? ABOVE_MAX_PAX_RULE : '',
       minParticipants: Number(trip.minParticipants || 1),
-      maxParticipants: Number(trip.maxParticipants || trip.quota || 1),
+      maxParticipants,
     }
     if (trip.id) {
       const nextTrip = { ...normalizedTrip, id: Number(trip.id) }

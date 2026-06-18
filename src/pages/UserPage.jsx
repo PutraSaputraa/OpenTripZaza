@@ -10,12 +10,14 @@ import { addonOptions } from '../config/constants'
 import { formatCurrency, formatDate, tripName } from '../utils/formatters'
 import { getCustomerJobStatusLabel, getJobAddonLabel, getJobCompletedAt, getJobResultLink, getJobWorkerName, getNormalizedJobStatus, getRegistrationResultJobs } from '../utils/jobResults'
 import { localizedList, localizedText } from '../utils/localization'
+import { getPrivatePricePerPerson, getPrivatePriceRange, getTripStartingPrice } from '../utils/pricing'
 import { getOpenTripScheduleOptions, getPrivateDateRange, getPrivateSessionOptions, getRegistrationDate, getTripSchedules, isDateWithinPrivateRange } from '../utils/schedules'
 import { AppModal, Badge, InfoBlock, NotFound } from './shared'
 
 const useCustomerLanguage = () => {
   const { t, i18n } = useTranslation()
-  const lang = i18n.resolvedLanguage?.startsWith('en') ? 'en' : 'id'
+  const activeLanguage = i18n.language || i18n.resolvedLanguage || 'id'
+  const lang = activeLanguage.startsWith('en') ? 'en' : 'id'
   return {
     t,
     i18n,
@@ -59,8 +61,8 @@ export function PublicNav({ navigate, session, logout }) {
   const isLoggedIn = Boolean(session)
 
   const changeLanguage = (nextLang) => {
-    i18n.changeLanguage(nextLang)
     localStorage.setItem('customerLanguage', nextLang)
+    i18n.changeLanguage(nextLang)
   }
 
   useEffect(() => {
@@ -69,6 +71,28 @@ export function PublicNav({ navigate, session, logout }) {
     window.addEventListener('scroll', handleScroll, { passive: true })
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
+
+  useEffect(() => {
+    if (!isMenuOpen) return undefined
+
+    const previousOverflow = document.body.style.overflow
+    const closeOnEscape = (event) => {
+      if (event.key === 'Escape') setIsMenuOpen(false)
+    }
+    const closeOnDesktop = () => {
+      if (window.innerWidth > 760) setIsMenuOpen(false)
+    }
+
+    document.body.style.overflow = 'hidden'
+    window.addEventListener('keydown', closeOnEscape)
+    window.addEventListener('resize', closeOnDesktop)
+
+    return () => {
+      document.body.style.overflow = previousOverflow
+      window.removeEventListener('keydown', closeOnEscape)
+      window.removeEventListener('resize', closeOnDesktop)
+    }
+  }, [isMenuOpen])
 
   const goToSection = (id) => {
     setIsMenuOpen(false)
@@ -109,7 +133,15 @@ export function PublicNav({ navigate, session, logout }) {
 
   return (
     <>
-      <header className={`public-nav ${isScrolled ? 'is-scrolled' : ''}`}>
+      {isMenuOpen && (
+        <button
+          className="public-menu-backdrop"
+          type="button"
+          aria-label={t('nav.closeMenu')}
+          onClick={() => setIsMenuOpen(false)}
+        />
+      )}
+      <header className={`public-nav ${isScrolled ? 'is-scrolled' : ''} ${isMenuOpen ? 'is-menu-open' : ''}`}>
         <button className="public-nav-logo" type="button" onClick={() => goToPage('/')} aria-label="MAUA home">
           <img src={horizontalLogo} alt="MAUA" />
         </button>
@@ -122,8 +154,8 @@ export function PublicNav({ navigate, session, logout }) {
 
         <div className="public-nav-actions">
           <div className="language-switcher" aria-label="Language">
-            <button className={lang === 'id' ? 'is-active' : ''} type="button" onClick={() => changeLanguage('id')}>ID</button>
-            <button className={lang === 'en' ? 'is-active' : ''} type="button" onClick={() => changeLanguage('en')}>EN</button>
+            <button className={lang === 'id' ? 'is-active' : ''} type="button" aria-pressed={lang === 'id'} onClick={() => changeLanguage('id')}>ID</button>
+            <button className={lang === 'en' ? 'is-active' : ''} type="button" aria-pressed={lang === 'en'} onClick={() => changeLanguage('en')}>EN</button>
           </div>
           {isLoggedIn ? (
             <>
@@ -150,26 +182,31 @@ export function PublicNav({ navigate, session, logout }) {
           <span />
         </button>
 
-        <div className={`public-mobile-menu ${isMenuOpen ? 'is-open' : ''}`}>
+        <nav
+          className={`public-mobile-menu ${isMenuOpen ? 'is-open' : ''}`}
+          aria-label={t('nav.main')}
+          aria-hidden={!isMenuOpen}
+          inert={!isMenuOpen}
+        >
           <div className="language-switcher mobile-language-switcher" aria-label="Language">
-            <button className={lang === 'id' ? 'is-active' : ''} type="button" onClick={() => changeLanguage('id')}>ID</button>
-            <button className={lang === 'en' ? 'is-active' : ''} type="button" onClick={() => changeLanguage('en')}>EN</button>
+            <button className={lang === 'id' ? 'is-active' : ''} type="button" aria-pressed={lang === 'id'} onClick={() => changeLanguage('id')}>ID</button>
+            <button className={lang === 'en' ? 'is-active' : ''} type="button" aria-pressed={lang === 'en'} onClick={() => changeLanguage('en')}>EN</button>
           </div>
           <button type="button" onClick={() => goToPage('/destinasi')}>{t('nav.trip')}</button>
           <button type="button" onClick={() => goToPage('/')}>{t('nav.home')}</button>
           <button type="button" onClick={() => goToSection('faq-list')}>{t('nav.faq')}</button>
           {isLoggedIn ? (
             <>
-              <button type="button" onClick={goToAccount}>{t('nav.account')}</button>
-              <button type="button" onClick={handleLogout}>{t('nav.logout')}</button>
+              <button className="mobile-account-link" type="button" onClick={goToAccount}>{t('nav.account')}</button>
+              <button className="mobile-login-link" type="button" onClick={handleLogout}>{t('nav.logout')}</button>
             </>
           ) : (
             <>
-              <button type="button" onClick={() => goToPage('/signup')}>{t('nav.signup')}</button>
-              <button type="button" onClick={() => goToPage('/login')}>{t('nav.login')}</button>
+              <button className="mobile-signup-link" type="button" onClick={() => goToPage('/signup')}>{t('nav.signup')}</button>
+              <button className="mobile-login-link" type="button" onClick={() => goToPage('/login')}>{t('nav.login')}</button>
             </>
           )}
-        </div>
+        </nav>
       </header>
       <AppModal
         isOpen={isLogoutModalOpen}
@@ -297,7 +334,7 @@ function DestinationCarousel({ trips, navigate }) {
             <span className="trip-type-chip">{getTripTypeLabel(trip, null, t)}</span>
             <strong>{trip.name}</strong>
             <small>{getTripDestination(trip, lang)}</small>
-            <span className="destination-price">{formatCurrency(trip.price)}</span>
+            <span className="destination-price">{formatCurrency(getTripStartingPrice(trip))}</span>
           </button>
         ))}
       </div>
@@ -505,7 +542,7 @@ function TripCard({ trip, navigate }) {
           {!trip.isPrivateTrip && <div><dt><span className="asset-icon icon-ticket" aria-hidden="true" />{t('common.availableSlots')}</dt><dd>{t('common.participantCount', { count: totalSlots })}</dd></div>}
         </dl>
         <div className="trip-card-footer">
-          <div className="trip-start-price"><span>{t('common.from')}</span><strong>{formatCurrency(trip.price)}</strong></div>
+          <div className="trip-start-price"><span>{t('common.from')}</span><strong>{formatCurrency(getTripStartingPrice(trip))}</strong></div>
           <button className="text-link-btn" onClick={() => navigate(`/open-trip/${trip.id}`)}>{t('common.details')} <span aria-hidden="true">&rarr;</span></button>
         </div>
       </div>
@@ -715,6 +752,7 @@ export function TripDetail({ tripId, trips, registrations, navigate, session, lo
   if (!trip) return <NotFound navigate={navigate} />
   const scheduleOptions = trip.isPrivateTrip ? [] : getOpenTripScheduleOptions(trip, registrations)
   const privateRange = getPrivateDateRange(trip)
+  const privatePriceRange = trip.isPrivateTrip ? getPrivatePriceRange(trip) : null
   const isOpen = trip.isPrivateTrip
     ? trip.status === 'Tersedia'
     : trip.status === 'Tersedia' && scheduleOptions.some((schedule) => schedule.isSelectable)
@@ -766,8 +804,25 @@ export function TripDetail({ tripId, trips, registrations, navigate, session, lo
               )}
             </section>
             <section className="detail-side-card checkout-card">
-              <span>{t('common.from')}</span>
-              <div className="checkout-price"><strong>{formatCurrency(trip.price)}</strong><small>{t('common.perPerson')}</small></div>
+              {trip.isPrivateTrip ? (
+                <>
+                  <span>{t('common.estimatedPrice')}</span>
+                  <div className="checkout-price private-price-range">
+                    <strong>
+                      {privatePriceRange.min === privatePriceRange.max
+                        ? formatCurrency(privatePriceRange.min)
+                        : `${formatCurrency(privatePriceRange.min)} - ${formatCurrency(privatePriceRange.max)}`}
+                    </strong>
+                    <small>{t('common.perPerson')}</small>
+                  </div>
+                  <p className="price-range-note">{t('common.dependsOnParticipants')}</p>
+                </>
+              ) : (
+                <>
+                  <span>{t('common.from')}</span>
+                  <div className="checkout-price"><strong>{formatCurrency(getTripStartingPrice(trip))}</strong><small>{t('common.perPerson')}</small></div>
+                </>
+              )}
               <button className="primary-btn wide" disabled={!isOpen} onClick={startCheckout}>
                 {isOpen ? t('common.checkout') : t('common.closed')}
               </button>
@@ -798,7 +853,7 @@ export function RegistrationPage({ tripId, trips, submitRegistration, navigate, 
     name: session?.role === 'customer' ? session.name : '',
     whatsapp: session?.whatsapp || customerProfile.whatsapp || '',
     email: session?.role === 'customer' ? session.email : '',
-    participants: trip?.isPrivateTrip ? 2 : 1,
+    participants: trip?.isPrivateTrip ? Number(trip.minParticipants) || 1 : 1,
     requestedDate: '',
     scheduleId: '',
     sessionId: '',
@@ -819,9 +874,12 @@ export function RegistrationPage({ tripId, trips, submitRegistration, navigate, 
   const sessionOptions = selectedTrip?.isPrivateTrip && isPrivateDateInRange ? getPrivateSessionOptions(selectedTrip, registrations, form.requestedDate) : []
   const selectedSession = sessionOptions.find((sessionItem) => sessionItem.id === form.sessionId)
   const participants = Number(form.participants) || 1
-  const estimatedTotal = selectedTrip ? selectedTrip.price * participants : 0
   const isPrivateTrip = Boolean(selectedTrip?.isPrivateTrip)
   const isPrivateBooking = isPrivateTrip || form.isPrivateTour
+  const pricePerPerson = selectedTrip
+    ? isPrivateBooking ? getPrivatePricePerPerson(selectedTrip, participants) : Number(selectedTrip.price || 0)
+    : 0
+  const estimatedTotal = participants * pricePerPerson
 
   if (!trip) return <NotFound navigate={navigate} />
 
@@ -857,6 +915,20 @@ export function RegistrationPage({ tripId, trips, submitRegistration, navigate, 
       setError(t('error.sessionUnavailable'))
       return
     }
+    if (isPrivateBooking && participants < Number(selectedTrip.minParticipants || 1)) {
+      setError(t('error.participantRange', {
+        min: selectedTrip.minParticipants || 1,
+        max: selectedTrip.maxParticipants || selectedTrip.quota || participants,
+      }))
+      return
+    }
+    if (isPrivateBooking && participants > Number(selectedTrip.maxParticipants || selectedTrip.quota || participants)) {
+      setError(t('error.participantRange', {
+        min: selectedTrip.minParticipants || 1,
+        max: selectedTrip.maxParticipants || selectedTrip.quota || participants,
+      }))
+      return
+    }
     if (form.addons.includes('transport') && !form.transportFrom.trim()) {
       setError(t('error.pickupRequired'))
       return
@@ -872,6 +944,8 @@ export function RegistrationPage({ tripId, trips, submitRegistration, navigate, 
       sessionName: isPrivateBooking ? selectedSession.name : '',
       startTime: isPrivateBooking ? selectedSession.startTime : '',
       endTime: isPrivateBooking ? selectedSession.endTime : '',
+      hargaPerOrang: pricePerPerson,
+      totalHarga: estimatedTotal,
     })
     setError('')
   }
@@ -929,10 +1003,11 @@ export function RegistrationPage({ tripId, trips, submitRegistration, navigate, 
               <dl className="summary-list">
                 <div><dt><span className="asset-icon icon-calendar" aria-hidden="true" />{t('common.date')}</dt><dd>{isPrivateBooking ? form.requestedDate ? formatDate(form.requestedDate, dateLocale) : t('common.chooseDate') : selectedSchedule ? formatDate(selectedSchedule.date, dateLocale) : t('schedule.chooseSchedule')}</dd></div>
                 {isPrivateBooking && selectedSession && <div><dt>{t('schedule.session')}</dt><dd>{getSessionLabel(selectedSession, t)}</dd></div>}
-                <div><dt><span className="asset-icon icon-currency" aria-hidden="true" />{t('common.price')}</dt><dd>{formatCurrency(selectedTrip.price)} {t('common.perPerson')}</dd></div>
+                <div><dt>{t('checkout.participantTotal')}</dt><dd>{t('common.participantCount', { count: participants })}</dd></div>
+                <div><dt><span className="asset-icon icon-currency" aria-hidden="true" />{t('common.pricePerPerson')}</dt><dd>{formatCurrency(pricePerPerson)}</dd></div>
                 {!isPrivateBooking && <div><dt><span className="asset-icon icon-ticket" aria-hidden="true" />{t('common.availableSlots')}</dt><dd>{selectedSchedule ? t('common.participantCount', { count: selectedSchedule.remaining }) : '-'}</dd></div>}
                 <div><dt>{t('common.type')}</dt><dd>{getTripTypeLabel(selectedTrip, { isPrivateTour: isPrivateBooking }, t)}</dd></div>
-                <div><dt>{t('common.totalEstimate')}</dt><dd>{formatCurrency(estimatedTotal)}</dd></div>
+                <div><dt>{t('common.totalPrice')}</dt><dd>{formatCurrency(estimatedTotal)}</dd></div>
               </dl>
             </div>
           </aside>
@@ -970,7 +1045,7 @@ export function RegistrationPage({ tripId, trips, submitRegistration, navigate, 
               )}
               {isPrivateBooking && (
                 <>
-                  <label>{t('checkout.participantTotal')}<input type="number" min="1" value={form.participants} onChange={(e) => updateParticipantCount(e.target.value)} /></label>
+                  <label>{t('checkout.participantTotal')}<input type="number" min={selectedTrip.minParticipants || 1} max={selectedTrip.maxParticipants || selectedTrip.quota || undefined} value={form.participants} onChange={(e) => updateParticipantCount(e.target.value)} /></label>
                   <label>{t('checkout.privateDate')}<input type="date" min={privateRange.startDate || undefined} max={privateRange.endDate || undefined} value={form.requestedDate} onChange={(e) => setForm({ ...form, requestedDate: e.target.value, sessionId: '' })} />{(privateRange.startDate || privateRange.endDate) && <small>{t('schedule.availableRange')}: {privateRange.startDate ? formatDate(privateRange.startDate, dateLocale) : '-'} - {privateRange.endDate ? formatDate(privateRange.endDate, dateLocale) : '-'}</small>}</label>
                   <label className="full">{t('schedule.session')}<select required value={form.sessionId} disabled={!form.requestedDate || !isPrivateDateInRange} onChange={(e) => setForm({ ...form, sessionId: e.target.value })}>
                     <option value="">{!form.requestedDate ? t('schedule.chooseDateFirst') : !isPrivateDateInRange ? t('schedule.dateUnavailable') : t('schedule.chooseSession')}</option>
@@ -1030,7 +1105,7 @@ export function RegistrationPage({ tripId, trips, submitRegistration, navigate, 
 
             <div className="registration-submit">
               <div>
-                <span>{t('common.totalEstimate')}</span>
+                <span>{t('common.totalPrice')}</span>
                 <strong>{formatCurrency(estimatedTotal)}</strong>
               </div>
               <button className="primary-btn" type="submit">{t('checkout.submit')}</button>
@@ -1125,7 +1200,7 @@ export function CustomerAccountPage({ registrations, trips, jobs = [], navigate,
         <section className="account-registration-list">
           {visibleRegistrations.length ? visibleRegistrations.map((item) => {
             const trip = trips.find((tripItem) => tripItem.id === item.tripId)
-            const totalPrice = trip ? Number(trip.price || 0) * Number(item.participants || 1) : 0
+            const totalPrice = Number(item.totalHarga ?? item.totalPrice ?? (trip ? Number(trip.price || 0) * Number(item.participants || 1) : 0))
             const registrationDate = getRegistrationDate(item)
             const workResults = getRegistrationResultJobs(jobs, item)
             return (
@@ -1142,7 +1217,7 @@ export function CustomerAccountPage({ registrations, trips, jobs = [], navigate,
                   {(item.tripType === 'private' || item.isPrivateTrip || item.isPrivateTour) && item.sessionName && <div><dt>{t('schedule.session')}</dt><dd>{item.sessionName}{item.startTime && item.endTime ? ` (${item.startTime} - ${item.endTime})` : ''}</dd></div>}
                   <div><dt>{t('common.type')}</dt><dd>{getTripTypeLabel(trip, item, t)}</dd></div>
                   <div><dt><span className="asset-icon icon-people" aria-hidden="true" />{t('common.participants')}</dt><dd>{t('common.participantCount', { count: item.participants })}</dd></div>
-                  <div><dt>{t('common.totalPrice')}</dt><dd>{trip ? formatCurrency(totalPrice) : '-'}</dd></div>
+                  <div><dt>{t('common.totalPrice')}</dt><dd>{trip || item.totalHarga != null || item.totalPrice != null ? formatCurrency(totalPrice) : '-'}</dd></div>
                   <div><dt>{t('common.bookingCode')}</dt><dd>MAUA-{item.id}</dd></div>
                 </dl>
                 <CustomerWorkResults jobs={workResults} t={t} dateLocale={dateLocale} compact />
