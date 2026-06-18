@@ -223,6 +223,7 @@ function App() {
       participantCount: isPrivateTour ? participantCount : 1,
       tripId: Number(form.tripId),
       tripType: isPrivateTour ? 'private' : 'open',
+      experienceType: trip.experienceType === 'custom' ? 'custom' : 'cave',
       notes: form.notes || '-',
       isPrivateTour,
       isPrivateTrip: Boolean(trip.isPrivateTrip),
@@ -358,6 +359,7 @@ function App() {
     const normalizedTrip = {
       ...trip,
       type: isPrivateTrip ? 'private' : 'open',
+      experienceType: trip.experienceType === 'custom' ? 'custom' : 'cave',
       schedules: isPrivateTrip ? [] : schedules,
       sessions: isPrivateTrip ? sessions : [],
       availableStartDate: isPrivateTrip ? trip.availableStartDate || '' : '',

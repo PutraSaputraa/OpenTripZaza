@@ -29,10 +29,15 @@ const getTripDestination = (trip, lang) => localizedText(trip?.destination, lang
 const getTripDescription = (trip, lang) => localizedText(trip?.description, lang)
 const getTripActivities = (trip, lang) => localizedList(trip?.activities ?? trip?.activity ?? trip?.itinerary ?? trip?.itineraryDays, lang)
 const getTripFacilities = (trip, lang) => localizedList(trip?.facilities, lang)
+const isCustomExperience = (trip) => trip?.experienceType === 'custom'
 const getTripTypeLabel = (trip, registration, t) => {
-  if (trip?.isPrivateTrip || registration?.isPrivateTrip || registration?.isPrivateTour) return t('tripType.private')
-  return t('tripType.open')
+  const isPrivate = trip?.isPrivateTrip || registration?.isPrivateTrip || registration?.isPrivateTour || registration?.tripType === 'private'
+  const isCustom = trip?.experienceType === 'custom' || registration?.experienceType === 'custom'
+  if (isCustom) return isPrivate ? t('tripType.customPrivate') : t('tripType.customOpen')
+  return isPrivate ? t('tripType.private') : t('tripType.open')
 }
+const getTripCardTypeLabel = (trip, t) => trip?.isPrivateTrip ? t('tripType.cardPrivate') : t('tripType.cardOpen')
+const getTripCategoryLabel = (trip, t) => isCustomExperience(trip) ? t('tripCategory.custom') : t('tripCategory.cave')
 const getScheduleLabel = (schedule, dateLocale, t) => {
   const dateText = formatDate(schedule.date, dateLocale)
   if (schedule.status === 'full' || schedule.remaining <= 0) return `${dateText} - ${t('schedule.full')}`
@@ -350,10 +355,11 @@ function TestimonialCarousel() {
 
 export function CustomerCatalog({ trips, navigate, session, logout }) {
   const { t } = useCustomerLanguage()
-  const openTrips = trips.filter((trip) => !trip.isPrivateTrip)
-  const privateTrips = trips.filter((trip) => trip.isPrivateTrip)
-  const featuredTrips = [...openTrips, ...privateTrips]
+  const featuredTrips = trips
   const faqs = t('faqs', { returnObjects: true })
+  const openCaveTrips = trips.filter((trip) => !isCustomExperience(trip) && !trip.isPrivateTrip)
+  const privateCaveTrips = trips.filter((trip) => !isCustomExperience(trip) && trip.isPrivateTrip)
+  const otherTrips = trips.filter((trip) => isCustomExperience(trip))
 
   useEffect(() => {
     const elements = document.querySelectorAll('.reveal-on-scroll')
@@ -368,7 +374,7 @@ export function CustomerCatalog({ trips, navigate, session, logout }) {
 
     elements.forEach((element) => observer.observe(element))
     return () => observer.disconnect()
-  }, [openTrips.length, privateTrips.length])
+  }, [openCaveTrips.length, privateCaveTrips.length, otherTrips.length])
 
   return (
     <main className="public-page home-page">
@@ -385,27 +391,52 @@ export function CustomerCatalog({ trips, navigate, session, logout }) {
         <DestinationCarousel trips={featuredTrips} navigate={navigate} />
       </section>
 
-      <section className="section-head" id="open-trip-list">
-        <div>
-          <p className="eyebrow">{t('catalog.openEyebrow')}</p>
-          <h2>{t('catalog.openTitle')}</h2>
-        </div>
-      </section>
+      <div className="catalog-section-list">
+        {openCaveTrips.length > 0 && (
+          <section className="catalog-trip-section" id="open-trip-list">
+            <div className="section-head compact-section-head">
+              <div>
+                <p className="eyebrow">{t('catalog.openEyebrow')}</p>
+                <h2>{t('catalog.openTitle')}</h2>
+              </div>
+              <span>{openCaveTrips.length} {t('catalog.packageCount')}</span>
+            </div>
+            <div className="trip-grid catalog-trip-grid">
+              {openCaveTrips.map((trip) => <TripCard key={trip.id} trip={trip} navigate={navigate} />)}
+            </div>
+          </section>
+        )}
 
-      <section className="trip-grid">
-        {openTrips.length ? openTrips.map((trip) => <TripCard key={trip.id} trip={trip} navigate={navigate} />) : <p className="empty-state">{t('catalog.openEmpty')}</p>}
-      </section>
+        {privateCaveTrips.length > 0 && (
+          <section className="catalog-trip-section">
+            <div className="section-head compact-section-head">
+              <div>
+                <p className="eyebrow">{t('catalog.privateEyebrow')}</p>
+                <h2>{t('catalog.privateTitle')}</h2>
+              </div>
+              <span>{privateCaveTrips.length} {t('catalog.packageCount')}</span>
+            </div>
+            <div className="trip-grid catalog-trip-grid">
+              {privateCaveTrips.map((trip) => <TripCard key={trip.id} trip={trip} navigate={navigate} />)}
+            </div>
+          </section>
+        )}
 
-      <section className="section-head compact-section-head">
-        <div>
-          <p className="eyebrow">{t('catalog.privateEyebrow')}</p>
-          <h2>{t('catalog.privateTitle')}</h2>
-        </div>
-      </section>
-
-      <section className="trip-grid">
-        {privateTrips.length ? privateTrips.map((trip) => <TripCard key={trip.id} trip={trip} navigate={navigate} />) : <p className="empty-state">{t('catalog.privateEmpty')}</p>}
-      </section>
+        {otherTrips.length > 0 && (
+          <section className="catalog-trip-section">
+            <div className="section-head compact-section-head">
+              <div>
+                <p className="eyebrow">{t('catalog.otherEyebrow')}</p>
+                <h2>{t('catalog.otherTitle')}</h2>
+              </div>
+              <span>{otherTrips.length} {t('catalog.packageCount')}</span>
+            </div>
+            <div className="trip-grid catalog-trip-grid">
+              {otherTrips.map((trip) => <TripCard key={trip.id} trip={trip} navigate={navigate} />)}
+            </div>
+          </section>
+        )}
+      </div>
 
       <section className="section-head compact-section-head" id="testimoni-list">
         <div>
@@ -447,8 +478,11 @@ export function CustomerCatalog({ trips, navigate, session, logout }) {
 
 function TripCard({ trip, navigate }) {
   const { t, lang, dateLocale } = useCustomerLanguage()
-  const typeLabel = getTripTypeLabel(trip, null, t)
+  const typeLabel = getTripCardTypeLabel(trip, t)
+  const categoryLabel = getTripCategoryLabel(trip, t)
   const schedules = !trip.isPrivateTrip ? getTripSchedules(trip) : []
+  const privateRange = trip.isPrivateTrip ? getPrivateDateRange(trip) : { startDate: '', endDate: '' }
+  const hasPrivateRange = Boolean(privateRange.startDate || privateRange.endDate)
   const totalSlots = schedules.length
     ? schedules.reduce((total, schedule) => total + Math.max(Number(schedule.quota || 0) - Number(schedule.bookedCount || 0), 0), 0)
     : Number(trip.slots || 0)
@@ -460,12 +494,14 @@ function TripCard({ trip, navigate }) {
         <div className="card-title-row">
           <h3>{trip.name}</h3>
           <div className="card-badge-stack">
-            <span className="trip-type-chip">{typeLabel}</span>
+            <span className={`trip-type-chip ${trip.isPrivateTrip ? 'is-private' : 'is-open'}`}>{typeLabel}</span>
+            <span className={`trip-category-chip ${isCustomExperience(trip) ? 'is-custom' : 'is-cave'}`}>{categoryLabel}</span>
           </div>
         </div>
         <p className="icon-line"><span className="asset-icon icon-geo" aria-hidden="true" />{getTripDestination(trip, lang)}</p>
         <dl>
-          <div><dt><span className="asset-icon icon-calendar" aria-hidden="true" />{t('common.date')}</dt><dd>{!trip.isPrivateTrip && schedules.length > 1 ? t('schedule.optionCount', { count: schedules.length }) : formatDate(trip.date, dateLocale)}</dd></div>
+          <div><dt><span className="asset-icon icon-calendar" aria-hidden="true" />{trip.isPrivateTrip ? t('schedule.schedule') : t('common.date')}</dt><dd>{trip.isPrivateTrip ? t('schedule.flexibleBooking') : schedules.length > 1 ? t('schedule.optionCount', { count: schedules.length }) : formatDate(trip.date, dateLocale)}</dd></div>
+          {trip.isPrivateTrip && hasPrivateRange && <div className="trip-card-booking-range"><dt>{t('schedule.availableRange')}</dt><dd>{privateRange.startDate ? formatDate(privateRange.startDate, dateLocale) : '-'} - {privateRange.endDate ? formatDate(privateRange.endDate, dateLocale) : '-'}</dd></div>}
           {!trip.isPrivateTrip && <div><dt><span className="asset-icon icon-ticket" aria-hidden="true" />{t('common.availableSlots')}</dt><dd>{t('common.participantCount', { count: totalSlots })}</dd></div>}
         </dl>
         <div className="trip-card-footer">
@@ -495,9 +531,24 @@ function TripVisual({ trip, large }) {
 
 export function DestinationPage({ path, trips, navigate, session, logout }) {
   const { t, lang } = useCustomerLanguage()
+  const [activeFilter, setActiveFilter] = useState('all')
   const searchParams = new URLSearchParams(path.split('?')[1] || '')
   const initialSearch = searchParams.get('search') || ''
-  const visibleTrips = filterTripsBySearch(trips, initialSearch, lang)
+  const searchedTrips = filterTripsBySearch(trips, initialSearch, lang)
+  const visibleTrips = searchedTrips.filter((trip) => {
+    if (activeFilter === 'open') return !trip.isPrivateTrip
+    if (activeFilter === 'private') return trip.isPrivateTrip
+    if (activeFilter === 'cave') return !isCustomExperience(trip)
+    if (activeFilter === 'custom') return isCustomExperience(trip)
+    return true
+  })
+  const filterOptions = [
+    ['all', t('catalog.filterAll')],
+    ['open', t('catalog.filterOpen')],
+    ['private', t('catalog.filterPrivate')],
+    ['cave', t('catalog.filterCave')],
+    ['custom', t('catalog.filterCustom')],
+  ]
 
   useEffect(() => {
     const elements = document.querySelectorAll('.reveal-on-scroll')
@@ -518,16 +569,27 @@ export function DestinationPage({ path, trips, navigate, session, logout }) {
     <main className="public-page">
       <PublicNav navigate={navigate} session={session} logout={logout} />
       <section className="destination-page">
-        <div className="destination-page-head">
-          <div>
-            <p className="eyebrow">{t('destination.eyebrow')}</p>
-            <h1>{t('destination.title')}</h1>
+        <section className="destination-toolbar">
+          <div className="destination-page-head">
+            <div>
+              <p className="eyebrow">{t('destination.eyebrow')}</p>
+              <h1>{t('destination.title')}</h1>
+              <p className="destination-subtitle">{t('destination.subtitle')}</p>
+            </div>
+            <SearchTripForm key={initialSearch} navigate={navigate} initialValue={initialSearch} />
           </div>
-          <SearchTripForm key={initialSearch} navigate={navigate} initialValue={initialSearch} />
-        </div>
+
+          <div className="destination-filter-chips catalog-filter-chips" role="tablist" aria-label={t('catalog.filterLabel')}>
+            {filterOptions.map(([value, label]) => (
+              <button className={activeFilter === value ? 'is-active' : ''} key={value} onClick={() => setActiveFilter(value)} type="button" role="tab" aria-selected={activeFilter === value}>
+                {label}
+              </button>
+            ))}
+          </div>
+        </section>
 
         <section className="trip-grid destination-grid">
-          {visibleTrips.length ? visibleTrips.map((trip) => <TripCard key={trip.id} trip={trip} navigate={navigate} />) : <p className="empty-state">{t('destination.notFound')}</p>}
+          {visibleTrips.length ? visibleTrips.map((trip) => <TripCard key={trip.id} trip={trip} navigate={navigate} />) : <p className="empty-state destination-empty-state">{t('destination.filterEmpty')}</p>}
         </section>
       </section>
     </main>

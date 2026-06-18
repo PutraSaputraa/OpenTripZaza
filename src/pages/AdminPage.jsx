@@ -13,6 +13,12 @@ const parseImageUrls = (value) => String(value || '')
 
 const adminText = (value) => localizedText(value, 'id') || '-'
 const adminListText = (value) => localizedList(value, 'id').join(', ')
+const getExperienceType = (trip) => trip?.experienceType === 'custom' ? 'custom' : 'cave'
+const getExperienceLabel = (trip) => getExperienceType(trip) === 'custom' ? 'Wisata / Kegiatan' : 'Wisata Goa'
+const getAdminTripTypeLabel = (trip) => {
+  if (getExperienceType(trip) === 'custom') return trip?.isPrivateTrip ? 'Private' : 'Open'
+  return trip?.isPrivateTrip ? 'Private Trip' : 'Open Trip'
+}
 const newSchedule = (index, source = {}) => ({
   id: source.id || `schedule_${index + 1}`,
   date: source.date || '',
@@ -60,6 +66,7 @@ const normalizeTripForm = (trip) => {
     privateNotes: '',
     flexibleSchedule: true,
     isPrivateTrip: false,
+    experienceType: 'cave',
     imageUrl: '',
     imageUrls: [],
     status: 'Tersedia',
@@ -81,9 +88,9 @@ const normalizeTripForm = (trip) => {
 }
 
 const registrationTripType = (item) => {
-  if (item.isPrivateTrip) return 'Private cave tour'
-  if (item.isPrivateTour) return 'Private cave tour'
-  return 'Open trip goa'
+  const isPrivate = item.isPrivateTrip || item.isPrivateTour || item.tripType === 'private'
+  if (item.experienceType === 'custom') return isPrivate ? 'Private' : 'Open'
+  return isPrivate ? 'Private cave tour' : 'Open trip goa'
 }
 
 const getSelectedAddons = (registration) => {
@@ -157,6 +164,8 @@ export function AdminDashboard(props) {
 
 export function AdminTrips(props) {
   const [activeType, setActiveType] = useState('all')
+  const [activeCategory, setActiveCategory] = useState('all')
+  const [activeStatus, setActiveStatus] = useState('all')
   const [search, setSearch] = useState('')
   const [tripToDelete, setTripToDelete] = useState(null)
   const searchTerm = search.trim().toLowerCase()
@@ -166,6 +175,8 @@ export function AdminTrips(props) {
       if (activeType === 'private') return trip.isPrivateTrip
       return true
     })
+    .filter((trip) => activeCategory === 'all' || getExperienceType(trip) === activeCategory)
+    .filter((trip) => activeStatus === 'all' || trip.status === activeStatus)
     .filter((trip) => {
       if (!searchTerm) return true
       return [trip.name, adminText(trip.destination), adminText(trip.description), adminListText(trip.activities), adminListText(trip.facilities)]
@@ -179,6 +190,11 @@ export function AdminTrips(props) {
     ['open', 'Open Trip', props.trips.filter((trip) => !trip.isPrivateTrip).length],
     ['private', 'Private Trip', props.trips.filter((trip) => trip.isPrivateTrip).length],
   ]
+  const categoryTabs = [
+    ['all', 'Semua kategori', props.trips.length],
+    ['cave', 'Wisata Goa', props.trips.filter((trip) => getExperienceType(trip) === 'cave').length],
+    ['custom', 'Wisata / Kegiatan', props.trips.filter((trip) => getExperienceType(trip) === 'custom').length],
+  ]
   const confirmDeleteTrip = async () => {
     if (!tripToDelete) return
     await props.deleteTrip(tripToDelete.id)
@@ -191,24 +207,42 @@ export function AdminTrips(props) {
         <div className="admin-page-head">
           <div>
             <p className="eyebrow">Katalog trip</p>
-            <h2>Kelola paket Open Trip dan Private Trip dari satu tempat.</h2>
-            <p className="muted">Filter jenis trip, cek status, lalu update paket yang tampil untuk customer.</p>
+            <h2>Kelola Paket Trip</h2>
+            <p className="muted">Kelola paket Open Trip dan Private Trip yang tampil untuk customer.</p>
           </div>
-          <button className="primary-btn" onClick={() => props.navigate('/admin/open-trip/tambah')}>Tambah paket trip</button>
+          <button className="primary-btn admin-add-trip-btn" onClick={() => props.navigate('/admin/open-trip/tambah')}>Tambah Paket</button>
         </div>
 
         <section className="admin-list-toolbar">
-          <div className="segmented-tabs compact-tabs" role="tablist" aria-label="Filter jenis paket trip">
-            {typeTabs.map(([value, label, count]) => (
-              <button className={activeType === value ? 'is-active' : ''} key={value} type="button" onClick={() => setActiveType(value)}>
-                {label}<span>{count}</span>
-              </button>
-            ))}
-          </div>
           <label className="admin-search-field">
             <span>Cari paket</span>
             <input placeholder="Nama trip, destinasi, atau deskripsi" value={search} onChange={(event) => setSearch(event.target.value)} />
           </label>
+          <div className="admin-filter-groups">
+            <div className="admin-trip-type-filter">
+              <span className="admin-filter-label">Tipe</span>
+              <div className="segmented-tabs compact-tabs" role="tablist" aria-label="Filter jenis paket">
+              {typeTabs.map(([value, label, count]) => (
+                <button className={activeType === value ? 'is-active' : ''} key={value} type="button" onClick={() => setActiveType(value)}>
+                  {label}<span>{count}</span>
+                </button>
+              ))}
+              </div>
+            </div>
+            <label className="admin-compact-filter">
+              <span>Kategori</span>
+              <select value={activeCategory} onChange={(event) => setActiveCategory(event.target.value)}>
+                {categoryTabs.map(([value, label, count]) => <option value={value} key={value}>{label} ({count})</option>)}
+              </select>
+            </label>
+            <label className="admin-compact-filter">
+              <span>Status</span>
+              <select value={activeStatus} onChange={(event) => setActiveStatus(event.target.value)}>
+                <option value="all">Semua Status</option>
+                {tripStatuses.map((status) => <option value={status} key={status}>{status}</option>)}
+              </select>
+            </label>
+          </div>
         </section>
 
         <div className="admin-trip-grid">
@@ -217,19 +251,22 @@ export function AdminTrips(props) {
               const schedules = !trip.isPrivateTrip ? getTripSchedules(trip) : []
               const remainingSlots = schedules.reduce((total, schedule) => total + Math.max(Number(schedule.quota || 0) - Number(schedule.bookedCount || 0), 0), 0)
               return (
-              <article className="admin-trip-card" key={trip.id}>
+              <article className={`admin-trip-card ${trip.isPrivateTrip ? 'is-private' : 'is-open'}`} key={trip.id}>
                 <div className="admin-trip-card-head">
                   <div>
                     <h3>{trip.name}</h3>
-                    <p className="icon-line"><span className="asset-icon icon-geo" aria-hidden="true" />{adminText(trip.destination)}</p>
                   </div>
                   <div className="card-badge-stack">
-                    <span className="trip-type-chip">{trip.isPrivateTrip ? 'Private Trip' : 'Open Trip'}</span>
+                    <span className="trip-type-chip">{getAdminTripTypeLabel(trip)}</span>
                     <Badge status={trip.status} />
                   </div>
                 </div>
+                <div className="admin-trip-subline">
+                  <p className="icon-line"><span className="asset-icon icon-geo" aria-hidden="true" />{adminText(trip.destination)}</p>
+                  <span className="admin-trip-category">{getExperienceLabel(trip)}</span>
+                </div>
                 <div className="admin-trip-price">
-                  <span><span className="asset-icon icon-currency" aria-hidden="true" />{trip.isPrivateTrip ? 'Mulai dari' : 'Harga per orang'}</span>
+                  <span>{trip.isPrivateTrip ? 'Mulai dari' : 'Harga per orang'}</span>
                   <strong>{formatCurrency(trip.price)}</strong>
                 </div>
                 <dl className="admin-trip-meta">
@@ -241,16 +278,16 @@ export function AdminTrips(props) {
                 </dl>
                 {!trip.isPrivateTrip && schedules.length > 0 && (
                   <div className="admin-schedule-mini-list">
-                    {schedules.slice(0, 3).map((schedule) => (
-                      <span key={schedule.id}>{formatDate(schedule.date)} - {schedule.bookedCount || 0}/{schedule.quota}</span>
+                    {schedules.slice(0, 2).map((schedule) => (
+                      <span key={schedule.id}><strong>{formatDate(schedule.date)}</strong><small>{schedule.bookedCount || 0}/{schedule.quota} peserta</small></span>
                     ))}
-                    {schedules.length > 3 && <span>+{schedules.length - 3} jadwal lainnya</span>}
+                    {schedules.length > 2 && <p>+{schedules.length - 2} jadwal lainnya</p>}
                   </div>
                 )}
                 <div className="admin-trip-actions">
-                  <button className="outline-btn" onClick={() => props.navigate(`/admin/jadwal/${trip.id}`)}>Detail</button>
-                  <button className="outline-btn" onClick={() => props.navigate(`/admin/open-trip/edit/${trip.id}`)}>Edit</button>
-                  <button className="outline-btn danger-btn" onClick={() => setTripToDelete(trip)}>Hapus</button>
+                  <button className="outline-btn compact-action-btn" onClick={() => props.navigate(`/admin/jadwal/${trip.id}`)}>Detail</button>
+                  <button className="outline-btn compact-action-btn" onClick={() => props.navigate(`/admin/open-trip/edit/${trip.id}`)}>Edit</button>
+                  <button className="outline-btn compact-action-btn danger-btn" onClick={() => setTripToDelete(trip)}>Hapus</button>
                 </div>
               </article>
               )
@@ -408,6 +445,7 @@ export function TripForm({ tripId, trips, saveTrip, navigate, ...props }) {
             <div className="data-form section-fields">
               <label>{isPrivateTrip ? 'Nama private trip' : 'Nama trip'}<input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></label>
               <label>Jenis trip<select value={isPrivateTrip ? 'private' : 'open'} onChange={(e) => setForm({ ...form, isPrivateTrip: e.target.value === 'private' })}><option value="open">Open Trip</option><option value="private">Private Trip</option></select><small>{isPrivateTrip ? 'Private Trip menerima request tanggal dari customer.' : 'Open Trip memakai tanggal keberangkatan tetap.'}</small></label>
+              <label>Kategori paket<select value={getExperienceType(form)} onChange={(e) => setForm({ ...form, experienceType: e.target.value })}><option value="cave">Wisata Goa</option><option value="custom">Wisata / Kegiatan (Non-Goa)</option></select><small>Paket custom memakai isi dan alur pemesanan yang sama, tetapi dapat digunakan untuk wisata atau kegiatan selain goa.</small></label>
               <label>Destinasi Indonesia<input required value={form.destinationId} onChange={(e) => setForm({ ...form, destinationId: e.target.value })} /></label>
               <label>Destinasi English<input value={form.destinationEn} onChange={(e) => setForm({ ...form, destinationEn: e.target.value })} /></label>
               <label>Status<select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>{tripStatuses.map((status) => <option key={status}>{status}</option>)}</select></label>
@@ -476,7 +514,7 @@ export function TripForm({ tripId, trips, saveTrip, navigate, ...props }) {
             <div className="data-form section-fields">
               <label className="full">Deskripsi Indonesia<textarea required value={form.descriptionId} onChange={(e) => setForm({ ...form, descriptionId: e.target.value })} /></label>
               <label className="full">Deskripsi English<textarea value={form.descriptionEn} onChange={(e) => setForm({ ...form, descriptionEn: e.target.value })} /></label>
-              <label className="full">Aktivitas Indonesia<textarea required placeholder="Contoh: briefing keselamatan, eksplor lorong goa, cave tubing, sesi foto, dan kembali ke meeting point." value={form.activitiesId} onChange={(e) => setForm({ ...form, activitiesId: e.target.value })} /></label>
+              <label className="full">Aktivitas Indonesia<textarea required placeholder={getExperienceType(form) === 'custom' ? 'Contoh: briefing, aktivitas utama, istirahat, sesi dokumentasi, dan kembali ke meeting point.' : 'Contoh: briefing keselamatan, eksplor lorong goa, cave tubing, sesi foto, dan kembali ke meeting point.'} value={form.activitiesId} onChange={(e) => setForm({ ...form, activitiesId: e.target.value })} /></label>
               <label className="full">Aktivitas English<textarea placeholder="One activity per line." value={form.activitiesEn} onChange={(e) => setForm({ ...form, activitiesEn: e.target.value })} /></label>
               <label className="full">Fasilitas Indonesia<textarea required value={form.facilitiesId} onChange={(e) => setForm({ ...form, facilitiesId: e.target.value })} /></label>
               <label className="full">Fasilitas English<textarea value={form.facilitiesEn} onChange={(e) => setForm({ ...form, facilitiesEn: e.target.value })} /></label>
@@ -516,7 +554,7 @@ function RegistrationTable({ registrations, trips, setRegistrationStatus, compac
   return (
     <div className="table-wrap">
       <table>
-        <thead><tr><th>Customer</th><th>Kontak</th><th>Peserta</th><th>Cave trip</th><th>Tanggal / sesi</th><th>Data utama</th><th>Add-on</th><th>Catatan</th><th>Status</th></tr></thead>
+        <thead><tr><th>Customer</th><th>Kontak</th><th>Peserta</th><th>Paket</th><th>Tanggal / sesi</th><th>Data utama</th><th>Add-on</th><th>Catatan</th><th>Status</th></tr></thead>
         <tbody>{rows.map((item) => (
           <tr key={item.id}>
             <td>{item.name}</td><td>{item.whatsapp}<br />{item.email}</td><td>{item.participants}</td><td>{tripName(trips, item.tripId)}</td><td>{formatDate(getRegistrationDate(item) || trips.find((trip) => trip.id === item.tripId)?.date)}{item.sessionName ? <><br />{item.sessionName}{item.startTime && item.endTime ? ` (${item.startTime} - ${item.endTime})` : ''}</> : null}</td><td>{item.address || '-'}<br />{item.age ? `${item.age} tahun` : '-'} - {item.gender || '-'}<br />{item.healthNotes || '-'}</td><td>{getSelectedAddons(item).join(', ') || '-'}</td><td>{item.notes}</td>
@@ -739,7 +777,7 @@ export function AdminSchedule(props) {
                   </div>
                   <div className="card-badge-stack">
                     {pendingCount > 0 && <span className="review-badge">Butuh Review</span>}
-                    <span className="trip-type-chip">Private Trip</span>
+                    <span className="trip-type-chip">{getAdminTripTypeLabel(trip)}</span>
                     <Badge status={trip.status} />
                   </div>
                 </div>
@@ -1239,7 +1277,7 @@ function RegistrationDetailModal({ item, trip, jobs = [], setRegistrationStatus,
           <section>
             <h3>Detail Trip</h3>
             <dl>
-              <div><dt>Cave trip</dt><dd>{trip.name}</dd></div>
+              <div><dt>Paket</dt><dd>{trip.name}</dd></div>
               <div><dt>Jenis</dt><dd>{registrationTripType(item)}</dd></div>
               <div><dt>Tanggal</dt><dd>{formatDate(registrationDate)}</dd></div>
               {item.sessionName && <div><dt>Sesi</dt><dd>{item.sessionName}{item.startTime && item.endTime ? ` (${item.startTime} - ${item.endTime})` : ''}</dd></div>}
@@ -1396,7 +1434,7 @@ export function JobTable({ jobs, trips, compact }) {
   return (
     <div className="table-wrap">
       <table>
-        <thead><tr><th>Cave trip</th><th>Destinasi</th><th>Tanggal</th><th>Kebutuhan</th><th>Tugas</th><th>Status job</th><th>Pekerja</th></tr></thead>
+        <thead><tr><th>Paket</th><th>Destinasi</th><th>Tanggal</th><th>Kebutuhan</th><th>Tugas</th><th>Status job</th><th>Pekerja</th></tr></thead>
         <tbody>{rows.map((job) => {
           const trip = trips.find((item) => item.id === job.tripId)
           return <tr key={job.id}><td>{trip?.name}</td><td>{adminText(trip?.destination)}</td><td>{formatDate(job.requestedDate || trip?.date)}</td><td>{job.addonLabel || 'Job trip'}</td><td>{job.task}</td><td><Badge status={job.status} /></td><td>{job.worker || '-'}</td></tr>
